@@ -1,22 +1,74 @@
-import { useEffect } from "react";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { ArrowLeft, BadgeCheck, ShieldCheck, Truck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, BadgeCheck, Loader2, Mail, ShieldCheck, Truck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useSessionContext } from "@/components/session-context-provider";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthErrorMessage } from "@/lib/auth-errors";
 
 const Login = () => {
   const navigate = useNavigate();
   const { user, authError, clearAuthError } = useSessionContext();
+  const [email, setEmail] = useState("");
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [localMessage, setLocalMessage] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       navigate("/", { replace: true });
     }
   }, [navigate, user]);
+
+  const signInWithGoogle = async () => {
+    setGoogleLoading(true);
+    setLocalError(null);
+    setLocalMessage(null);
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      setLocalError(getAuthErrorMessage(error));
+      setGoogleLoading(false);
+      return;
+    }
+  };
+
+  const signInWithMagicLink = async () => {
+    if (!email.trim()) {
+      setLocalError("Email manzilini kiriting.");
+      setLocalMessage(null);
+      return;
+    }
+
+    setEmailLoading(true);
+    setLocalError(null);
+    setLocalMessage(null);
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
+
+    setEmailLoading(false);
+
+    if (error) {
+      setLocalError(getAuthErrorMessage(error));
+      return;
+    }
+
+    setLocalMessage("Emailingizga kirish havolasi yuborildi.");
+  };
 
   return (
     <main className="min-h-screen bg-transparent px-4 py-6 sm:px-6 lg:px-8">
@@ -50,8 +102,8 @@ const Login = () => {
                   Hisobingizga kiring va buyurtmalaringizni boshqaring.
                 </h1>
                 <p className="max-w-xl text-base leading-7 text-[#5C7260] sm:text-lg">
-                  Google orqali tez kirish, buyurtma tarixi, profil ma'lumotlari va
-                  real vaqt yangilanishlari — hammasi bitta joyda.
+                  Google orqali tez kirish yoki email magic link bilan xavfsiz tarzda
+                  SmartCam hisobingizga kiring.
                 </p>
               </div>
 
@@ -98,58 +150,74 @@ const Login = () => {
             <div className="mb-6 space-y-2 text-center">
               <h2 className="text-3xl font-extrabold text-[#1A3828]">Kirish</h2>
               <p className="text-sm leading-6 text-[#5C7260]">
-                Google orqali yoki email yordamida SmartCam hisobingizga kiring.
+                Google yoki email magic link orqali SmartCam hisobingizga kiring.
               </p>
             </div>
 
-            {authError ? (
+            {authError || localError ? (
               <Alert className="mb-5 rounded-3xl border-[#EE7526]/25 bg-[#fff4ec] text-[#8a4616]">
                 <AlertDescription className="flex items-center justify-between gap-3 text-sm">
-                  <span>{authError}</span>
-                  <button className="font-semibold underline" onClick={clearAuthError}>
+                  <span>{authError || localError}</span>
+                  <button
+                    className="font-semibold underline"
+                    onClick={() => {
+                      clearAuthError();
+                      setLocalError(null);
+                    }}
+                  >
                     Yopish
                   </button>
                 </AlertDescription>
               </Alert>
             ) : null}
 
-            <div className="rounded-[28px] border border-[#dbe7d8] bg-[#fcfdfc] p-4 sm:p-5">
-              <Auth
-                supabaseClient={supabase}
-                providers={["google"]}
-                redirectTo={window.location.origin}
-                appearance={{
-                  theme: ThemeSupa,
-                  variables: {
-                    default: {
-                      colors: {
-                        brand: "#EE7526",
-                        brandAccent: "#d8661c",
-                        defaultButtonBackground: "#ffffff",
-                        defaultButtonBackgroundHover: "#edf4ec",
-                        defaultButtonBorder: "#dbe7d8",
-                        defaultButtonText: "#1A3828",
-                        inputBackground: "#ffffff",
-                        inputBorder: "#dbe7d8",
-                        inputBorderHover: "#7CAE7A",
-                        inputBorderFocus: "#EE7526",
-                        inputText: "#1C2E1E",
-                        inputLabelText: "#4A7A5A",
-                        messageText: "#5C7260",
-                      },
-                      radii: {
-                        buttonBorderRadius: "999px",
-                        inputBorderRadius: "18px",
-                      },
-                      space: {
-                        inputPadding: "14px",
-                        buttonPadding: "14px",
-                      },
-                    },
-                  },
-                }}
-                theme="light"
-              />
+            {localMessage ? (
+              <Alert className="mb-5 rounded-3xl border-[#7CAE7A]/25 bg-[#edf4ec] text-[#2f6b43]">
+                <AlertDescription className="text-sm">{localMessage}</AlertDescription>
+              </Alert>
+            ) : null}
+
+            <div className="space-y-4 rounded-[28px] border border-[#dbe7d8] bg-[#fcfdfc] p-4 sm:p-5">
+              <Button
+                type="button"
+                onClick={signInWithGoogle}
+                disabled={googleLoading}
+                className="h-12 w-full rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]"
+              >
+                {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Google orqali kirish
+              </Button>
+
+              <div className="relative py-2 text-center text-sm text-[#5C7260]">
+                <span className="relative z-10 bg-[#fcfdfc] px-3">yoki</span>
+                <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-[#dbe7d8]" />
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-[#4A7A5A]">
+                  Email manzili
+                </label>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a907d]" />
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="siz@email.com"
+                    className="h-12 rounded-2xl border-[#dbe7d8] bg-white pl-11"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={signInWithMagicLink}
+                  disabled={emailLoading}
+                  className="h-12 w-full rounded-full border-[#dbe7d8] bg-white text-[#254A34] hover:bg-[#edf4ec]"
+                >
+                  {emailLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  Magic link yuborish
+                </Button>
+              </div>
             </div>
           </section>
         </div>
