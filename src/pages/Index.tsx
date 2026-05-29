@@ -8,6 +8,7 @@ import {
   ChevronRight,
   CreditCard,
   Loader2,
+  MessageCircle,
   Minus,
   Package,
   Plus,
@@ -199,6 +200,7 @@ const Index = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [telegramLinkLoading, setTelegramLinkLoading] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<"home" | "orders">("home");
   const [activeSlides, setActiveSlides] = useState<Record<string, number>>({});
   const [checkoutForm, setCheckoutForm] = useState<CheckoutForm>(defaultCheckoutForm);
@@ -552,6 +554,32 @@ const Index = () => {
     toast.success(`Buyurtma qabul qilindi: #${order.id.slice(0, 8).toUpperCase()}`);
     setActiveSection("orders");
     await loadOrders();
+  };
+
+  const openTelegramLink = async (type: "connect" | "order", orderId?: string) => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    const loadingKey = orderId ?? type;
+    setTelegramLinkLoading(loadingKey);
+
+    const { data, error } = await supabase.functions.invoke("telegram-link", {
+      body: {
+        type,
+        orderId,
+      },
+    });
+
+    setTelegramLinkLoading(null);
+
+    if (error || !data?.url) {
+      toast.error("Telegram havolasini yaratib bo'lmadi.");
+      return;
+    }
+
+    window.open(data.url as string, "_blank", "noopener,noreferrer");
   };
 
   const nextSlide = (productId: string, imagesLength: number, direction: number) => {
@@ -997,12 +1025,27 @@ const Index = () => {
                   Barcha buyurtmalaringiz holatini shu yerda kuzatasiz.
                 </p>
               </div>
-              <Button
-                className="rounded-full bg-[#EE7526] px-5 text-white hover:bg-[#d8661c]"
-                onClick={scrollToCatalog}
-              >
-                Yana mahsulot tanlash
-              </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant="outline"
+                  className="rounded-full border-[#dbe7d8] bg-white px-5 text-[#254A34] hover:bg-[#edf4ec]"
+                  onClick={() => void openTelegramLink("connect")}
+                  disabled={telegramLinkLoading === "connect"}
+                >
+                  {telegramLinkLoading === "connect" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <MessageCircle className="h-4 w-4" />
+                  )}
+                  Telegram ulash
+                </Button>
+                <Button
+                  className="rounded-full bg-[#EE7526] px-5 text-white hover:bg-[#d8661c]"
+                  onClick={scrollToCatalog}
+                >
+                  Yana mahsulot tanlash
+                </Button>
+              </div>
             </div>
 
             {ordersLoading ? (
@@ -1060,10 +1103,25 @@ const Index = () => {
                         <div className="max-w-xl text-sm leading-7 text-[#5C7260]">
                           {order.notes ? `Izoh: ${order.notes}` : "Buyurtma uchun maxsus izoh qoldirilmagan."}
                         </div>
-                        <div className="text-right">
-                          <div className="text-xs uppercase tracking-[0.18em] text-[#7b927d]">Jami summa</div>
-                          <div className="mt-1 text-2xl font-extrabold text-[#254A34]">
-                            {formatPrice(Number(order.total_amount))}
+                        <div className="flex flex-col items-start gap-3 sm:items-end">
+                          <Button
+                            variant="outline"
+                            className="rounded-full border-[#dbe7d8] bg-white text-[#254A34] hover:bg-[#edf4ec]"
+                            onClick={() => void openTelegramLink("order", order.id)}
+                            disabled={telegramLinkLoading === order.id}
+                          >
+                            {telegramLinkLoading === order.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <MessageCircle className="h-4 w-4" />
+                            )}
+                            Telegramda kuzatish
+                          </Button>
+                          <div className="text-right">
+                            <div className="text-xs uppercase tracking-[0.18em] text-[#7b927d]">Jami summa</div>
+                            <div className="mt-1 text-2xl font-extrabold text-[#254A34]">
+                              {formatPrice(Number(order.total_amount))}
+                            </div>
                           </div>
                         </div>
                       </div>
