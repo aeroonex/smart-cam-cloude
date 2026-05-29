@@ -51,8 +51,8 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "DM Sans", sans-serif;
-    background-image: radial-gradient(circle at top, rgba(124, 174, 122, 0.12), transparent 38%), url("/assets/smartcam-bg-pattern.png");
-    background-size: auto, 960px;
+    background-image: url("/assets/smartcam-bg-pattern.png");
+    background-size: 960px;
     background-attachment: fixed;
   }
 

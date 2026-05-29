@@ -566,8 +566,6 @@ const Index = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden text-[#1C2E1E]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(124,174,122,0.14),transparent_30%),radial-gradient(circle_at_80%_10%,rgba(238,117,38,0.10),transparent_22%)]" />
-
       <header className="sticky top-0 z-40 border-b border-white/70 bg-[#f7faf7]/85 backdrop-blur-xl">
         <div className="container-shell flex items-center justify-between gap-4 py-4">
           <button
