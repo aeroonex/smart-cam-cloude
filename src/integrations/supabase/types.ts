@@ -67,7 +67,17 @@ export interface Database {
           user_id: string;
           items: Json;
           total_amount: number;
-          status: "yangi" | "yetkazilmoqda" | "yopildi" | "rad_etildi";
+          status:
+            | "yangi"
+            | "qabul_qilindi"
+            | "tolov_jarayonida"
+            | "qadoqlanmoqda"
+            | "yetkazilmoqda"
+            | "mijoz_qabul_qildi"
+            | "rad_etildi";
+          payment_status: "unpaid" | "pending" | "paid" | "rejected";
+          receipt_file_id: string | null;
+          receipt_submitted_at: string | null;
           customer_name: string | null;
           customer_phone: string | null;
           customer_region: string | null;
@@ -80,7 +90,17 @@ export interface Database {
           user_id: string;
           items?: Json;
           total_amount?: number;
-          status?: "yangi" | "yetkazilmoqda" | "yopildi" | "rad_etildi";
+          status?:
+            | "yangi"
+            | "qabul_qilindi"
+            | "tolov_jarayonida"
+            | "qadoqlanmoqda"
+            | "yetkazilmoqda"
+            | "mijoz_qabul_qildi"
+            | "rad_etildi";
+          payment_status?: "unpaid" | "pending" | "paid" | "rejected";
+          receipt_file_id?: string | null;
+          receipt_submitted_at?: string | null;
           customer_name?: string | null;
           customer_phone?: string | null;
           customer_region?: string | null;

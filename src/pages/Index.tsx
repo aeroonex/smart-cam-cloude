@@ -12,17 +12,14 @@ import {
   Minus,
   Package,
   Plus,
-  Shield,
   ShoppingBag,
   Sparkles,
-  Star,
   Truck,
   UserRound,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -94,39 +91,9 @@ const regions = [
 ];
 
 const featureCards = [
-  {
-    title: "AI Harakatni aniqlash",
-    description:
-      "Odam, mashina va g'ayrioddiy harakatlarni tez ajratib, foydali ogohlantirishlarni yuboradi.",
-    icon: Sparkles,
-  },
-  {
-    title: "Premium o'rnatish xizmati",
-    description:
-      "Hududingiz bo'yicha mutaxassis yetib boradi, sozlaydi va telefoningizga ulab beradi.",
-    icon: Truck,
-  },
-  {
-    title: "Ishonchli kafolat",
-    description:
-      "Har bir qurilma original manbadan keltiriladi va rasmiy kafolat bilan topshiriladi.",
-    icon: BadgeCheck,
-  },
-];
-
-const testimonials = [
-  {
-    name: "Aziza Xasanova",
-    role: "Uy egasi, Toshkent",
-    quote:
-      "Yetkazib berish ham, o'rnatish ham juda silliq o'tdi. Telefonimdan hovlini bemalol kuzatyapman.",
-  },
-  {
-    name: "Murod Ergashev",
-    role: "Ofis menejeri, Samarqand",
-    quote:
-      "PTZ kamera sifati kutilganidan ham yuqori bo'ldi. Kechasi ham aniq ko'rsatadi.",
-  },
+  { title: "AI aniqlash", icon: Sparkles },
+  { title: "O'rnatish", icon: Truck },
+  { title: "2 yil kafolat", icon: BadgeCheck },
 ];
 
 const defaultCheckoutForm: CheckoutForm = {
@@ -138,8 +105,11 @@ const defaultCheckoutForm: CheckoutForm = {
 
 const statusMeta: Record<Order["status"], { label: string; className: string }> = {
   yangi: { label: "Yangi", className: "bg-[#fff4ec] text-[#b4571c]" },
-  yetkazilmoqda: { label: "Yetkazilmoqda", className: "bg-[#edf4ec] text-[#2f6b43]" },
-  yopildi: { label: "Yopildi", className: "bg-[#e9f7f0] text-[#1f7a4b]" },
+  qabul_qilindi: { label: "Qabul qilindi", className: "bg-emerald-50 text-emerald-700" },
+  tolov_jarayonida: { label: "To'lov jarayonida", className: "bg-blue-50 text-blue-700" },
+  qadoqlanmoqda: { label: "Qadoqlanmoqda", className: "bg-purple-50 text-purple-700" },
+  yetkazilmoqda: { label: "Yetkazilmoqda", className: "bg-orange-50 text-[#b4571c]" },
+  mijoz_qabul_qildi: { label: "Mijoz qabul qildi", className: "bg-orange-100 text-[#9a4a18]" },
   rad_etildi: { label: "Rad etildi", className: "bg-[#fff1f1] text-[#b53b3b]" },
 };
 
@@ -346,7 +316,10 @@ const Index = () => {
         },
         (payload) => {
           const nextStatus = payload.new.status as Order["status"];
-          toast.info(`Buyurtma holati yangilandi: ${statusMeta[nextStatus]?.label ?? nextStatus}`);
+          const prevStatus = payload.old?.status as Order["status"] | undefined;
+          if (prevStatus && prevStatus !== nextStatus) {
+            toast.info(`Buyurtma holati yangilandi: ${statusMeta[nextStatus]?.label ?? nextStatus}`);
+          }
           void loadOrders();
         },
       )
@@ -533,6 +506,7 @@ const Index = () => {
         items: orderItems,
         total_amount: cartTotal,
         status: "yangi",
+        payment_status: "unpaid",
         customer_name: checkoutForm.full_name,
         customer_phone: checkoutForm.phone,
         customer_region: checkoutForm.region,
@@ -593,53 +567,50 @@ const Index = () => {
   const productCountText = `${products.length}+ model`;
 
   return (
-    <div className="relative min-h-screen overflow-hidden text-[#1C2E1E]">
-      <header className="sticky top-0 z-40 border-b border-white/70 bg-[#f7faf7]/85 backdrop-blur-xl">
-        <div className="container-shell flex items-center justify-between gap-4 py-4">
+    <div className="relative min-h-screen bg-white text-neutral-900">
+      <header className="sticky top-0 z-40 border-b border-orange-100/80 bg-white/90 backdrop-blur-md">
+        <div className="container-shell flex items-center justify-between gap-4 py-3">
           <button
             onClick={goHome}
-            className="flex items-center gap-3 rounded-full border border-[#dbe7d8] bg-white px-3 py-2 text-left shadow-sm transition hover:shadow"
+            className="flex items-center gap-2.5 rounded-full transition hover:opacity-80"
           >
             <img
               src="/assets/smartcam-logo.png"
               alt="SmartCam"
-              className="h-11 w-11 rounded-full object-cover"
+              className="h-9 w-9 rounded-full object-cover ring-2 ring-orange-100"
             />
-            <div>
-              <div className="font-syne text-lg font-extrabold text-[#254A34]">SmartCam</div>
-              <div className="text-xs font-medium text-[#5C7260]">Aqlli kameralar do'koni</div>
-            </div>
+            <span className="font-syne text-lg font-bold text-neutral-900">SmartCam</span>
           </button>
 
-          <nav className="hidden items-center gap-2 md:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             <Button
               variant="ghost"
-              className="rounded-full px-5 text-[#45624d] hover:bg-white"
+              className="rounded-full px-4 text-neutral-600 hover:bg-orange-50 hover:text-[#EE7526]"
               onClick={goHome}
             >
               Bosh sahifa
             </Button>
             <Button
               variant="ghost"
-              className="rounded-full px-5 text-[#45624d] hover:bg-white"
+              className="rounded-full px-4 text-neutral-600 hover:bg-orange-50 hover:text-[#EE7526]"
               onClick={scrollToCatalog}
             >
               Katalog
             </Button>
             <Button
               variant="ghost"
-              className="rounded-full px-5 text-[#45624d] hover:bg-white"
+              className="rounded-full px-4 text-neutral-600 hover:bg-orange-50 hover:text-[#EE7526]"
               onClick={() => void showOrdersSection()}
             >
               Buyurtmalarim
             </Button>
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="icon"
-              className="relative h-11 w-11 rounded-full border-[#dbe7d8] bg-white text-[#254A34] hover:bg-[#edf4ec]"
+              className="relative h-10 w-10 rounded-full border-orange-100 bg-white text-neutral-800 hover:bg-orange-50"
               onClick={() => setCartOpen(true)}
             >
               <ShoppingBag className="h-5 w-5" />
@@ -651,28 +622,27 @@ const Index = () => {
             </Button>
 
             {sessionLoading ? (
-              <div className="flex h-11 items-center rounded-full border border-[#dbe7d8] bg-white px-4 text-sm text-[#5C7260]">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Yuklanmoqda
+              <div className="flex h-10 items-center rounded-full border border-orange-100 px-3 text-sm text-neutral-500">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#EE7526]" />
               </div>
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="rounded-full border border-[#dbe7d8] bg-white p-1 shadow-sm transition hover:shadow-md">
-                    <Avatar className="h-10 w-10 border border-[#edf4ec]">
+                  <button className="rounded-full ring-1 ring-orange-100 transition hover:ring-orange-200">
+                    <Avatar className="h-9 w-9">
                       <AvatarImage src={profile?.avatar_url ?? user.user_metadata?.avatar_url ?? undefined} />
-                      <AvatarFallback className="bg-[#edf4ec] font-semibold text-[#254A34]">
+                      <AvatarFallback className="bg-orange-50 font-semibold text-[#EE7526]">
                         {getInitials(profile?.full_name || user.email)}
                       </AvatarFallback>
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64 rounded-3xl border-[#dbe7d8] p-2">
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl border-orange-100 p-2">
                   <div className="px-3 py-2">
-                    <p className="font-syne text-lg font-bold text-[#254A34]">
+                    <p className="font-syne font-bold text-neutral-900">
                       {profile?.full_name || user.email}
                     </p>
-                    <p className="text-sm text-[#5C7260]">{user.email}</p>
+                    <p className="truncate text-xs text-neutral-500">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => void showOrdersSection()} className="rounded-2xl py-3">
@@ -711,153 +681,83 @@ const Index = () => {
       <main className="relative z-10">
         {activeSection === "home" ? (
           <>
-            <section className="container-shell grid gap-10 py-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-16">
-              <div className="space-y-8">
-                <Badge className="rounded-full border-0 bg-[#edf4ec] px-4 py-2 text-sm font-semibold text-[#4A7A5A]">
-                  O'zbekistonda xavfsizlik uchun tanlangan premium do'kon
-                </Badge>
+            <section className="container-shell grid gap-8 py-12 lg:grid-cols-2 lg:items-center lg:py-16">
+              <div className="space-y-6">
+                <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight text-neutral-900 sm:text-5xl">
+                  Aqlli kamera.
+                  <span className="text-[#EE7526]"> Oddiy nazorat.</span>
+                </h1>
+                <p className="max-w-md text-neutral-500">
+                  Uy va ofis uchun. Yetkazib berish va o'rnatish bilan.
+                </p>
 
-                <div className="space-y-5">
-                  <h1 className="max-w-2xl text-4xl font-extrabold leading-tight text-[#1A3828] sm:text-5xl lg:text-6xl">
-                    Hamma joyni aqlli nazorat ostida ushlang.
-                  </h1>
-                  <p className="max-w-xl text-base leading-8 text-[#5C7260] sm:text-lg">
-                    SmartCam professional kameralari uy, ofis va biznes uchun ishlab
-                    chiqilgan. Premium uskuna, tez yetkazib berish va real vaqt nazorati
-                    bitta ekotizimda jamlangan.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap gap-3">
                   <Button
-                    className="rounded-full bg-[#EE7526] px-6 py-6 text-base text-white hover:bg-[#d8661c]"
+                    className="rounded-full bg-[#EE7526] px-6 text-white hover:bg-[#d8661c]"
                     onClick={scrollToCatalog}
                   >
-                    Katalogni ko'rish
+                    Katalog
                     <ArrowRight className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="rounded-full border-[#dbe7d8] bg-white px-6 py-6 text-base text-[#254A34] hover:bg-[#edf4ec]"
-                    onClick={() => (user ? setProfileOpen(true) : navigate("/login"))}
-                  >
-                    {user ? "Profilni to'ldirish" : "Ro'yxatdan o'tish"}
-                  </Button>
+                  {!user ? (
+                    <Button
+                      variant="outline"
+                      className="rounded-full border-orange-200 bg-white text-neutral-800 hover:bg-orange-50"
+                      onClick={() => navigate("/login")}
+                    >
+                      Kirish
+                    </Button>
+                  ) : null}
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="flex flex-wrap gap-6 border-t border-orange-100 pt-6 text-sm">
                   {[
-                    { value: "2,400+", label: "Baxtli mijoz" },
-                    { value: "4.9/5", label: "O'rtacha baho" },
-                    { value: productCountText, label: "Faol mahsulotlar" },
+                    { value: "2,400+", label: "Mijoz" },
+                    { value: "4.9", label: "Baho" },
+                    { value: productCountText, label: "Model" },
                   ].map((item) => (
-                    <div key={item.label} className="panel-surface p-5">
-                      <div className="text-3xl font-extrabold text-[#254A34]">{item.value}</div>
-                      <p className="mt-2 text-sm text-[#5C7260]">{item.label}</p>
+                    <div key={item.label}>
+                      <div className="text-xl font-bold text-[#EE7526]">{item.value}</div>
+                      <div className="text-neutral-500">{item.label}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-5">
-                <div className="panel-surface overflow-hidden p-4 sm:p-5">
-                  <img
-                    src="/assets/smartcam-hero.png"
-                    alt="Premium SmartCam kamera"
-                    className="h-[360px] w-full rounded-[24px] object-cover sm:h-[420px]"
-                  />
-                  <div className="grid gap-4 px-2 pb-2 pt-5 sm:grid-cols-[1fr_auto] sm:items-end">
-                    <div>
-                      <div className="flex items-center gap-2 text-sm font-semibold text-[#4A7A5A]">
-                        <Star className="h-4 w-4 fill-[#EE7526] text-[#EE7526]" />
-                        Premium tavsiya
-                      </div>
-                      <h2 className="mt-2 text-2xl font-extrabold text-[#1A3828]">
-                        Smart Micro Camera X1
-                      </h2>
-                      <p className="mt-2 max-w-md text-sm leading-7 text-[#5C7260]">
-                        4K tasvir, night vision, Wi‑Fi va qulay mobil boshqaruv bilan
-                        uy xavfsizligi uchun ideal model.
-                      </p>
-                    </div>
-                    <div className="rounded-[24px] bg-[#254A34] px-5 py-4 text-white">
-                      <div className="text-xs uppercase tracking-[0.18em] text-white/70">Boshlanish narxi</div>
-                      <div className="mt-2 text-2xl font-extrabold">850 000 so'm</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="panel-surface flex items-center gap-4 p-5">
-                    <Shield className="h-12 w-12 rounded-full bg-[#edf4ec] p-3 text-[#EE7526]" />
-                    <div>
-                      <h3 className="font-syne text-lg font-bold text-[#254A34]">2 yil kafolat</h3>
-                      <p className="text-sm leading-6 text-[#5C7260]">Original mahsulot va ishonchli servis.</p>
-                    </div>
-                  </div>
-                  <div className="panel-surface flex items-center gap-4 p-5">
-                    <Truck className="h-12 w-12 rounded-full bg-[#fff4ec] p-3 text-[#EE7526]" />
-                    <div>
-                      <h3 className="font-syne text-lg font-bold text-[#254A34]">1–2 kun yetkazish</h3>
-                      <p className="text-sm leading-6 text-[#5C7260]">Hududga qarab tezkor yetkazib berish.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="container-shell py-6 lg:py-10">
-              <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-                <div className="panel-surface overflow-hidden p-4 sm:p-5">
-                  <img
-                    src="/assets/smartcam-ai-illustration.png"
-                    alt="AI kuzatuv tizimi"
-                    className="h-full min-h-[320px] w-full rounded-[24px] object-cover"
-                  />
-                </div>
-
-                <div className="space-y-5">
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 to-white p-3 ring-1 ring-orange-100">
+                <img
+                  src="/assets/smartcam-hero.png"
+                  alt="SmartCam kamera"
+                  className="aspect-[4/3] w-full rounded-xl object-cover"
+                />
+                <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-3 rounded-xl bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm">
                   <div>
-                    <Badge className="rounded-full border-0 bg-[#fff4ec] px-4 py-2 text-sm font-semibold text-[#b4571c]">
-                      Nega SmartCam?
-                    </Badge>
-                    <h2 className="mt-4 text-3xl font-extrabold text-[#1A3828] sm:text-4xl">
-                      Yumshoq dizayn ichida kuchli texnologiya.
-                    </h2>
-                    <p className="mt-4 max-w-2xl text-base leading-8 text-[#5C7260]">
-                      Biz mahsulotga urg'u berilgan, xavfsizlikka ishonch uyg'otuvchi va
-                      foydalanishga oson bo'lgan xarid tajribasini yaratdik.
-                    </p>
+                    <p className="text-xs font-medium text-[#EE7526]">X1</p>
+                    <p className="font-syne font-bold text-neutral-900">Smart Micro Camera</p>
                   </div>
-
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    {featureCards.map((feature) => (
-                      <div key={feature.title} className="panel-surface p-5">
-                        <feature.icon className="h-11 w-11 rounded-full bg-[#edf4ec] p-3 text-[#EE7526]" />
-                        <h3 className="mt-4 text-lg font-bold text-[#254A34]">{feature.title}</h3>
-                        <p className="mt-2 text-sm leading-7 text-[#5C7260]">{feature.description}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="font-syne text-lg font-bold text-[#EE7526]">850 000 so'm</p>
                 </div>
               </div>
             </section>
 
-            <section id="catalog" className="container-shell py-10">
-              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <Badge className="rounded-full border-0 bg-[#edf4ec] px-4 py-2 text-sm font-semibold text-[#4A7A5A]">
-                    SmartCam katalogi
-                  </Badge>
-                  <h2 className="mt-4 text-3xl font-extrabold text-[#1A3828] sm:text-4xl">
-                    Har bir ehtiyojga mos kamera tanlovi
-                  </h2>
-                </div>
-                <p className="max-w-xl text-sm leading-7 text-[#5C7260] sm:text-base">
-                  Hovli, ofis, koridor yoki kirish eshigi uchun mos variantlarni bitta
-                  joyda ko'ring va darhol savatga qo'shing.
-                </p>
+            <section className="border-y border-orange-50 bg-orange-50/40">
+              <div className="container-shell grid grid-cols-3 gap-4 py-8 sm:gap-8">
+                {featureCards.map((feature) => (
+                  <div
+                    key={feature.title}
+                    className="flex flex-col items-center gap-2 text-center sm:flex-row sm:text-left"
+                  >
+                    <feature.icon className="h-8 w-8 shrink-0 text-[#EE7526]" />
+                    <span className="text-sm font-semibold text-neutral-800">{feature.title}</span>
+                  </div>
+                ))}
               </div>
+            </section>
+
+            <section id="catalog" className="container-shell py-12">
+              <h2 className="mb-8 font-syne text-2xl font-bold text-neutral-900 sm:text-3xl">
+                Katalog
+              </h2>
 
               {productsLoading ? (
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -876,9 +776,9 @@ const Index = () => {
                     return (
                       <article
                         key={product.id}
-                        className="panel-surface overflow-hidden p-3 transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_70px_rgba(44,90,61,0.14)]"
+                        className="panel-surface overflow-hidden p-3 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(238,117,38,0.12)]"
                       >
-                        <div className="relative overflow-hidden rounded-[24px] bg-[#edf4ec]">
+                        <div className="relative overflow-hidden rounded-xl bg-orange-50">
                           <img
                             src={images[currentSlide]}
                             alt={product.name}
@@ -887,7 +787,7 @@ const Index = () => {
                             }}
                             className="h-64 w-full object-cover"
                           />
-                          <div className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-[#254A34] shadow-sm">
+                          <div className="absolute left-3 top-3 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-medium text-[#EE7526] shadow-sm">
                             Mavjud
                           </div>
 
@@ -895,13 +795,13 @@ const Index = () => {
                             <>
                               <button
                                 onClick={() => nextSlide(product.id, images.length, -1)}
-                                className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#254A34] shadow-sm transition hover:bg-white"
+                                className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-neutral-800 shadow-sm transition hover:bg-white"
                               >
                                 <ChevronLeft className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => nextSlide(product.id, images.length, 1)}
-                                className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#254A34] shadow-sm transition hover:bg-white"
+                                className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 text-neutral-800 shadow-sm transition hover:bg-white"
                               >
                                 <ChevronRight className="h-4 w-4" />
                               </button>
@@ -918,7 +818,7 @@ const Index = () => {
                                     className={`h-2.5 rounded-full transition ${
                                       currentSlide === index
                                         ? "w-6 bg-[#EE7526]"
-                                        : "w-2.5 bg-[#c8d9c3]"
+                                        : "w-2.5 bg-orange-200"
                                     }`}
                                   />
                                 ))}
@@ -927,23 +827,22 @@ const Index = () => {
                           ) : null}
                         </div>
 
-                        <div className="space-y-4 p-3 pb-2 pt-5">
+                        <div className="space-y-3 p-3 pt-4">
                           <div>
-                            <h3 className="text-xl font-extrabold text-[#1A3828]">{product.name}</h3>
-                            <p className="mt-2 text-sm leading-7 text-[#5C7260]">
-                              {product.description || "Premium xavfsizlik kamerasi"}
-                            </p>
+                            <h3 className="font-syne text-lg font-bold text-neutral-900">{product.name}</h3>
+                            {product.description ? (
+                              <p className="mt-1 line-clamp-2 text-sm text-neutral-500">
+                                {product.description}
+                              </p>
+                            ) : null}
                           </div>
 
-                          <div className="flex items-center justify-between gap-3 border-t border-[#edf2eb] pt-4">
-                            <div>
-                              <div className="text-xs uppercase tracking-[0.18em] text-[#7b927d]">Narxi</div>
-                              <div className="mt-1 text-2xl font-extrabold text-[#254A34]">
-                                {formatPrice(Number(product.price))}
-                              </div>
+                          <div className="flex items-center justify-between gap-3 border-t border-orange-50 pt-3">
+                            <div className="text-lg font-bold text-[#EE7526]">
+                              {formatPrice(Number(product.price))}
                             </div>
                             <Button
-                              className="rounded-full bg-[#254A34] px-5 text-white hover:bg-[#1A3828]"
+                              className="rounded-full bg-[#EE7526] px-4 text-white hover:bg-[#d8661c]"
                               onClick={() => addToCart(product)}
                             >
                               <Plus className="h-4 w-4" />
@@ -957,78 +856,31 @@ const Index = () => {
                 </div>
               ) : (
                 <div className="panel-surface p-10 text-center">
-                  <Camera className="mx-auto h-12 w-12 rounded-full bg-[#edf4ec] p-3 text-[#EE7526]" />
-                  <h3 className="mt-4 text-2xl font-extrabold text-[#1A3828]">Mahsulotlar topilmadi</h3>
-                  <p className="mt-3 text-sm leading-7 text-[#5C7260]">
-                    Supabase katalogi bo'sh ko'rinmoqda. Keyinroq qayta tekshiring.
-                  </p>
+                  <Camera className="mx-auto h-10 w-10 text-[#EE7526]" />
+                  <p className="mt-3 text-neutral-500">Mahsulotlar hozircha yo'q</p>
                 </div>
               )}
-            </section>
-
-            <section className="container-shell py-10">
-              <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-                <div className="panel-surface overflow-hidden p-6 sm:p-8">
-                  <div className="mb-6 flex items-center gap-3">
-                    <Badge className="rounded-full border-0 bg-[#fff4ec] px-4 py-2 text-sm font-semibold text-[#b4571c]">
-                      Mijozlar fikri
-                    </Badge>
-                  </div>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {testimonials.map((testimonial) => (
-                      <div key={testimonial.name} className="rounded-[24px] border border-[#e6efe3] bg-[#fcfdfc] p-5">
-                        <div className="flex items-center gap-1 text-[#EE7526]">
-                          {Array.from({ length: 5 }).map((_, index) => (
-                            <Star key={index} className="h-4 w-4 fill-current" />
-                          ))}
-                        </div>
-                        <p className="mt-4 text-sm leading-7 text-[#35513d]">“{testimonial.quote}”</p>
-                        <div className="mt-5">
-                          <div className="font-syne text-lg font-bold text-[#254A34]">{testimonial.name}</div>
-                          <div className="text-sm text-[#5C7260]">{testimonial.role}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="panel-surface overflow-hidden p-4 sm:p-5">
-                  <img
-                    src="/assets/smartcam-outdoor-camera.png"
-                    alt="Outdoor SmartCam kamera"
-                    className="h-[360px] w-full rounded-[24px] object-cover"
-                  />
-                </div>
-              </div>
             </section>
           </>
         ) : (
           <section className="container-shell py-10 sm:py-14">
             <Button
               variant="ghost"
-              className="mb-5 rounded-full px-4 text-[#45624d] hover:bg-white"
+              className="mb-5 rounded-full px-4 text-neutral-600 hover:bg-orange-50"
               onClick={goHome}
             >
               <ChevronLeft className="h-4 w-4" />
-              Bosh sahifaga qaytish
+              Orqaga
             </Button>
 
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <Badge className="rounded-full border-0 bg-[#edf4ec] px-4 py-2 text-sm font-semibold text-[#4A7A5A]">
-                  Shaxsiy kabinet
-                </Badge>
-                <h1 className="mt-4 text-3xl font-extrabold text-[#1A3828] sm:text-4xl">
-                  Buyurtmalarim
-                </h1>
-                <p className="mt-2 text-sm leading-7 text-[#5C7260]">
-                  Barcha buyurtmalaringiz holatini shu yerda kuzatasiz.
-                </p>
-              </div>
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h1 className="font-syne text-2xl font-bold text-neutral-900 sm:text-3xl">
+                Buyurtmalarim
+              </h1>
               <div className="flex flex-wrap gap-3">
                 <Button
                   variant="outline"
-                  className="rounded-full border-[#dbe7d8] bg-white px-5 text-[#254A34] hover:bg-[#edf4ec]"
+                  className="rounded-full border-orange-200 bg-white text-neutral-800 hover:bg-orange-50"
                   onClick={() => void openTelegramLink("connect")}
                   disabled={telegramLinkLoading === "connect"}
                 >
@@ -1148,35 +1000,30 @@ const Index = () => {
         )}
       </main>
 
-      <footer className="mt-12 border-t border-white/70 bg-[#1A3828] py-10 text-white">
-        <div className="container-shell grid gap-8 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
-          <div>
-            <div className="mb-4 flex items-center gap-3">
-              <img src="/assets/smartcam-logo.png" alt="SmartCam" className="h-11 w-11 rounded-full object-cover" />
-              <div>
-                <div className="font-syne text-xl font-extrabold">SmartCam</div>
-                <div className="text-sm text-white/70">Aqlli kameralar do'koni</div>
-              </div>
-            </div>
-            <p className="max-w-md text-sm leading-7 text-white/70">
-              Zamonaviy kuzatuv texnologiyasi, premium servis va ishonchli buyurtma tajribasi.
-            </p>
+      <footer className="mt-16 border-t border-orange-100 bg-[#EE7526] py-8 text-white">
+        <div className="container-shell flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <img src="/assets/smartcam-logo.png" alt="SmartCam" className="h-8 w-8 rounded-full ring-2 ring-white/30" />
+            <span className="font-syne text-lg font-bold">SmartCam</span>
           </div>
-          <div>
-            <div className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/60">Sahifalar</div>
-            <div className="space-y-3 text-sm text-white/80">
-              <button onClick={goHome} className="block transition hover:text-white">Bosh sahifa</button>
-              <button onClick={scrollToCatalog} className="block transition hover:text-white">Katalog</button>
-              <button onClick={() => void showOrdersSection()} className="block transition hover:text-white">Buyurtmalarim</button>
-            </div>
-          </div>
-          <div>
-            <div className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-white/60">Aloqa</div>
-            <div className="space-y-3 text-sm text-white/80">
-              <a href="tel:+998901234567" className="block transition hover:text-white">+998 90 123 45 67</a>
-              <a href="mailto:info@smartcam.uz" className="block transition hover:text-white">info@smartcam.uz</a>
-              <span className="block">Toshkent, O'zbekiston</span>
-            </div>
+          <nav className="flex flex-wrap gap-4 text-sm text-white/90">
+            <button onClick={goHome} className="transition hover:text-white">
+              Bosh sahifa
+            </button>
+            <button onClick={scrollToCatalog} className="transition hover:text-white">
+              Katalog
+            </button>
+            <button onClick={() => void showOrdersSection()} className="transition hover:text-white">
+              Buyurtmalarim
+            </button>
+          </nav>
+          <div className="flex flex-wrap gap-4 text-sm text-white/90">
+            <a href="tel:+998901234567" className="transition hover:text-white">
+              +998 90 123 45 67
+            </a>
+            <a href="mailto:info@smartcam.uz" className="transition hover:text-white">
+              info@smartcam.uz
+            </a>
           </div>
         </div>
       </footer>
@@ -1263,7 +1110,7 @@ const Index = () => {
               </div>
               <Button
                 disabled={!cart.length}
-                className="h-12 w-full rounded-full bg-[#254A34] text-white hover:bg-[#1A3828]"
+                className="h-12 w-full rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]"
                 onClick={openCheckout}
               >
                 <CreditCard className="h-4 w-4" />

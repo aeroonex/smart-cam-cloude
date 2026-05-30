@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, BadgeCheck, Loader2, Mail, ShieldCheck, Truck } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
+import { ArrowLeft, BadgeCheck, Loader2, Lock, ShieldCheck, Truck, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,9 @@ import { getAuthErrorMessage } from "@/lib/auth-errors";
 const Login = () => {
   const navigate = useNavigate();
   const { user, authError, clearAuthError } = useSessionContext();
-  const [email, setEmail] = useState("");
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [emailLoading, setEmailLoading] = useState(false);
-  const [localMessage, setLocalMessage] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,51 +22,36 @@ const Login = () => {
     }
   }, [navigate, user]);
 
-  const signInWithGoogle = async () => {
-    setGoogleLoading(true);
-    setLocalError(null);
-    setLocalMessage(null);
+  const signInWithPassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
-
-    if (error) {
-      setLocalError(getAuthErrorMessage(error));
-      setGoogleLoading(false);
-      return;
-    }
-  };
-
-  const signInWithMagicLink = async () => {
-    if (!email.trim()) {
-      setLocalError("Email manzilini kiriting.");
-      setLocalMessage(null);
+    const login = username.trim();
+    if (!login) {
+      setLocalError("Foydalanuvchi nomini kiriting.");
       return;
     }
 
-    setEmailLoading(true);
-    setLocalError(null);
-    setLocalMessage(null);
+    if (!password) {
+      setLocalError("Parolni kiriting.");
+      return;
+    }
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
+    setLoading(true);
+    setLocalError(null);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: login,
+      password,
     });
 
-    setEmailLoading(false);
+    setLoading(false);
 
     if (error) {
       setLocalError(getAuthErrorMessage(error));
       return;
     }
 
-    setLocalMessage("Emailingizga kirish havolasi yuborildi.");
+    navigate("/", { replace: true });
   };
 
   return (
@@ -102,8 +86,8 @@ const Login = () => {
                   Hisobingizga kiring va buyurtmalaringizni boshqaring.
                 </h1>
                 <p className="max-w-xl text-base leading-7 text-[#5C7260] sm:text-lg">
-                  Google orqali tez kirish yoki email magic link bilan xavfsiz tarzda
-                  SmartCam hisobingizga kiring.
+                  Foydalanuvchi nomi va parol bilan SmartCam hisobingizga xavfsiz
+                  kiring.
                 </p>
               </div>
 
@@ -150,7 +134,7 @@ const Login = () => {
             <div className="mb-6 space-y-2 text-center">
               <h2 className="text-3xl font-extrabold text-[#1A3828]">Kirish</h2>
               <p className="text-sm leading-6 text-[#5C7260]">
-                Google yoki email magic link orqali SmartCam hisobingizga kiring.
+                Foydalanuvchi nomi va parolingizni kiriting.
               </p>
             </div>
 
@@ -159,6 +143,7 @@ const Login = () => {
                 <AlertDescription className="flex items-center justify-between gap-3 text-sm">
                   <span>{authError || localError}</span>
                   <button
+                    type="button"
                     className="font-semibold underline"
                     onClick={() => {
                       clearAuthError();
@@ -171,54 +156,55 @@ const Login = () => {
               </Alert>
             ) : null}
 
-            {localMessage ? (
-              <Alert className="mb-5 rounded-3xl border-[#7CAE7A]/25 bg-[#edf4ec] text-[#2f6b43]">
-                <AlertDescription className="text-sm">{localMessage}</AlertDescription>
-              </Alert>
-            ) : null}
-
-            <div className="space-y-4 rounded-[28px] border border-[#dbe7d8] bg-[#fcfdfc] p-4 sm:p-5">
-              <Button
-                type="button"
-                onClick={signInWithGoogle}
-                disabled={googleLoading}
-                className="h-12 w-full rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]"
-              >
-                {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Google orqali kirish
-              </Button>
-
-              <div className="relative py-2 text-center text-sm text-[#5C7260]">
-                <span className="relative z-10 bg-[#fcfdfc] px-3">yoki</span>
-                <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-[#dbe7d8]" />
-              </div>
-
+            <form
+              onSubmit={signInWithPassword}
+              className="space-y-4 rounded-[28px] border border-[#dbe7d8] bg-[#fcfdfc] p-4 sm:p-5"
+            >
               <div className="space-y-3">
-                <label className="block text-sm font-semibold text-[#4A7A5A]">
-                  Email manzili
+                <label htmlFor="username" className="block text-sm font-semibold text-[#4A7A5A]">
+                  Foydalanuvchi nomi
                 </label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a907d]" />
+                  <User className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a907d]" />
                   <Input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="siz@email.com"
+                    id="username"
+                    type="text"
+                    autoComplete="username"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                    placeholder="foydalanuvchi@email.com"
                     className="h-12 rounded-2xl border-[#dbe7d8] bg-white pl-11"
                   />
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={signInWithMagicLink}
-                  disabled={emailLoading}
-                  className="h-12 w-full rounded-full border-[#dbe7d8] bg-white text-[#254A34] hover:bg-[#edf4ec]"
-                >
-                  {emailLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                  Magic link yuborish
-                </Button>
               </div>
-            </div>
+
+              <div className="space-y-3">
+                <label htmlFor="password" className="block text-sm font-semibold text-[#4A7A5A]">
+                  Parol
+                </label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a907d]" />
+                  <Input
+                    id="password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="••••••••"
+                    className="h-12 rounded-2xl border-[#dbe7d8] bg-white pl-11"
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-12 w-full rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Kirish
+              </Button>
+            </form>
           </section>
         </div>
       </div>

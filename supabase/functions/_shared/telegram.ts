@@ -14,6 +14,51 @@ export async function telegramRequest(token: string, method: string, body?: Reco
   return data.result;
 }
 
+function isIgnorableTelegramError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("message is not modified") ||
+    message.includes("message to edit not found") ||
+    message.includes("there is no text in the message to edit")
+  );
+}
+
+export async function telegramRequestSafe(
+  token: string,
+  method: string,
+  body?: Record<string, unknown>,
+) {
+  try {
+    return await telegramRequest(token, method, body);
+  } catch (error) {
+    if (isIgnorableTelegramError(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export function parseCallbackData(data: string) {
+  const firstColon = data.indexOf(":");
+  if (firstColon === -1) {
+    return { action: data, token: null, extra: null };
+  }
+
+  const action = data.slice(0, firstColon);
+  const rest = data.slice(firstColon + 1);
+  const lastColon = rest.lastIndexOf(":");
+
+  if (lastColon === -1) {
+    return { action, token: rest, extra: null };
+  }
+
+  return {
+    action,
+    token: rest.slice(0, lastColon),
+    extra: rest.slice(lastColon + 1),
+  };
+}
+
 export function formatPrice(value: number) {
   return `${new Intl.NumberFormat("uz-UZ").format(value)} so'm`;
 }
@@ -28,8 +73,17 @@ export function encodeOrderToken(orderId: string) {
   return orderId.replace(/-/g, "_");
 }
 
+export function encodeOrderRef(orderId: string) {
+  return orderId.replace(/-/g, "").slice(0, 8).toLowerCase();
+}
+
 export function decodeOrderToken(token: string) {
   return normalizeUuid(token.replace(/_/g, ""));
+}
+
+export function isShortOrderRef(token: string) {
+  const clean = token.replace(/_/g, "").toLowerCase();
+  return /^[a-f0-9]{6,12}$/.test(clean);
 }
 
 export async function signLinkPayload(token: string, raw: string) {

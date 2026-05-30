@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@500;600;700;800&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,38 +6,37 @@
 
 @layer base {
   :root {
-    --background: 120 33% 98%;
-    --foreground: 135 28% 14%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 135 28% 14%;
+    --card-foreground: 0 0% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 135 28% 14%;
+    --popover-foreground: 0 0% 12%;
     --primary: 23 86% 54%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 111 28% 92%;
-    --secondary-foreground: 137 29% 24%;
-    --muted: 120 25% 95%;
-    --muted-foreground: 130 14% 43%;
-    --accent: 111 35% 90%;
-    --accent-foreground: 137 29% 24%;
+    --secondary: 28 100% 97%;
+    --secondary-foreground: 23 70% 40%;
+    --muted: 30 40% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 28 100% 96%;
+    --accent-foreground: 23 86% 40%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 110 20% 88%;
-    --input: 110 20% 88%;
+    --border: 28 30% 92%;
+    --input: 28 30% 92%;
     --ring: 23 86% 54%;
-    --radius: 1.25rem;
+    --radius: 1rem;
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 135 28% 14%;
+    --sidebar-foreground: 0 0% 12%;
     --sidebar-primary: 23 86% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 111 35% 90%;
-    --sidebar-accent-foreground: 137 29% 24%;
-    --sidebar-border: 110 20% 88%;
+    --sidebar-accent: 28 100% 96%;
+    --sidebar-accent-foreground: 23 86% 40%;
+    --sidebar-border: 28 30% 92%;
     --sidebar-ring: 23 86% 54%;
-    --brand-sage: 124 26% 58%;
-    --brand-forest: 138 32% 22%;
     --brand-orange: 23 86% 54%;
-    --brand-cream: 120 33% 98%;
+    --brand-orange-dark: 23 78% 48%;
+    --brand-cream: 28 100% 98%;
   }
 
   * {
@@ -51,9 +50,6 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "DM Sans", sans-serif;
-    background-image: url("/assets/smartcam-bg-pattern.png");
-    background-size: 960px;
-    background-attachment: fixed;
   }
 
   h1,
@@ -66,20 +62,16 @@
   }
 
   ::selection {
-    background: rgba(238, 117, 38, 0.18);
+    background: rgba(238, 117, 38, 0.2);
   }
 }
 
 @layer utilities {
   .container-shell {
-    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
   }
 
   .panel-surface {
-    @apply rounded-[28px] border border-white/70 bg-white/90 shadow-[0_18px_60px_rgba(44,90,61,0.10)] backdrop-blur;
-  }
-
-  .soft-ring {
-    @apply ring-1 ring-[#7CAE7A]/20;
+    @apply rounded-2xl border border-orange-100/80 bg-white shadow-[0_8px_32px_rgba(238,117,38,0.08)];
   }
 }

@@ -24,7 +24,7 @@ serve(async (req) => {
     const botInfo = await telegramRequest(botToken, "getMe");
     const setupResult = await telegramRequest(botToken, "setWebhook", {
       url: webhookUrl,
-      allowed_updates: ["message", "edited_message"],
+      allowed_updates: ["message", "edited_message", "callback_query"],
       drop_pending_updates: false,
     });
 
