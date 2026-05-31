@@ -1,3 +1,7 @@
+.env
+.env.local
+.env.*.local
+
 # Logs
 logs
 *.log
@@ -23,3 +27,6 @@ dist-ssr
 *.sln
 *.sw?
 .dyad/
+
+# Media uploads (server localida saqlanadi, git'ga kirmasin)
+uploads/

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vite-frontend",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 8080
+    },
+    {
+      "name": "media-server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server/index.cjs"],
+      "port": 3001
+    }
+  ]
+}
