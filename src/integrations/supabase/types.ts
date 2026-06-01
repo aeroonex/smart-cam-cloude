@@ -229,6 +229,8 @@ export interface Database {
           rating: number;
           comment: string | null;
           created_at: string;
+          status: "pending" | "approved" | "rejected";
+          is_approved: boolean;
         };
         Insert: {
           id?: string;
@@ -237,6 +239,8 @@ export interface Database {
           rating: number;
           comment?: string | null;
           created_at?: string;
+          status?: "pending" | "approved" | "rejected";
+          is_approved?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["product_reviews"]["Insert"]>;
       };

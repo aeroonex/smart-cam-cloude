@@ -44,15 +44,15 @@ const SPEC_PRESETS: Record<string, string[]> = {
 
 type PForm = {
   name: string; description: string; price: string; discount_percent: string;
-  images: string; category: string; store_id: string;
-  specs: SpecEntry[];
+  stock_count: string; images: string; category: string; store_id: string;
+  warranty: string; specs: SpecEntry[];
 };
 
 type SpecEntry = { key: string; value: string };
 
 const EMPTY: PForm = {
   name: "", description: "", price: "", discount_percent: "",
-  images: "", category: "", store_id: "", specs: [],
+  stock_count: "", images: "", category: "", store_id: "", warranty: "", specs: [],
 };
 
 type BulkRow = { name: string; price: number; category: string; description: string };
@@ -115,11 +115,13 @@ export function AdminProducts() {
       price: discPct > 0 ? Math.round(origPrice * (1 - discPct / 100)) : origPrice,
       original_price: discPct > 0 ? origPrice : null,
       discount_percent: discPct || null,
+      stock_count: Number(addForm.stock_count) || 0,
       images: parseImages(addForm.images),
       category: addForm.category || null,
       specifications: specsToObject(addForm.specs),
       store_id: addForm.store_id || null,
       store_name: store?.name ?? null,
+      warranty: addForm.warranty.trim() || null,
       status: "active",
     } as Record<string, unknown>);
     setSaving(false);
@@ -139,11 +141,13 @@ export function AdminProducts() {
       price: discPct > 0 ? Math.round(origPrice * (1 - discPct / 100)) : origPrice,
       original_price: discPct > 0 ? origPrice : null,
       discount_percent: discPct || null,
+      stock_count: Number(editForm.stock_count) || 0,
       images: parseImages(editForm.images),
       category: editForm.category || null,
       specifications: specsToObject(editForm.specs),
       store_id: editForm.store_id || null,
       store_name: store?.name ?? null,
+      warranty: editForm.warranty.trim() || null,
     } as Record<string, unknown>).eq("id", editId);
     setSaving(false);
     if (error) toast.error("Saqlashda xato.");
@@ -223,9 +227,11 @@ export function AdminProducts() {
       description: p.description ?? "",
       price: String(p.original_price ?? p.price),
       discount_percent: String(p.discount_percent ?? ""),
+      stock_count: String(p.stock_count ?? 0),
       images: (p.images ?? []).join("\n"),
       category: p.category ?? "",
       store_id: p.store_id ?? "",
+      warranty: (p as unknown as { warranty?: string }).warranty ?? "",
       specs: objectToSpecs(p.specifications as Record<string, string> | null),
     });
     setEditId(p.id);
@@ -241,22 +247,24 @@ export function AdminProducts() {
   return (
     <div className="space-y-5">
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-          <Input placeholder="Mahsulot qidirish..."
-            className="pl-9 h-9 w-56 rounded-xl"
-            value={search} onChange={e => setSearch(e.target.value)} />
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex gap-2 flex-1 min-w-0">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <Input placeholder="Mahsulot qidirish..."
+              className="pl-9 h-9 w-full rounded-xl"
+              value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
+            className="h-9 rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none shrink-0 max-w-[160px]">
+            <option value="">Barcha kat.</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
         </div>
-        <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-          className="h-9 rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none">
-          <option value="">Barcha kategoriyalar</option>
-          {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-        <div className="ml-auto flex gap-2">
+        <div className="flex gap-2 shrink-0">
           <Button variant="outline" size="sm" className="rounded-xl gap-1.5"
             onClick={() => bulkRef.current?.click()}>
-            <Upload className="h-4 w-4" />Bulk Upload
+            <Upload className="h-4 w-4" /><span className="hidden sm:inline">Bulk Upload</span>
           </Button>
           <input ref={bulkRef} type="file" accept=".csv,.txt" className="hidden"
             onChange={e => handleBulkFile(e.target.files)} />
@@ -292,24 +300,20 @@ export function AdminProducts() {
 
       {/* Dynamic price update */}
       <div className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Narxlarni dynamic yangilash</label>
-            <div className="flex items-center gap-2">
-              <select value={priceUpdateCat} onChange={e => setPriceUpdateCat(e.target.value)}
-                className="h-9 rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none">
-                <option value="">Barcha kategoriyalar</option>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <Input placeholder="+10 yoki -5 (%)" value={priceUpdatePct}
-                onChange={e => setPriceUpdatePct(e.target.value)} className="h-9 w-36 rounded-xl" />
-              <Button onClick={applyPriceUpdate} disabled={priceUpdating}
-                variant="outline" className="h-9 rounded-xl border-orange-200 text-[#EE7526]">
-                {priceUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                Yangilash
-              </Button>
-            </div>
-          </div>
+        <label className="mb-2 block text-xs font-semibold text-neutral-500 uppercase tracking-wide">Narxlarni dynamic yangilash</label>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+          <select value={priceUpdateCat} onChange={e => setPriceUpdateCat(e.target.value)}
+            className="h-9 rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none w-full sm:w-auto">
+            <option value="">Barcha kategoriyalar</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <Input placeholder="+10 yoki -5 (%)" value={priceUpdatePct}
+            onChange={e => setPriceUpdatePct(e.target.value)} className="h-9 w-full sm:w-36 rounded-xl" />
+          <Button onClick={applyPriceUpdate} disabled={priceUpdating}
+            variant="outline" className="h-9 rounded-xl border-orange-200 text-[#EE7526] w-full sm:w-auto">
+            {priceUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Yangilash
+          </Button>
         </div>
       </div>
 
@@ -417,6 +421,9 @@ export function AdminProducts() {
                   )}
                 </div>
                 <p className="text-[10px] text-neutral-400">{p.sold_count} ta sotildi</p>
+                <p className={`text-[10px] font-semibold ${p.stock_count === 0 ? "text-red-500" : p.stock_count <= 5 ? "text-amber-500" : "text-emerald-600"}`}>
+                  {p.stock_count === 0 ? "Tugagan" : p.stock_count <= 5 ? `⚠ ${p.stock_count} ta qoldi` : `✓ ${p.stock_count} ta omborda`}
+                </p>
 
                 <div className="mt-3 space-y-2">
                   <button onClick={() => void toggleStock(p.id, p.status)}
@@ -528,6 +535,18 @@ function ProductFormFields({
             </p>
           )}
         </div>
+        {/* Stock count */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Ombordagi miqdor (dona) *</label>
+          <Input type="number" min="0" value={form.stock_count}
+            onChange={e => setForm(f => ({ ...f, stock_count: e.target.value }))}
+            placeholder="100" className="rounded-xl" />
+          {form.stock_count !== "" && (
+            <p className={`text-xs font-medium ${Number(form.stock_count) === 0 ? "text-red-500" : Number(form.stock_count) <= 5 ? "text-amber-500" : "text-emerald-600"}`}>
+              {Number(form.stock_count) === 0 ? "⚠ Tugagan — xaridorga «Tugadi» ko'rinadi" : Number(form.stock_count) <= 5 ? `⚠ Faqat ${form.stock_count} ta qoldi` : `✓ ${form.stock_count} ta mavjud`}
+            </p>
+          )}
+        </div>
         {/* Category */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Kategoriya</label>
@@ -552,6 +571,20 @@ function ProductFormFields({
           {stores.length === 0 && (
             <p className="text-xs text-neutral-400">Hamkorlar bo'limidan do'kon qo'shing</p>
           )}
+        </div>
+        {/* Warranty */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Kafolat muddati</label>
+          <select value={form.warranty}
+            onChange={e => setForm(f => ({ ...f, warranty: e.target.value }))}
+            className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-[#EE7526]/30">
+            <option value="">— Kafolat yo'q —</option>
+            <option value="6 oy">6 oy</option>
+            <option value="12 oy">12 oy</option>
+            <option value="18 oy">18 oy</option>
+            <option value="24 oy">24 oy</option>
+            <option value="36 oy">36 oy</option>
+          </select>
         </div>
         {/* Description */}
         <div className="space-y-1.5 sm:col-span-2">

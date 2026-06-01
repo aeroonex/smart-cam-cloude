@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ChevronDown, Flame, Heart, Home, LayoutDashboard, Loader2,
-  LogOut, MapPin, MessageCircle, Package, Play, Search, ShoppingCart, Star, UserRound,
+  CheckCircle2, ChevronDown, Flame, Heart, Home, LayoutDashboard, Loader2,
+  LogOut, MapPin, MessageCircle, Package, Play, Search, ShieldCheck, ShoppingCart, Star, UserRound,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -38,9 +38,11 @@ import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials } from "@/lib/format";
 import type { Database } from "@/integrations/supabase/types";
+import { useQuery } from "@tanstack/react-query";
 
 type OrderItem = { product_id: string; product_name: string; price: number; quantity: number };
 type Tab = "sale" | "recommended" | "top";
+type ActiveSection = "home" | "catalog" | "orders" | "wallet";
 type PromoSectionRow = Database["public"]["Tables"]["promo_sections"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
@@ -73,40 +75,49 @@ const Index = () => {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [telegramLinkLoading, setTelegramLinkLoading] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"home" | "orders" | "wallet">("home");
+  const [activeSection, setActiveSection] = useState<ActiveSection>("home");
+  const [catalogCategory, setCatalogCategory] = useState("");
   const [tab, setTab] = useState<Tab>("recommended");
   const [searchInput, setSearchInput] = useState("");
   const [catalogOpen, setCatalogOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [promoSections, setPromoSections] = useState<PromoSectionRow[]>([]);
   const [videoCatalogOpen, setVideoCatalogOpen] = useState(false);
   const catalogRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("users").select("role").eq("id", user.id).single().then(({ data }) => {
-      if (data?.role === "admin") setIsAdmin(true);
-    });
-  }, [user]);
+  const { data: adminData } = useQuery({
+    queryKey: ["isAdmin", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("users").select("role").eq("id", user!.id).single();
+      return data?.role === "admin";
+    },
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+  });
+  const isAdmin = adminData ?? false;
 
-  useEffect(() => {
-    supabase.from("promo_sections").select("*").eq("is_active", true).order("sort_order")
-      .then(({ data }) => { if (data) setPromoSections(data); });
-  }, []);
+  const { data: promoSections = [] } = useQuery<PromoSectionRow[]>({
+    queryKey: ["promoSections"],
+    queryFn: async () => {
+      const { data } = await supabase.from("promo_sections").select("*").eq("is_active", true).order("sort_order");
+      return data ?? [];
+    },
+    staleTime: 5 * 60_000,
+  });
 
-  const displayed = (() => {
+  const displayed = useMemo(() => {
     if (tab === "sale") return [...products].sort((a, b) => h(a.id, 7) % 60 - h(b.id, 7) % 60).reverse();
     if (tab === "top") return [...products].sort((a, b) => h(b.id, 99) - h(a.id, 99));
     return products.filter((p) => p.is_recommended);
-  })();
+  }, [products, tab]);
 
-  // Recently viewed products (hydrated)
-  const recentProducts = viewedIds
-    .map((id) => products.find((p) => p.id === id))
-    .filter((p): p is Product => !!p)
-    .slice(0, 12);
+  const recentProducts = useMemo(() =>
+    viewedIds
+      .map((id) => products.find((p) => p.id === id))
+      .filter((p): p is Product => !!p)
+      .slice(0, 12),
+    [viewedIds, products]);
 
   const goHome = () => { setActiveSection("home"); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const goCatalog = (cat = "") => { setActiveSection("catalog"); setCatalogCategory(cat); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   const showOrders = async () => {
     if (!user) { navigate("/login"); return; }
@@ -410,6 +421,17 @@ const Index = () => {
               </p>
             </footer>
           </>
+        ) : activeSection === "catalog" ? (
+          <CatalogSection
+            products={products}
+            loading={productsLoading}
+            category={catalogCategory}
+            onCategoryChange={setCatalogCategory}
+            onAddToCart={addToCart}
+            inWishlist={inWishlist}
+            onToggleWishlist={toggleWishlist}
+            formatPrice={(n) => n.toLocaleString("uz-UZ") + " so'm"}
+          />
         ) : activeSection === "orders" ? (
           <div className="mx-auto max-w-7xl px-3 py-6">
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -520,8 +542,8 @@ const Index = () => {
             <span className="text-[10px] font-medium">{t("home")}</span>
           </button>
 
-          <button onClick={() => setCatalogOpen((o) => !o)}
-            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition text-neutral-500">
+          <button onClick={() => goCatalog()}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition ${activeSection === "catalog" ? "text-[#EE7526]" : "text-neutral-500"}`}>
             <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
               <rect x="3" y="3" width="8" height="8" rx="1.5" />
               <rect x="13" y="3" width="8" height="8" rx="1.5" />
@@ -640,5 +662,244 @@ const Index = () => {
     </div>
   );
 };
+
+// ─────────────────────────────────────────────
+// CATALOG SECTION
+// ─────────────────────────────────────────────
+const CATEGORIES = [
+  "Mobil telefonlar", "Kompyuter & Noutbuk", "Kiyim-kechak", "Poyabzal",
+  "Uy va ofis", "Avtomobil", "Bolalar tovarlari", "O'yinlar & Hobby",
+  "Sport & Sog'liq", "Soatlar & Zargarlik", "Sumkalar", "Asbob-uskuna",
+  "Go'zallik & Parfyumeriya", "Kameralar va xavfsizlik",
+];
+
+type CatalogProps = {
+  products: Product[];
+  loading: boolean;
+  category: string;
+  onCategoryChange: (c: string) => void;
+  onAddToCart: (p: Product) => void;
+  inWishlist: (id: string) => boolean;
+  onToggleWishlist: (id: string) => void;
+  formatPrice: (n: number) => string;
+};
+
+function CatalogCard({ product, onAddToCart, inWishlist, onToggleWishlist }: {
+  product: Product;
+  onAddToCart: (p: Product) => void;
+  inWishlist: boolean;
+  onToggleWishlist: () => void;
+}) {
+  const navigate = useNavigate();
+  const { format: formatPrice } = useCurrency();
+  const { cart } = useCart();
+
+  const img = product.images?.[0] ?? null;
+  const outOfStock = product.stock_count === 0;
+  const inCart = cart.some(item => item.id === product.id);
+  const cartQty = cart.find(item => item.id === product.id)?.qty ?? 0;
+  const discountPct = (product as unknown as { discount_percent?: number }).discount_percent;
+  const origPrice = (product as unknown as { original_price?: number }).original_price;
+  const warranty = (product as unknown as { warranty?: string }).warranty;
+  const sold = product.sold_count;
+  const rating = sold > 0 ? (4.1 + (product.id.charCodeAt(0) % 9) / 10).toFixed(1) : null;
+
+  return (
+    <article
+      className="group cursor-pointer overflow-hidden rounded-2xl bg-white shadow-sm transition active:scale-[0.98]"
+      onClick={() => navigate(`/product/${product.id}`)}
+    >
+      {/* Image */}
+      <div className="relative overflow-hidden bg-[#f5f5f5]" style={{ aspectRatio: "1/1" }}>
+        {img ? (
+          <img
+            src={img}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${outOfStock ? "opacity-60" : ""}`}
+            onError={e => { e.currentTarget.style.display = "none"; }}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <ShoppingCart className="h-12 w-12 text-neutral-200" />
+          </div>
+        )}
+
+        {/* Discount badge */}
+        {discountPct && !outOfStock && (
+          <span className="absolute left-2.5 top-2.5 rounded-xl bg-red-500 px-2 py-0.5 text-xs font-bold text-white shadow">
+            -{discountPct}%
+          </span>
+        )}
+
+        {/* Tugadi overlay */}
+        {outOfStock && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <span className="rounded-2xl bg-black/70 px-3 py-1.5 text-xs font-bold text-white">Tugadi</span>
+          </div>
+        )}
+
+        {/* In-cart badge */}
+        {inCart && !outOfStock && (
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-[#EE7526] px-2 py-0.5 text-[10px] font-bold text-white shadow">
+            <CheckCircle2 className="h-3 w-3" /> {cartQty} ta
+          </div>
+        )}
+
+        {/* Wishlist */}
+        <button
+          className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition hover:scale-110"
+          onClick={e => { e.stopPropagation(); onToggleWishlist(); toast.success(inWishlist ? "Sevimlilardan olib tashlandi" : "Sevimlilariga qo'shildi"); }}
+        >
+          <Heart className={`h-3.5 w-3.5 ${inWishlist ? "fill-red-500 text-red-500" : "text-neutral-400"}`} />
+        </button>
+      </div>
+
+      {/* Info */}
+      <div className="px-3 py-2.5">
+        {/* Warranty */}
+        {warranty && (
+          <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-emerald-600 uppercase tracking-wide">
+            <ShieldCheck className="h-3 w-3" /> Kafolat {warranty}
+          </div>
+        )}
+
+        {/* Price */}
+        <div className="flex items-baseline gap-1.5">
+          <p className="text-[17px] font-extrabold leading-tight text-neutral-900">
+            {formatPrice(Number(product.price))}
+          </p>
+        </div>
+        {origPrice && origPrice > Number(product.price) && (
+          <p className="text-xs text-neutral-400 line-through">{formatPrice(origPrice)}</p>
+        )}
+
+        {/* Name */}
+        <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-neutral-700">
+          {product.name}
+        </p>
+
+        {/* Rating */}
+        {rating && sold > 0 && (
+          <div className="mt-1.5 flex items-center gap-1">
+            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+            <span className="text-[12px] font-semibold text-neutral-700">{rating}</span>
+            <span className="text-[11px] text-neutral-400">
+              ({sold > 999 ? (sold / 1000).toFixed(1) + "k" : sold})
+            </span>
+          </div>
+        )}
+
+        {/* Add to cart button */}
+        {!outOfStock && (
+          <button
+            onClick={e => { e.stopPropagation(); onAddToCart(product); toast.success("Savatga qo'shildi"); }}
+            className={`mt-2.5 w-full rounded-xl py-2 text-[13px] font-bold transition active:scale-95 ${
+              inCart ? "bg-emerald-500 text-white hover:bg-emerald-600" : "bg-[#EE7526] text-white hover:bg-[#d8661c]"
+            }`}
+          >
+            {inCart ? "Yana qo'shish" : "Savatga"}
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function CatalogSection({ products, loading, category, onCategoryChange, onAddToCart, inWishlist, onToggleWishlist }: CatalogProps) {
+  const { format: formatPrice } = useCurrency();
+  const [search, setSearch] = useState("");
+  const navigate = useNavigate();
+
+  const filtered = useMemo(() => {
+    let list = products.filter(p => p.status === "active");
+    if (category) list = list.filter(p => p.category === category);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(p => p.name.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q));
+    }
+    return list;
+  }, [products, category, search]);
+
+  return (
+    <div className="min-h-screen">
+      {/* Search bar */}
+      <div className="sticky top-0 z-30 bg-white px-3 pt-3 pb-2 shadow-sm">
+        <div className="flex overflow-hidden rounded-2xl border border-neutral-200 bg-[#f7f7f7]">
+          <Search className="ml-3 h-4 w-4 shrink-0 self-center text-neutral-400" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Mahsulot qidiring..."
+            className="flex-1 bg-transparent px-2 py-2.5 text-sm outline-none"
+          />
+          {search && (
+            <button onClick={() => setSearch("")} className="px-3 text-neutral-400 font-bold text-lg">×</button>
+          )}
+        </div>
+
+        {/* Category chips */}
+        <div className="mt-2 flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+          {["", ...CATEGORIES].map(cat => (
+            <button
+              key={cat || "all"}
+              onClick={() => onCategoryChange(cat)}
+              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-all ${
+                category === cat
+                  ? "border-neutral-900 bg-neutral-900 text-white"
+                  : "border-neutral-200 bg-white text-neutral-600"
+              }`}
+            >
+              {cat || "Barchasi"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Results count */}
+      <div className="px-3 py-2 text-xs text-neutral-400 font-medium">
+        {loading ? "" : `${filtered.length} ta mahsulot`}
+        {category && <span className="ml-1 text-[#EE7526]">· {category}</span>}
+      </div>
+
+      {/* Grid */}
+      <div className="px-3 pb-4">
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="overflow-hidden rounded-2xl bg-white">
+                <div className="aspect-square animate-pulse bg-neutral-100" />
+                <div className="space-y-2 p-3">
+                  <div className="h-4 w-2/3 animate-pulse rounded bg-neutral-100" />
+                  <div className="h-3 w-1/2 animate-pulse rounded bg-neutral-100" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filtered.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {filtered.map(product => (
+              <CatalogCard
+                key={product.id}
+                product={product}
+                onAddToCart={onAddToCart}
+                inWishlist={inWishlist(product.id)}
+                onToggleWishlist={() => onToggleWishlist(product.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-16 text-center">
+            <Search className="mb-3 h-10 w-10 text-neutral-300" />
+            <p className="font-semibold text-neutral-500">Mahsulot topilmadi</p>
+            <button onClick={() => { setSearch(""); onCategoryChange(""); }}
+              className="mt-2 text-sm font-semibold text-[#EE7526]">Filterni tozalash</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default Index;

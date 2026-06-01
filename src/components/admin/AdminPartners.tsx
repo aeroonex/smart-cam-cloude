@@ -199,8 +199,8 @@ CREATE POLICY "Admin full access" ON stores USING (true);`}
           <p className="text-neutral-400">Hali hamkor do'kon qo'shilmagan</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-neutral-100 bg-white shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded-2xl border border-neutral-100 bg-white shadow-sm overflow-x-auto">
+          <table className="w-full text-sm min-w-[560px]">
             <thead>
               <tr className="border-b border-neutral-100 bg-neutral-50 text-left">
                 <th className="px-4 py-3 text-xs font-semibold uppercase text-neutral-400">Do'kon</th>

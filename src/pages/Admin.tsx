@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft, BarChart3, Bell, CreditCard, LayoutDashboard,
+  ArrowLeft, BarChart3, Bell, LayoutDashboard,
   Loader2, LogOut, Menu, MessageSquare, Package,
-  Settings, ShoppingBag, Store, Wallet, X,
+  Settings, ShoppingBag, Store, Users, Wallet, X,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import { AdminPartners } from "@/components/admin/AdminPartners";
 import { AdminFinance } from "@/components/admin/AdminFinance";
 import { AdminReviews } from "@/components/admin/AdminReviews";
 import { AdminSystem } from "@/components/admin/AdminSystem";
+import { AdminUsers } from "@/components/admin/AdminUsers";
 
 
 const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: string }[] = [
@@ -29,6 +30,7 @@ const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: str
   { id: "finance", label: "Moliya", icon: Wallet, sub: "Cashback & Balans" },
   { id: "reviews", label: "Izohlar", icon: MessageSquare, sub: "Moderatsiya" },
   { id: "system", label: "Tizim", icon: Settings, sub: "Logs & Xavfsizlik" },
+  { id: "users", label: "Foydalanuvchilar", icon: Users, sub: "Ro'yxat & Faollik" },
 ];
 
 export default function Admin() {
@@ -209,6 +211,7 @@ export default function Admin() {
           {section === "finance" && <AdminFinance />}
           {section === "reviews" && <AdminReviews />}
           {section === "system" && <AdminSystem />}
+          {section === "users" && <AdminUsers />}
         </main>
       </div>
     </div>

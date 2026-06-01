@@ -145,7 +145,7 @@ export function AdminOrders() {
           placeholder="Mijoz nomi, telefon yoki ID..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="h-9 w-60 rounded-xl border-neutral-200"
+          className="h-9 w-full sm:w-60 rounded-xl border-neutral-200"
         />
         <div className="flex gap-2 flex-wrap">
           <button
