@@ -10,7 +10,8 @@ async function fetchProducts(): Promise<Product[]> {
     .from("products")
     .select("*")
     .eq("status", "active")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(500);
 
   if (error) {
     toast.error("Mahsulotlarni yuklashda xato yuz berdi.");

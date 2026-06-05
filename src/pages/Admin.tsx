@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from "react";
 import {
   ArrowLeft, BarChart3, Bell, LayoutDashboard,
-  LogOut, Menu, MessageSquare, Package,
+  LogOut, Menu, MessageSquare, Package, Shield,
   Settings, ShoppingBag, Store, Truck, Users, Wallet, X,
 } from "lucide-react";
 import { BoxLoader } from "@/components/BoxLoader";
@@ -21,6 +21,8 @@ import { AdminReviews } from "@/components/admin/AdminReviews";
 import { AdminSystem } from "@/components/admin/AdminSystem";
 import { AdminUsers } from "@/components/admin/AdminUsers";
 import { AdminDelivery } from "@/components/admin/AdminDelivery";
+import { AdminTaxReport } from "@/components/admin/AdminTaxReport";
+import { AdminAuditLogs } from "@/components/admin/AdminAuditLogs";
 
 
 const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: string }[] = [
@@ -34,7 +36,9 @@ const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: str
   { id: "reviews", label: "Izohlar", icon: MessageSquare, sub: "Moderatsiya" },
   { id: "system", label: "Tizim", icon: Settings, sub: "Logs & Xavfsizlik" },
   { id: "users", label: "Foydalanuvchilar", icon: Users, sub: "Ro'yxat & Faollik" },
-];
+  { id: "tax", label: "Soliq Hisoboti", icon: BarChart3, sub: "YATT uchun Excel" },
+  { id: "audit", label: "Audit Logs", icon: Shield, sub: "Adminlar harakati" },
+] as const;
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -216,6 +220,24 @@ export default function Admin() {
           {section === "reviews" && <AdminReviews />}
           {section === "system" && <AdminSystem />}
           {section === "users" && <AdminUsers />}
+          {section === "tax" && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-bold">Soliq Hisoboti</h2>
+                <p className="text-sm text-gray-500">YATT uchun oylik moliyaviy hisobot va Excel eksport</p>
+              </div>
+              <AdminTaxReport />
+            </div>
+          )}
+          {section === "audit" && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-lg font-bold">Audit Logs</h2>
+                <p className="text-sm text-gray-500">Adminlar harakatlarining doimiy yozuvi</p>
+              </div>
+              <AdminAuditLogs />
+            </div>
+          )}
         </main>
       </div>
     </div>

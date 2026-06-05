@@ -87,10 +87,12 @@ export function AdminOrders() {
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    if (error) console.error("[AdminOrders] load:", error.message);
     setOrders((data as Order[]) ?? []);
     setLoading(false);
   }
