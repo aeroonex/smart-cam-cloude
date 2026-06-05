@@ -47,6 +47,7 @@ const CartPage = lazy(() => import("./pages/CartPage"));
 const OrdersPage = lazy(() => import("./pages/OrdersPage"));
 const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 const TrackPage = lazy(() => import("./pages/TrackPage"));
+const OrderPage = lazy(() => import("./pages/OrderPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -117,6 +118,7 @@ function AppRoutes() {
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/track" element={<TrackPage />} />
+        <Route path="/order" element={<OrderPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

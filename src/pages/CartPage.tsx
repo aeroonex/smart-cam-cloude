@@ -1,119 +1,34 @@
-import { useState } from "react";
 import { Minus, Plus, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { PageLayout } from "@/components/PageLayout";
-import { CartItemSkeleton } from "@/components/Skeleton";
 import { useCart } from "@/hooks/useCart";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useProducts } from "@/hooks/useProducts";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { useSessionContext } from "@/components/session-context-provider";
-import { CheckoutDialog } from "@/components/CheckoutDialog";
-import { OrderSuccess } from "@/components/OrderSuccess";
-import { useProfile } from "@/hooks/useProfile";
-import { useWallet } from "@/hooks/useWallet";
-import { supabase } from "@/integrations/supabase/client";
-import type { OrderItem } from "@/lib/format";
 
 const FREE_THRESHOLD = 150_000;
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const { cart, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { cart, cartTotal, updateQuantity, removeFromCart } = useCart();
   const { format } = useCurrency();
   const { products } = useProducts();
   const { user } = useSessionContext();
-  const { form, setForm, upsertForOrder } = useProfile(user);
-  const { cashbackBalance } = useWallet(user);
-
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [placingOrder, setPlacingOrder] = useState(false);
-  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
 
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
   const remaining = Math.max(0, FREE_THRESHOLD - cartTotal);
   const progressPct = Math.min((cartTotal / FREE_THRESHOLD) * 100, 100);
 
-  const checkoutDeliveryFee = (() => {
-    const seen = new Set<string>();
-    let total = 0;
-    for (const item of cart) {
-      if (item.delivery_provider_id && !seen.has(item.delivery_provider_id)) {
-        seen.add(item.delivery_provider_id);
-        total += item.delivery_provider_fee ?? 0;
-      }
-    }
-    return total;
-  })();
-
-  const placeOrder = async (opts: {
-    paymentMethod: string; promoCode?: string;
-    discountAmount: number; deliveryFee: number; addressDetail?: string;
-  }) => {
-    if (!user) { navigate("/login"); return; }
-    if (!cart.length) { toast.error("Savat hozircha bo'sh."); return; }
-    if (!form.full_name || !form.phone || !form.region) {
-      toast.error("Buyurtma uchun ism, telefon va hududni kiriting."); return;
-    }
-    setPlacingOrder(true);
-    const profileOk = await upsertForOrder(user);
-    if (!profileOk) { setPlacingOrder(false); return; }
-
-    const orderItems: OrderItem[] = cart.map((item) => ({
-      product_id: item.id, product_name: item.name, price: item.price, quantity: item.qty,
-    }));
-
-    const finalTotal = Math.max(0, cartTotal - opts.discountAmount) + opts.deliveryFee;
-
-    const { data: order, error } = await supabase.from("orders").insert({
-      user_id: user.id, items: orderItems, total_amount: finalTotal, status: "yangi",
-      payment_status: "unpaid", customer_name: form.full_name, customer_phone: form.phone,
-      customer_region: form.region, notes: form.notes || null,
-      payment_method: opts.paymentMethod,
-      promo_code: opts.promoCode ?? null,
-      discount_amount: opts.discountAmount,
-      order_delivery_fee: opts.deliveryFee,
-      address_detail: opts.addressDetail ?? null,
-    }).select("*").single();
-
-    setPlacingOrder(false);
-    if (error) { toast.error("Buyurtma yuborilmadi. Iltimos, qayta urinib ko'ring."); return; }
-
-    const totalCashback = cart.reduce((sum, item) => {
-      const p = products.find((pr) => pr.id === item.id);
-      return sum + (p?.cashback_amount ?? 0) * item.qty;
-    }, 0);
-    if (totalCashback > 0 && user) {
-      await supabase.from("users").update({ cashback_balance: cashbackBalance + totalCashback }).eq("id", user.id);
-    }
-
-    if (opts.promoCode) {
-      const { data: promo } = await supabase.from("promo_codes").select("uses_count").eq("code", opts.promoCode).single();
-      if (promo) {
-        await supabase.from("promo_codes").update({ uses_count: promo.uses_count + 1 }).eq("code", opts.promoCode);
-      }
-    }
-
-    clearCart();
-    setCheckoutOpen(false);
-    setForm((prev) => ({ ...prev, notes: "" }));
-    if (totalCashback > 0) toast.success(`${totalCashback.toLocaleString()} so'm cashback yig'ildi!`);
-    setSuccessOrderId(order.id);
-  };
-
   const handleCheckout = () => {
     if (!user) { navigate("/login"); return; }
-    setCheckoutOpen(true);
+    navigate("/order");
   };
 
   return (
-    <>
-    <PageLayout
-      title={cart.length > 0 ? `Savat · ${totalQty} ta` : "Savat"}
-    >
+    <PageLayout title={cart.length > 0 ? `Savat · ${totalQty} ta` : "Savat"}>
       {cart.length === 0 ? (
-        /* Empty state */
         <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
           <div className="mb-6 flex h-28 w-28 items-center justify-center rounded-full bg-neutral-100">
             <ShoppingBag className="h-14 w-14 text-neutral-300" />
@@ -164,7 +79,6 @@ export default function CartPage() {
               <div key={item.id}>
                 {idx > 0 && <div className="mx-4 h-px bg-neutral-50" />}
                 <div className="flex gap-3 px-4 py-4">
-                  {/* Image */}
                   <div
                     onClick={() => navigate(`/product/${item.id}`)}
                     className="h-[80px] w-[80px] shrink-0 overflow-hidden rounded-2xl bg-neutral-50 cursor-pointer active:scale-95 transition"
@@ -176,14 +90,10 @@ export default function CartPage() {
                       className="h-full w-full object-cover"
                     />
                   </div>
-
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="line-clamp-2 text-[13px] text-neutral-700 leading-snug">{item.name}</p>
                     <p className="mt-1.5 text-[17px] font-extrabold text-neutral-900">{format(item.price)}</p>
                     <p className="text-[11px] text-neutral-400">{format(item.price)} / dona</p>
-
-                    {/* Controls */}
                     <div className="mt-2.5 flex items-center justify-between">
                       <div className="flex items-center rounded-2xl border border-neutral-200 overflow-hidden">
                         <button
@@ -205,7 +115,6 @@ export default function CartPage() {
                           <Plus className="h-3.5 w-3.5" />
                         </button>
                       </div>
-
                       <button
                         onClick={() => { removeFromCart(item.id); toast("Savatdan olib tashlandi"); }}
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-400 active:scale-90 transition"
@@ -274,7 +183,7 @@ export default function CartPage() {
         </div>
       )}
 
-      {/* Sticky checkout — nav ustida, scroll qilinsa ham doim ko'rinadi */}
+      {/* Sticky checkout */}
       {cart.length > 0 && (
         <div className="fixed left-0 right-0 z-[199] px-4" style={{ bottom: "84px" }}>
           <div className="mx-auto max-w-lg">
@@ -291,7 +200,7 @@ export default function CartPage() {
               <div className="flex items-center justify-between px-5 py-3">
                 <div>
                   <p className="text-[11px] text-neutral-400 leading-none mb-0.5">
-                    {cart.reduce((s, i) => s + i.qty, 0)} ta mahsulot
+                    {totalQty} ta mahsulot
                   </p>
                   <p className="text-[19px] font-extrabold text-[#EE7526] leading-tight">
                     {format(cartTotal)}
@@ -310,22 +219,5 @@ export default function CartPage() {
         </div>
       )}
     </PageLayout>
-
-    <CheckoutDialog
-      open={checkoutOpen} onOpenChange={setCheckoutOpen}
-      cart={cart} cartTotal={cartTotal}
-      form={form} onFormChange={setForm}
-      placing={placingOrder}
-      onPlace={(opts) => void placeOrder(opts)}
-      deliveryFee={checkoutDeliveryFee}
-    />
-
-    {successOrderId && (
-      <OrderSuccess
-        orderId={successOrderId}
-        onClose={() => { setSuccessOrderId(null); navigate("/orders"); }}
-      />
-    )}
-  </>
   );
 }
