@@ -28,9 +28,18 @@ export default defineConfig(() => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: undefined,
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('@supabase')) return 'supabase';
+            if (id.includes('@radix-ui') || id.includes('cmdk') || id.includes('vaul')) return 'ui';
+            if (id.includes('recharts') || id.includes('d3')) return 'charts';
+            if (id.includes('react-router') || id.includes('react-dom') || id.includes('react/')) return 'react';
+            return 'vendor';
+          }
+        },
       },
     },
     chunkSizeWarningLimit: 600,
+    sourcemap: false,
   },
 }));

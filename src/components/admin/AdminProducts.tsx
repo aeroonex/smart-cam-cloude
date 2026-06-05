@@ -86,7 +86,7 @@ export function AdminProducts() {
   async function load() {
     setLoading(true);
     const [prodRes, storeRes, dpRes] = await Promise.all([
-      supabase.from("products").select("*").order("created_at", { ascending: false }),
+      supabase.from("products").select("*").order("created_at", { ascending: false }).limit(2000),
       (supabase.from("stores" as never).select("id, name, commission_percent") as unknown as Promise<{ data: Store[] | null }>),
       (supabase.from("delivery_providers" as never).select("id, name, company_name, service_fee").eq("is_active", true).order("name") as unknown as Promise<{ data: DeliveryProvider[] | null }>),
     ]);
@@ -112,10 +112,13 @@ export function AdminProducts() {
   }
 
   async function addProduct() {
-    if (!addForm.name.trim() || !addForm.price) { toast.error("Nom va narxni kiriting."); return; }
-    setSaving(true);
-    const discPct = Number(addForm.discount_percent) || 0;
+    if (!addForm.name.trim()) { toast.error("Mahsulot nomini kiriting."); return; }
     const origPrice = Number(addForm.price);
+    if (!origPrice || origPrice <= 0) { toast.error("To'g'ri narx kiriting."); return; }
+    const discPct = Number(addForm.discount_percent) || 0;
+    if (discPct < 0 || discPct >= 100) { toast.error("Chegirma 0–99% oralig'ida bo'lishi kerak."); return; }
+    if (Number(addForm.stock_count) < 0) { toast.error("Ombor miqdori manfiy bo'lishi mumkin emas."); return; }
+    setSaving(true);
     const store = stores.find(s => s.id === addForm.store_id);
     const dp = deliveryProviders.find(d => d.id === addForm.delivery_provider_id);
     const { error } = await supabase.from("products").insert({
