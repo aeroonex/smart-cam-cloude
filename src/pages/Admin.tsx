@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from "react";
 import {
   ArrowLeft, BarChart3, Bell, LayoutDashboard,
-  LogOut, Menu, MessageSquare, Package, Shield,
+  LogOut, MapPin, Menu, MessageSquare, Package, Shield,
   Settings, ShoppingBag, Store, Truck, Users, Wallet, X,
 } from "lucide-react";
 import { BoxLoader } from "@/components/BoxLoader";
@@ -23,6 +23,7 @@ import { AdminUsers } from "@/components/admin/AdminUsers";
 import { AdminDelivery } from "@/components/admin/AdminDelivery";
 import { AdminTaxReport } from "@/components/admin/AdminTaxReport";
 import { AdminAuditLogs } from "@/components/admin/AdminAuditLogs";
+import { AdminPickupPoints } from "@/components/admin/AdminPickupPoints";
 
 
 const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: string }[] = [
@@ -38,6 +39,7 @@ const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: str
   { id: "users", label: "Foydalanuvchilar", icon: Users, sub: "Ro'yxat & Faollik" },
   { id: "tax", label: "Soliq Hisoboti", icon: BarChart3, sub: "YATT uchun Excel" },
   { id: "audit", label: "Audit Logs", icon: Shield, sub: "Adminlar harakati" },
+  { id: "pickup_points", label: "Topshirish nuqtalari", icon: MapPin, sub: "Xaritada boshqarish" },
 ] as const;
 
 export default function Admin() {
@@ -238,6 +240,7 @@ export default function Admin() {
               <AdminAuditLogs />
             </div>
           )}
+          {section === "pickup_points" && <AdminPickupPoints />}
         </main>
       </div>
     </div>
