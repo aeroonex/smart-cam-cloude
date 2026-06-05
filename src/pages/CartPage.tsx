@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Minus, Plus, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -8,26 +9,106 @@ import { useCurrency } from "@/hooks/useCurrency";
 import { useProducts } from "@/hooks/useProducts";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { useSessionContext } from "@/components/session-context-provider";
+import { CheckoutDialog } from "@/components/CheckoutDialog";
+import { OrderSuccess } from "@/components/OrderSuccess";
+import { useProfile } from "@/hooks/useProfile";
+import { useWallet } from "@/hooks/useWallet";
+import { supabase } from "@/integrations/supabase/client";
+import type { OrderItem } from "@/lib/format";
 
 const FREE_THRESHOLD = 150_000;
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const { cart, cartTotal, updateQuantity, removeFromCart } = useCart();
+  const { cart, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
   const { format } = useCurrency();
   const { products } = useProducts();
   const { user } = useSessionContext();
+  const { form, setForm, upsertForOrder } = useProfile(user);
+  const { cashbackBalance } = useWallet(user);
+
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
 
   const totalQty = cart.reduce((s, i) => s + i.qty, 0);
   const remaining = Math.max(0, FREE_THRESHOLD - cartTotal);
   const progressPct = Math.min((cartTotal / FREE_THRESHOLD) * 100, 100);
 
+  const checkoutDeliveryFee = (() => {
+    const seen = new Set<string>();
+    let total = 0;
+    for (const item of cart) {
+      if (item.delivery_provider_id && !seen.has(item.delivery_provider_id)) {
+        seen.add(item.delivery_provider_id);
+        total += item.delivery_provider_fee ?? 0;
+      }
+    }
+    return total;
+  })();
+
+  const placeOrder = async (opts: {
+    paymentMethod: string; promoCode?: string;
+    discountAmount: number; deliveryFee: number; addressDetail?: string;
+  }) => {
+    if (!user) { navigate("/login"); return; }
+    if (!cart.length) { toast.error("Savat hozircha bo'sh."); return; }
+    if (!form.full_name || !form.phone || !form.region) {
+      toast.error("Buyurtma uchun ism, telefon va hududni kiriting."); return;
+    }
+    setPlacingOrder(true);
+    const profileOk = await upsertForOrder(user);
+    if (!profileOk) { setPlacingOrder(false); return; }
+
+    const orderItems: OrderItem[] = cart.map((item) => ({
+      product_id: item.id, product_name: item.name, price: item.price, quantity: item.qty,
+    }));
+
+    const finalTotal = Math.max(0, cartTotal - opts.discountAmount) + opts.deliveryFee;
+
+    const { data: order, error } = await supabase.from("orders").insert({
+      user_id: user.id, items: orderItems, total_amount: finalTotal, status: "yangi",
+      payment_status: "unpaid", customer_name: form.full_name, customer_phone: form.phone,
+      customer_region: form.region, notes: form.notes || null,
+      payment_method: opts.paymentMethod,
+      promo_code: opts.promoCode ?? null,
+      discount_amount: opts.discountAmount,
+      order_delivery_fee: opts.deliveryFee,
+      address_detail: opts.addressDetail ?? null,
+    }).select("*").single();
+
+    setPlacingOrder(false);
+    if (error) { toast.error("Buyurtma yuborilmadi. Iltimos, qayta urinib ko'ring."); return; }
+
+    const totalCashback = cart.reduce((sum, item) => {
+      const p = products.find((pr) => pr.id === item.id);
+      return sum + (p?.cashback_amount ?? 0) * item.qty;
+    }, 0);
+    if (totalCashback > 0 && user) {
+      await supabase.from("users").update({ cashback_balance: cashbackBalance + totalCashback }).eq("id", user.id);
+    }
+
+    if (opts.promoCode) {
+      const { data: promo } = await supabase.from("promo_codes").select("uses_count").eq("code", opts.promoCode).single();
+      if (promo) {
+        await supabase.from("promo_codes").update({ uses_count: promo.uses_count + 1 }).eq("code", opts.promoCode);
+      }
+    }
+
+    clearCart();
+    setCheckoutOpen(false);
+    setForm((prev) => ({ ...prev, notes: "" }));
+    if (totalCashback > 0) toast.success(`${totalCashback.toLocaleString()} so'm cashback yig'ildi!`);
+    setSuccessOrderId(order.id);
+  };
+
   const handleCheckout = () => {
     if (!user) { navigate("/login"); return; }
-    navigate("/checkout");
+    setCheckoutOpen(true);
   };
 
   return (
+    <>
     <PageLayout
       title={cart.length > 0 ? `Savat · ${totalQty} ta` : "Savat"}
     >
@@ -229,5 +310,22 @@ export default function CartPage() {
         </div>
       )}
     </PageLayout>
+
+    <CheckoutDialog
+      open={checkoutOpen} onOpenChange={setCheckoutOpen}
+      cart={cart} cartTotal={cartTotal}
+      form={form} onFormChange={setForm}
+      placing={placingOrder}
+      onPlace={(opts) => void placeOrder(opts)}
+      deliveryFee={checkoutDeliveryFee}
+    />
+
+    {successOrderId && (
+      <OrderSuccess
+        orderId={successOrderId}
+        onClose={() => { setSuccessOrderId(null); navigate("/orders"); }}
+      />
+    )}
+  </>
   );
 }
