@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { CheckCircle2, Clock, Loader2, MessageSquare, Package, Star, Trash2, XCircle } from "lucide-react";
+﻿import { useEffect, useState } from "react";
+import { CheckCircle2, Clock, MessageSquare, Package, Star, Trash2, XCircle } from "lucide-react";
+import { BoxLoader } from "@/components/BoxLoader";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,11 +62,7 @@ export function AdminReviews() {
     r, count: approved.filter(rv => rv.rating === r).length,
   }));
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-[#EE7526]" />
-    </div>
-  );
+  if (loading) return <BoxLoader className="py-20" />;
 
   return (
     <div className="space-y-5">
@@ -140,7 +137,7 @@ export function AdminReviews() {
             onClick={() => setTab(t.id)}
             className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
               tab === t.id
-                ? "bg-[#EE7526] text-white shadow-sm"
+                ? "bg-[#1d4f8a] text-white shadow-sm"
                 : "bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
             }`}
           >
@@ -156,7 +153,7 @@ export function AdminReviews() {
 
       {/* Pending alert */}
       {tab === "pending" && pending.length > 0 && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-amber-800">
           <b>{pending.length} ta izoh</b> sizning tasdiqlashingizni kutmoqda. Tasdiqlagan izohlar mahsulot sahifasida ko'rinadi.
         </div>
       )}
@@ -211,7 +208,7 @@ export function AdminReviews() {
                   </div>
                   {review.products?.name && (
                     <Link to={`/product/${review.product_id}`} target="_blank"
-                      className="mb-2 flex items-center gap-1 text-xs text-[#EE7526] hover:underline">
+                      className="mb-2 flex items-center gap-1 text-xs text-[#1d4f8a] hover:underline">
                       <Package className="h-3 w-3" />{review.products.name}
                     </Link>
                   )}

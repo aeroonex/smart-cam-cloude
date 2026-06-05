@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Award, Loader2, TrendingDown, TrendingUp, Users, Wallet } from "lucide-react";
+﻿import { useEffect, useState } from "react";
+import { Award, TrendingDown, TrendingUp, Users, Wallet } from "lucide-react";
+import { BoxLoader } from "@/components/BoxLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
 
@@ -32,11 +33,7 @@ export function AdminFinance() {
   const usersWithBonus = users.filter(u => u.cashback_balance > 0 || u.wallet_balance > 0).length;
   const topEarners = users.filter(u => u.cashback_balance > 0).slice(0, 10);
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-[#EE7526]" />
-    </div>
-  );
+  if (loading) return <BoxLoader className="py-20" />;
 
   return (
     <div className="space-y-6">
@@ -45,7 +42,7 @@ export function AdminFinance() {
         {[
           {
             label: "Jami cashback (aylanmada)", value: formatPrice(totalCashback),
-            icon: Award, bg: "bg-amber-50", color: "text-amber-600",
+            icon: Award, bg: "bg-blue-50", color: "text-amber-600",
             sub: "Foydalanuvchilar hisobida",
           },
           {
@@ -60,7 +57,7 @@ export function AdminFinance() {
           },
           {
             label: "O'rtacha cashback", value: formatPrice(users.length ? totalCashback / users.length : 0),
-            icon: TrendingUp, bg: "bg-orange-50", color: "text-[#EE7526]",
+            icon: TrendingUp, bg: "bg-blue-50", color: "text-[#1d4f8a]",
             sub: "Foydalanuvchi boshiga",
           },
         ].map(s => (
@@ -88,7 +85,7 @@ export function AdminFinance() {
             { label: "0 so'm (bonus yo'q)", count: users.filter(u => !u.cashback_balance).length, color: "bg-neutral-200" },
             { label: "1 — 10 000 so'm", count: users.filter(u => u.cashback_balance > 0 && u.cashback_balance <= 10000).length, color: "bg-blue-300" },
             { label: "10 001 — 50 000 so'm", count: users.filter(u => u.cashback_balance > 10000 && u.cashback_balance <= 50000).length, color: "bg-amber-400" },
-            { label: "50 001+ so'm", count: users.filter(u => u.cashback_balance > 50000).length, color: "bg-[#EE7526]" },
+            { label: "50 001+ so'm", count: users.filter(u => u.cashback_balance > 50000).length, color: "bg-[#1d4f8a]" },
           ].map(b => {
             const pct = users.length ? Math.round((b.count / users.length) * 100) : 0;
             return (
@@ -119,7 +116,7 @@ export function AdminFinance() {
                 <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
                   i === 0 ? "bg-amber-400 text-white" :
                   i === 1 ? "bg-neutral-300 text-white" :
-                  i === 2 ? "bg-amber-600/50 text-white" : "bg-orange-100 text-[#EE7526]"
+                  i === 2 ? "bg-amber-600/50 text-white" : "bg-blue-100 text-[#1d4f8a]"
                 }`}>{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-sm font-semibold text-neutral-800">

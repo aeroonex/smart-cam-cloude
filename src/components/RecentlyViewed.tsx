@@ -1,4 +1,4 @@
-import { Clock } from "lucide-react";
+﻿import { Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCurrency } from "@/hooks/useCurrency";
 import type { Database } from "@/integrations/supabase/types";
@@ -33,12 +33,12 @@ export function RecentlyViewed({ products }: Props) {
               {p.images?.[0] ? (
                 <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-orange-50 text-2xl">📷</div>
+                <div className="flex h-full w-full items-center justify-center bg-blue-50 text-2xl">📷</div>
               )}
             </div>
             <div className="p-1.5">
               <p className="line-clamp-1 text-[11px] text-neutral-700">{p.name}</p>
-              <p className="text-[11px] font-bold text-[#EE7526]">{formatPrice(Number(p.price))}</p>
+              <p className="text-[11px] font-bold text-[#1d4f8a]">{formatPrice(Number(p.price))}</p>
             </div>
           </button>
         ))}

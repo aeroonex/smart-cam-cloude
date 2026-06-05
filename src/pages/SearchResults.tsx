@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
   ChevronDown,
   LayoutGrid,
   LayoutList,
-  Loader2,
   Search,
   ShoppingCart,
   SlidersHorizontal,
@@ -155,7 +154,7 @@ export default function SearchResults() {
   const FilterSidebar = () => (
     <aside className="w-60 shrink-0 space-y-5">
       {hasFilters && (
-        <button onClick={clearFilters} className="flex items-center gap-1.5 text-sm font-semibold text-[#EE7526] hover:underline">
+        <button onClick={clearFilters} className="flex items-center gap-1.5 text-sm font-semibold text-[#1d4f8a] hover:underline">
           <X className="h-3.5 w-3.5" /> {t("clear_filters")}
         </button>
       )}
@@ -166,12 +165,12 @@ export default function SearchResults() {
         <ul className="space-y-1.5">
           {CATEGORIES.map((cat) => (
             <li key={cat}>
-              <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-700 hover:text-[#EE7526]">
+              <label className="flex cursor-pointer items-center gap-2.5 text-sm text-neutral-700 hover:text-[#1d4f8a]">
                 <input
                   type="checkbox"
                   checked={selectedCats.has(cat)}
                   onChange={() => toggleCat(cat)}
-                  className="h-4 w-4 accent-[#EE7526]"
+                  className="h-4 w-4 accent-[#1d4f8a]"
                 />
                 {cat}
               </label>
@@ -189,7 +188,7 @@ export default function SearchResults() {
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
             placeholder="dan"
-            className="h-9 w-full rounded-lg border border-neutral-200 px-3 text-sm outline-none focus:border-[#EE7526]"
+            className="h-9 w-full rounded-lg border border-neutral-200 px-3 text-sm outline-none focus:border-[#1d4f8a]"
           />
           <span className="text-neutral-400">—</span>
           <input
@@ -197,12 +196,12 @@ export default function SearchResults() {
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
             placeholder="gacha"
-            className="h-9 w-full rounded-lg border border-neutral-200 px-3 text-sm outline-none focus:border-[#EE7526]"
+            className="h-9 w-full rounded-lg border border-neutral-200 px-3 text-sm outline-none focus:border-[#1d4f8a]"
           />
         </div>
         <button
           onClick={() => runSearch()}
-          className="mt-2 w-full rounded-lg bg-[#EE7526] py-2 text-sm font-semibold text-white hover:bg-[#d8661c]"
+          className="mt-2 w-full rounded-lg bg-[#1d4f8a] py-2 text-sm font-semibold text-white hover:bg-[#164078]"
         >
           {t("apply")}
         </button>
@@ -220,7 +219,7 @@ export default function SearchResults() {
                   name="rating"
                   checked={minRating === n}
                   onChange={() => setMinRating(minRating === n ? null : n)}
-                  className="h-4 w-4 accent-[#EE7526]"
+                  className="h-4 w-4 accent-[#1d4f8a]"
                 />
                 <span className="flex items-center gap-0.5">
                   {Array.from({ length: n }).map((_, i) => (
@@ -242,7 +241,7 @@ export default function SearchResults() {
             type="checkbox"
             checked={freeDelivery}
             onChange={(e) => setFreeDelivery(e.target.checked)}
-            className="h-4 w-4 accent-[#EE7526]"
+            className="h-4 w-4 accent-[#1d4f8a]"
           />
           <Truck className="h-4 w-4 text-emerald-500" /> {t("free_delivery")}
         </label>
@@ -253,11 +252,11 @@ export default function SearchResults() {
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#EE7526] shadow-md">
+      <header className="sticky top-0 z-50 bg-[#1d4f8a] shadow-md">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 py-2.5 sm:px-6">
           <Link to="/" className="flex shrink-0 items-center gap-2 text-white transition hover:opacity-90">
             <HammaBopLogo size={34} dark />
-            <span className="hidden font-extrabold sm:block text-lg">Hamma<span className="text-orange-200">Bop</span></span>
+            <span className="hidden font-extrabold sm:block text-lg">Hamma<span className="text-blue-200">Bop</span></span>
           </Link>
 
           <div className="relative shrink-0" ref={catalogRef}>
@@ -290,7 +289,7 @@ export default function SearchResults() {
             )}
             <button
               onClick={() => doSearch()}
-              className="flex items-center gap-1.5 bg-[#d8661c] px-5 text-sm font-bold text-white transition hover:bg-[#c25a18]"
+              className="flex items-center gap-1.5 bg-[#164078] px-5 text-sm font-bold text-white transition hover:bg-[#c25a18]"
             >
               <Search className="h-4 w-4" />
               <span className="hidden sm:inline">{t("search_btn")}</span>
@@ -315,7 +314,7 @@ export default function SearchResults() {
                 className="flex flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-white transition hover:bg-white/20"
               >
                 <Avatar className="h-6 w-6">
-                  <AvatarFallback className="bg-orange-300 text-xs font-bold text-white">
+                  <AvatarFallback className="bg-blue-300 text-xs font-bold text-white">
                     {getInitials(profile?.full_name || user.email)}
                   </AvatarFallback>
                 </Avatar>
@@ -334,7 +333,7 @@ export default function SearchResults() {
       {/* Sub nav */}
       <div className="border-b border-neutral-200 bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-1.5 sm:px-6 text-sm text-neutral-500">
-          <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-[#EE7526]">
+          <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-[#1d4f8a]">
             <ArrowLeft className="h-3.5 w-3.5" /> {t("home")}
           </button>
           <span>›</span>
@@ -362,7 +361,7 @@ export default function SearchResults() {
             {/* "Tavsiya etamiz" sarlavhasi — Uzum uslubida */}
             {isRecommendMode && (
               <div className="mb-4 flex items-center gap-2.5">
-                <Star className="h-6 w-6 fill-[#EE7526] text-[#EE7526]" />
+                <Star className="h-6 w-6 fill-[#1d4f8a] text-[#1d4f8a]" />
                 <h1 className="text-2xl font-extrabold text-neutral-900">Tavsiya etamiz</h1>
               </div>
             )}
@@ -373,10 +372,10 @@ export default function SearchResults() {
                 {/* Mobile filters */}
                 <button
                   onClick={() => setFiltersOpen(true)}
-                  className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:border-[#EE7526] lg:hidden"
+                  className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:border-[#1d4f8a] lg:hidden"
                 >
                   <SlidersHorizontal className="h-4 w-4" />
-                  {t("filters")} {hasFilters && <span className="rounded-full bg-[#EE7526] px-1.5 text-xs text-white">{selectedCats.size + (minPrice || maxPrice ? 1 : 0) + (minRating ? 1 : 0) + (freeDelivery ? 1 : 0)}</span>}
+                  {t("filters")} {hasFilters && <span className="rounded-full bg-[#1d4f8a] px-1.5 text-xs text-white">{selectedCats.size + (minPrice || maxPrice ? 1 : 0) + (minRating ? 1 : 0) + (freeDelivery ? 1 : 0)}</span>}
                 </button>
 
                 <p className="text-sm text-neutral-500">
@@ -390,14 +389,14 @@ export default function SearchResults() {
                 {/* Sort */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:border-[#EE7526]">
+                    <button className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium shadow-sm hover:border-[#1d4f8a]">
                       {SORT_LABELS_T[sort]} <ChevronDown className="h-3.5 w-3.5" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="rounded-xl">
                     {(Object.keys(SORT_LABELS_T) as SortKey[]).map((k) => (
                       <DropdownMenuItem key={k} onClick={() => setSort(k)}
-                        className={`rounded-lg ${sort === k ? "font-semibold text-[#EE7526]" : ""}`}>
+                        className={`rounded-lg ${sort === k ? "font-semibold text-[#1d4f8a]" : ""}`}>
                         {SORT_LABELS_T[k]}
                       </DropdownMenuItem>
                     ))}
@@ -407,11 +406,11 @@ export default function SearchResults() {
                 {/* View toggle */}
                 <div className="flex overflow-hidden rounded-full border border-neutral-200 bg-white shadow-sm">
                   <button onClick={() => setViewMode("grid")}
-                    className={`p-2 ${viewMode === "grid" ? "bg-[#EE7526] text-white" : "text-neutral-500 hover:bg-neutral-50"}`}>
+                    className={`p-2 ${viewMode === "grid" ? "bg-[#1d4f8a] text-white" : "text-neutral-500 hover:bg-neutral-50"}`}>
                     <LayoutGrid className="h-4 w-4" />
                   </button>
                   <button onClick={() => setViewMode("list")}
-                    className={`p-2 ${viewMode === "list" ? "bg-[#EE7526] text-white" : "text-neutral-500 hover:bg-neutral-50"}`}>
+                    className={`p-2 ${viewMode === "list" ? "bg-[#1d4f8a] text-white" : "text-neutral-500 hover:bg-neutral-50"}`}>
                     <LayoutList className="h-4 w-4" />
                   </button>
                 </div>
@@ -422,13 +421,13 @@ export default function SearchResults() {
             {hasFilters && (
               <div className="mb-4 flex flex-wrap gap-2">
                 {[...selectedCats].map((cat) => (
-                  <span key={cat} className="flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-[#EE7526]">
+                  <span key={cat} className="flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-[#1d4f8a]">
                     {cat}
                     <button onClick={() => toggleCat(cat)}><X className="h-3 w-3" /></button>
                   </span>
                 ))}
                 {(minPrice || maxPrice) && (
-                  <span className="flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-[#EE7526]">
+                  <span className="flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-[#1d4f8a]">
                     {minPrice || "0"} — {maxPrice || "∞"} so'm
                     <button onClick={() => { setMinPrice(""); setMaxPrice(""); }}><X className="h-3 w-3" /></button>
                   </span>
@@ -473,11 +472,11 @@ export default function SearchResults() {
                 </div>
                 <div className="flex flex-wrap justify-center gap-3 pt-2">
                   {hasFilters && (
-                    <button onClick={clearFilters} className="rounded-full border border-[#EE7526] px-5 py-2 text-sm font-semibold text-[#EE7526] hover:bg-orange-50">
+                    <button onClick={clearFilters} className="rounded-full border border-[#1d4f8a] px-5 py-2 text-sm font-semibold text-[#1d4f8a] hover:bg-blue-50">
                       {t("clear_filters")}
                     </button>
                   )}
-                  <button onClick={() => navigate("/")} className="rounded-full bg-[#EE7526] px-5 py-2 text-sm font-semibold text-white hover:bg-[#d8661c]">
+                  <button onClick={() => navigate("/")} className="rounded-full bg-[#1d4f8a] px-5 py-2 text-sm font-semibold text-white hover:bg-[#164078]">
                     {t("back_home")}
                   </button>
                 </div>
@@ -499,13 +498,13 @@ export default function SearchResults() {
                         <img src={p.images[0]} alt={p.name} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full items-center justify-center">
-                          <ShoppingCart className="h-8 w-8 text-orange-200" />
+                          <ShoppingCart className="h-8 w-8 text-blue-200" />
                         </div>
                       )}
                     </div>
                     <div className="flex flex-1 flex-col justify-between gap-2">
                       <div>
-                        {p.category && <span className="mb-1 inline-block rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-medium text-[#EE7526]">{p.category}</span>}
+                        {p.category && <span className="mb-1 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-[#1d4f8a]">{p.category}</span>}
                         <p className="font-semibold text-neutral-900 line-clamp-2">{p.name}</p>
                         {p.description && <p className="mt-1 line-clamp-2 text-sm text-neutral-500">{p.description}</p>}
                       </div>
@@ -520,7 +519,7 @@ export default function SearchResults() {
                         </div>
                         <button
                           onClick={(e) => { e.stopPropagation(); addToCart(p); toast.success("Savatga qo'shildi!"); }}
-                          className="rounded-full bg-[#EE7526] px-4 py-2 text-sm font-semibold text-white hover:bg-[#d8661c]"
+                          className="rounded-full bg-[#1d4f8a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#164078]"
                         >
                           {t("add_to_cart")}
                         </button>
@@ -547,7 +546,7 @@ export default function SearchResults() {
             </div>
             <FilterSidebar />
             <button onClick={() => setFiltersOpen(false)}
-              className="mt-5 w-full rounded-full bg-[#EE7526] py-3 font-semibold text-white">
+              className="mt-5 w-full rounded-full bg-[#1d4f8a] py-3 font-semibold text-white">
               Ko'rsatish ({total})
             </button>
           </div>

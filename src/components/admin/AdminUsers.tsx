@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Loader2, Search, Users, ShieldCheck, Clock, Activity } from "lucide-react";
+﻿import { useEffect, useState } from "react";
+import { Search, Users, ShieldCheck, Clock, Activity } from "lucide-react";
+import { BoxLoader } from "@/components/BoxLoader";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -94,7 +95,7 @@ export function AdminUsers() {
         {[
           { label: "Jami", value: users.length, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
           { label: "Online", value: onlineCount, icon: Activity, color: "text-emerald-600", bg: "bg-emerald-50" },
-          { label: "Bugun faol", value: todayActive, icon: Clock, color: "text-orange-600", bg: "bg-orange-50" },
+          { label: "Bugun faol", value: todayActive, icon: Clock, color: "text-blue-700", bg: "bg-blue-50" },
           { label: "Admin", value: adminCount, icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
         ].map(s => (
           <div key={s.label} className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm flex items-center gap-3">
@@ -126,9 +127,7 @@ export function AdminUsers() {
 
       {/* Table */}
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-[#EE7526]" />
-        </div>
+        <BoxLoader className="py-16" />
       ) : (
         <div className="rounded-2xl border border-neutral-100 bg-white shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -151,7 +150,7 @@ export function AdminUsers() {
                         {u.avatar_url ? (
                           <img src={u.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
                         ) : (
-                          <div className="h-9 w-9 rounded-full bg-[#EE7526]/10 flex items-center justify-center text-sm font-bold text-[#EE7526]">
+                          <div className="h-9 w-9 rounded-full bg-[#1d4f8a]/10 flex items-center justify-center text-sm font-bold text-[#1d4f8a]">
                             {(u.full_name ?? "?")[0]?.toUpperCase()}
                           </div>
                         )}
@@ -187,7 +186,7 @@ export function AdminUsers() {
                     </td>
                     <td className="px-4 py-3">
                       {u.today_minutes > 0 ? (
-                        <span className="text-xs font-semibold text-[#EE7526]">
+                        <span className="text-xs font-semibold text-[#1d4f8a]">
                           {u.today_minutes >= 60
                             ? `${Math.floor(u.today_minutes / 60)}s ${u.today_minutes % 60}d`
                             : `${u.today_minutes} daq`}

@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { Loader2, X } from "lucide-react";
+﻿import { useEffect, useRef, useState } from "react";
+import { X } from "lucide-react";
+import { BoxLoader } from "@/components/BoxLoader";
 import { toast } from "sonner";
 
 export function MediaUploader({ onAdd }: { onAdd: (url: string) => void }) {
@@ -41,15 +42,15 @@ export function MediaUploader({ onAdd }: { onAdd: (url: string) => void }) {
   return (
     <div>
       {serverOk === false && (
-        <div className="mb-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-sm text-amber-700">
+        <div className="mb-2 rounded-xl bg-blue-50 border border-blue-200 px-4 py-2.5 text-sm text-amber-700">
           ⚠️ Media server ishlamayapti. Terminalda: <code className="font-mono font-bold">npm run server</code>
         </div>
       )}
       <div
         className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-8 transition ${
           serverOk === false
-            ? "border-amber-200 bg-amber-50/50 cursor-not-allowed"
-            : "border-orange-200 bg-orange-50/50 hover:border-[#EE7526] hover:bg-orange-50"
+            ? "border-blue-200 bg-blue-50/50 cursor-not-allowed"
+            : "border-blue-200 bg-blue-50/50 hover:border-[#1d4f8a] hover:bg-blue-50"
         }`}
         onClick={() => serverOk !== false && inputRef.current?.click()}
         onDragOver={e => e.preventDefault()}
@@ -65,16 +66,31 @@ export function MediaUploader({ onAdd }: { onAdd: (url: string) => void }) {
         />
         {uploading ? (
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-[#EE7526]" />
-            <p className="text-sm font-medium text-[#EE7526]">Yuklanmoqda...</p>
+            <BoxLoader />
+            <p className="text-sm font-medium text-[#1d4f8a]">Yuklanmoqda...</p>
           </div>
         ) : (
-          <>
-            <span className="text-3xl">📷 🎥</span>
-            <p className="text-sm font-semibold text-neutral-700">Rasm yoki video yuklash</p>
-            <p className="text-xs text-neutral-400">JPG · PNG · WEBP · MP4 — maks 50 MB</p>
-            <p className="text-xs text-neutral-400">Bosing yoki Drag & Drop</p>
-          </>
+          <div className="flex items-center gap-4">
+            <div className="mu-design">
+              <div className="mu-circle-1 mu-color-border">
+                <div className="mu-circle-2 mu-color-border">
+                  <div className="mu-circle-3 mu-color-border">
+                    <div className="mu-circle-4 mu-color-border">
+                      <div className="mu-circle-5"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mu-shape mu-shadow mu-mountain-1"></div>
+              <div className="mu-shape mu-mountain-2"></div>
+              <div className="mu-shape mu-shadow mu-mountain-3"></div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-semibold text-neutral-700">Rasm yoki video yuklash</p>
+              <p className="text-xs text-neutral-400">JPG · PNG · WEBP · MP4 — maks 50 MB</p>
+              <p className="text-xs text-neutral-400">Bosing yoki Drag & Drop</p>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -94,9 +110,11 @@ export function MediaPreviewList({
       {urls.map((url, i) => {
         const isVid = /\.(mp4|webm|mov|avi)(\?.*)?$/i.test(url);
         return (
-          <div key={i} className="group relative overflow-hidden rounded-lg border border-orange-100">
+          <div key={i} className="group relative overflow-hidden rounded-lg border border-blue-100">
             {isVid ? (
-              <div className="flex h-16 w-16 items-center justify-center bg-neutral-100 text-2xl">🎥</div>
+              <div className="flex h-16 w-16 items-center justify-center bg-neutral-100">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+              </div>
             ) : (
               <img src={url} alt="" className="h-16 w-16 object-cover"
                 onError={e => { e.currentTarget.style.display = "none"; }} />

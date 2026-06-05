@@ -1,10 +1,11 @@
-import { memo } from "react";
+﻿import { memo } from "react";
 import { CheckCircle2, Heart, ShoppingCart, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useI18n } from "@/hooks/useI18n";
 import { useCart } from "@/hooks/useCart";
+import { AddToCartButton } from "@/components/AddToCartButton";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -58,8 +59,8 @@ export const ProductCard = memo(function ProductCard({
             onError={e => { e.currentTarget.style.display = "none"; }}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-orange-50">
-            <ShoppingCart className="h-10 w-10 text-orange-200" />
+          <div className="flex h-full w-full items-center justify-center bg-blue-50">
+            <ShoppingCart className="h-10 w-10 text-blue-200" />
           </div>
         )}
 
@@ -79,7 +80,7 @@ export const ProductCard = memo(function ProductCard({
 
         {/* In-cart badge */}
         {inCart && (
-          <div className="absolute right-2 bottom-2 flex items-center gap-1 rounded-full bg-[#EE7526] px-2 py-0.5 text-[10px] font-bold text-white shadow">
+          <div className="absolute right-2 bottom-2 flex items-center gap-1 rounded-full bg-[#1d4f8a] px-2 py-0.5 text-[10px] font-bold text-white shadow">
             <CheckCircle2 className="h-3 w-3" />
             {cartQty} ta
           </div>
@@ -133,22 +134,9 @@ export const ProductCard = memo(function ProductCard({
           </div>
         )}
 
-        {!outOfStock && (
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              onAddToCart(product);
-              toast.success("Savatga qo'shildi");
-            }}
-            className={`mt-1.5 w-full rounded-xl py-2 text-[12px] font-bold transition active:scale-95 ${
-              inCart
-                ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                : "bg-[#EE7526] text-white hover:bg-[#d8661c]"
-            }`}
-          >
-            {inCart ? `Yana qo'shish` : t("add_to_cart")}
-          </button>
-        )}
+        <div className="mt-1.5">
+          <AddToCartButton product={product} onAddToCart={onAddToCart} size="md" />
+        </div>
       </div>
     </article>
   );

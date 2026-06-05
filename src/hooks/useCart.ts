@@ -10,6 +10,9 @@ export type CartItem = {
   price: number;
   qty: number;
   image: string | null;
+  delivery_provider_id?: string | null;
+  delivery_provider_name?: string | null;
+  delivery_provider_fee?: number;
 };
 
 const CART_STORAGE_KEY = "smartcam_cart";
@@ -43,9 +46,15 @@ export function useCart() {
           item.id === product.id ? { ...item, qty: Math.min(99, item.qty + 1) } : item,
         );
       }
+      const ep = product as unknown as { delivery_provider_id?: string | null; delivery_provider_name?: string | null; delivery_provider_fee?: number };
       return [
         ...current,
-        { id: product.id, name: product.name, price: Number(product.price), qty: 1, image: fallbackImage },
+        {
+          id: product.id, name: product.name, price: Number(product.price), qty: 1, image: fallbackImage,
+          delivery_provider_id: ep.delivery_provider_id ?? null,
+          delivery_provider_name: ep.delivery_provider_name ?? null,
+          delivery_provider_fee: ep.delivery_provider_fee ?? 0,
+        },
       ];
     });
     toast.success(`${product.name} savatga qo'shildi.`);
@@ -56,7 +65,7 @@ export function useCart() {
       current
         .map((item) =>
           item.id === productId
-            ? { ...item, qty: Math.max(1, Math.min(99, item.qty + delta)) }
+            ? { ...item, qty: Math.min(99, item.qty + delta) }
             : item,
         )
         .filter((item) => item.qty > 0),

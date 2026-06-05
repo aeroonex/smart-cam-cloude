@@ -1,4 +1,4 @@
-type Props = {
+﻿type Props = {
   className?: string;
   size?: number;
   dark?: boolean;
@@ -17,8 +17,8 @@ export function HammaBopLogo({ className = "", size = 36, dark = false }: Props)
     >
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#F4853A" />
-          <stop offset="100%" stopColor="#C85A10" />
+          <stop offset="0%" stopColor="#2860a8" />
+          <stop offset="100%" stopColor="#0d2744" />
         </linearGradient>
       </defs>
       {/* Left leg of H */}
@@ -33,7 +33,7 @@ export function HammaBopLogo({ className = "", size = 36, dark = false }: Props)
 export function HammaBopWordmark({ className = "", textSize = "text-xl" }: { className?: string; textSize?: string }) {
   return (
     <span className={`font-extrabold tracking-tight ${textSize} ${className}`}>
-      <span className="text-[#EE7526]">Hamma</span>
+      <span className="text-[#1d4f8a]">Hamma</span>
       <span className="text-neutral-900">Bop</span>
     </span>
   );
@@ -42,7 +42,7 @@ export function HammaBopWordmark({ className = "", textSize = "text-xl" }: { cla
 export function HammaBopWordmarkWhite({ className = "", textSize = "text-xl" }: { className?: string; textSize?: string }) {
   return (
     <span className={`font-extrabold tracking-tight ${textSize} ${className}`}>
-      <span className="text-[#EE7526]">Hamma</span>
+      <span className="text-[#1d4f8a]">Hamma</span>
       <span className="text-white">Bop</span>
     </span>
   );

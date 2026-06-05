@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Loader2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -116,7 +116,7 @@ export function CheckoutDialog({
                 )}
                 <div className="flex justify-between border-t border-neutral-100 pt-2 font-extrabold text-neutral-900 text-base">
                   <span>Jami:</span>
-                  <span className="text-[#EE7526]">{formatPrice(finalTotal)}</span>
+                  <span className="text-[#1d4f8a]">{formatPrice(finalTotal)}</span>
                 </div>
               </div>
             </div>
@@ -145,7 +145,7 @@ export function CheckoutDialog({
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-[#4A7A5A]">Viloyat / shahar</label>
                 <select value={form.region} onChange={update("region")}
-                  className="flex h-11 w-full rounded-2xl border border-[#dbe7d8] bg-white px-4 text-sm outline-none focus:border-[#EE7526]">
+                  className="flex h-11 w-full rounded-2xl border border-[#dbe7d8] bg-white px-4 text-sm outline-none focus:border-[#1d4f8a]">
                   <option value="">Hududni tanlang</option>
                   {regions.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
@@ -158,7 +158,7 @@ export function CheckoutDialog({
               <div>
                 <label className="mb-1.5 block text-sm font-semibold text-[#4A7A5A]">Qo'shimcha izoh</label>
                 <textarea value={form.notes} onChange={update("notes")}
-                  className="min-h-20 w-full rounded-[20px] border border-[#dbe7d8] bg-white px-4 py-3 text-sm outline-none focus:border-[#EE7526]"
+                  className="min-h-20 w-full rounded-[20px] border border-[#dbe7d8] bg-white px-4 py-3 text-sm outline-none focus:border-[#1d4f8a]"
                   placeholder="Qo'shimcha talablar..." />
               </div>
             </div>
@@ -168,7 +168,7 @@ export function CheckoutDialog({
 
             <Button
               disabled={placing || !cart.length}
-              className="h-12 w-full rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c] text-base font-bold"
+              className="h-12 w-full rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078] text-base font-bold"
               onClick={() => onPlace({ paymentMethod, promoCode: appliedCode || undefined, discountAmount, deliveryFee, addressDetail: addressDetail || undefined })}
             >
               {placing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}

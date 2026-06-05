@@ -1,11 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, BadgeCheck, ChevronLeft, ChevronRight, Gift,
-  Heart, Loader2, MessageSquare, Package, Pause, Play,
+  Heart, MessageSquare, Package, Pause, Play,
   RotateCcw, Send, Share2, ShieldCheck, ShoppingCart,
   Star, Truck, ZoomIn,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { BoxLoader } from "@/components/BoxLoader";
+import { HeartLoader } from "@/components/HeartLoader";
+import { ProductDetailSkeleton } from "@/components/Skeleton";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -166,16 +169,12 @@ export default function ProductDetail() {
     setSlide(s => (s + dir + allMedia.length) % allMedia.length);
   }
 
-  if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f5f5f5]">
-      <Loader2 className="h-10 w-10 animate-spin text-[#EE7526]" />
-    </div>
-  );
+  if (loading) return <ProductDetailSkeleton />;
 
   if (!product) return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4">
       <p className="text-lg font-semibold text-neutral-600">Mahsulot topilmadi</p>
-      <Button asChild className="rounded-full bg-[#EE7526] text-white"><Link to="/">Bosh sahifaga</Link></Button>
+      <Button asChild className="rounded-full bg-[#1d4f8a] text-white"><Link to="/">Bosh sahifaga</Link></Button>
     </div>
   );
 
@@ -193,12 +192,12 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-[#f5f5f5]">
 
       {/* ══════════ HEADER ══════════ */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#EE7526] shadow-lg">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#1d4f8a] shadow-lg">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <Link to="/" className="flex shrink-0 items-center gap-2 text-white">
             <HammaBopLogo size={28} dark />
             <span className="hidden font-extrabold text-lg tracking-tight sm:block">
-              Hamma<span className="text-orange-200">Bop</span>
+              Hamma<span className="text-blue-200">Bop</span>
             </span>
           </Link>
           <button onClick={() => navigate(-1)}
@@ -224,12 +223,12 @@ export default function ProductDetail() {
 
         {/* Breadcrumb */}
         <nav className="mb-3 flex items-center gap-1.5 text-xs text-neutral-500">
-          <Link to="/" className="transition hover:text-[#EE7526]">HammaBop</Link>
+          <Link to="/" className="transition hover:text-[#1d4f8a]">HammaBop</Link>
           {product.category && (
             <>
               <ChevronRight className="h-3 w-3" />
               <button onClick={() => navigate(`/search?category=${encodeURIComponent(product.category!)}`)}
-                className="transition hover:text-[#EE7526]">{product.category}</button>
+                className="transition hover:text-[#1d4f8a]">{product.category}</button>
             </>
           )}
           <ChevronRight className="h-3 w-3" />
@@ -250,11 +249,11 @@ export default function ProductDetail() {
                       <button key={i}
                         onClick={() => { if (videoRef.current) videoRef.current.pause(); setVideoPlaying(false); setSlide(i); }}
                         className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
-                          slide === i ? "border-[#EE7526] shadow-md shadow-orange-100" : "border-neutral-100 hover:border-orange-200"
+                          slide === i ? "border-[#1d4f8a] shadow-md shadow-orange-100" : "border-neutral-100 hover:border-blue-200"
                         }`}>
                         {isVideo(url) ? (
                           <div className="flex h-full items-center justify-center bg-neutral-50">
-                            <Play className="h-4 w-4 text-[#EE7526]" />
+                            <Play className="h-4 w-4 text-[#1d4f8a]" />
                           </div>
                         ) : (
                           <img src={url} alt="" className="h-full w-full object-cover" />
@@ -310,7 +309,7 @@ export default function ProductDetail() {
                       )
                     ) : (
                       <div className="flex h-full items-center justify-center">
-                        <ShoppingCart className="h-24 w-24 text-orange-100" />
+                        <ShoppingCart className="h-24 w-24 text-blue-100" />
                       </div>
                     )}
 
@@ -348,7 +347,7 @@ export default function ProductDetail() {
                         <button key={i}
                           onClick={() => { if (videoRef.current) videoRef.current.pause(); setVideoPlaying(false); setSlide(i); }}
                           className={`h-2 rounded-full transition-all duration-300 ${
-                            i === slide ? "w-6 bg-[#EE7526]" : isVideo(url) ? "w-2 bg-blue-300" : "w-2 bg-neutral-300"
+                            i === slide ? "w-6 bg-[#1d4f8a]" : isVideo(url) ? "w-2 bg-blue-300" : "w-2 bg-neutral-300"
                           }`} />
                       ))}
                     </div>
@@ -361,10 +360,10 @@ export default function ProductDetail() {
                         <button key={i}
                           onClick={() => { if (videoRef.current) videoRef.current.pause(); setVideoPlaying(false); setSlide(i); }}
                           className={`h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 transition ${
-                            slide === i ? "border-[#EE7526]" : "border-neutral-200"
+                            slide === i ? "border-[#1d4f8a]" : "border-neutral-200"
                           }`}>
                           {isVideo(url) ? (
-                            <div className="flex h-full items-center justify-center bg-neutral-50"><Play className="h-3 w-3 text-[#EE7526]" /></div>
+                            <div className="flex h-full items-center justify-center bg-neutral-50"><Play className="h-3 w-3 text-[#1d4f8a]" /></div>
                           ) : (
                             <img src={url} alt="" className="h-full w-full object-cover" />
                           )}
@@ -404,7 +403,7 @@ export default function ProductDetail() {
               <div className="flex flex-wrap items-center gap-2">
                 {product.category && (
                   <button onClick={() => navigate(`/search?category=${encodeURIComponent(product.category!)}`)}
-                    className="rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-[#EE7526] hover:bg-orange-100">
+                    className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-[#1d4f8a] hover:bg-blue-100">
                     {product.category}
                   </button>
                 )}
@@ -424,14 +423,14 @@ export default function ProductDetail() {
                       ))}
                     </div>
                     <span className="font-semibold text-amber-500">{avgRating.toFixed(1)}</span>
-                    <a href="#reviews" className="text-neutral-400 hover:text-[#EE7526]">({reviews.length})</a>
+                    <a href="#reviews" className="text-neutral-400 hover:text-[#1d4f8a]">({reviews.length})</a>
                   </div>
                 )}
                 <span className="text-neutral-400">{product.sold_count} ta sotildi</span>
               </div>
 
               {/* Price */}
-              <div className="rounded-xl bg-orange-50 px-4 py-3">
+              <div className="rounded-xl bg-blue-50 px-4 py-3">
                 <div className="flex items-baseline gap-2">
                   <p className="text-3xl font-extrabold tracking-tight text-neutral-900">
                     {formatPrice(Number(product.price))}
@@ -446,7 +445,7 @@ export default function ProductDetail() {
                   </p>
                 )}
                 {product.cashback_amount > 0 && (
-                  <div className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[#EE7526]">
+                  <div className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[#1d4f8a]">
                     <Gift className="h-3 w-3" /> +{product.cashback_amount.toLocaleString()} so'm cashback
                   </div>
                 )}
@@ -458,7 +457,7 @@ export default function ProductDetail() {
                   <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> Omborda yo'q
                 </div>
               ) : lowStock ? (
-                <div className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
+                <div className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                   Faqat <b>{product.stock_count} ta</b> qoldi
                 </div>
@@ -476,7 +475,7 @@ export default function ProductDetail() {
                     {sizes.map(s => (
                       <button key={s} onClick={() => setSelectedSize(s)}
                         className={`rounded-lg border-2 px-3 py-1 text-sm font-semibold transition ${
-                          selectedSize === s ? "border-[#EE7526] bg-[#EE7526] text-white" : "border-neutral-200 hover:border-orange-200"
+                          selectedSize === s ? "border-[#1d4f8a] bg-[#1d4f8a] text-white" : "border-neutral-200 hover:border-blue-200"
                         }`}>{s}</button>
                     ))}
                   </div>
@@ -493,7 +492,7 @@ export default function ProductDetail() {
                     {colors.map(c => (
                       <button key={c} onClick={() => setSelectedColor(c)} title={c}
                         className={`relative h-8 w-8 rounded-full border-2 transition-all ${
-                          selectedColor === c ? "border-[#EE7526] scale-110" : "border-neutral-200 hover:scale-105"
+                          selectedColor === c ? "border-[#1d4f8a] scale-110" : "border-neutral-200 hover:scale-105"
                         }`}
                         style={{ backgroundColor: COLORS_PALETTE[c] ?? c }}>
                         {selectedColor === c && (
@@ -573,12 +572,12 @@ export default function ProductDetail() {
                 {/* Buttons */}
                 <div className="space-y-2">
                   <Button disabled={!inStock} onClick={handleAddToCart}
-                    className="h-12 w-full rounded-xl bg-[#EE7526] text-base font-bold text-white shadow-md hover:bg-[#d8661c] disabled:opacity-50">
+                    className="h-12 w-full rounded-xl bg-[#1d4f8a] text-base font-bold text-white shadow-md hover:bg-[#164078] disabled:opacity-50">
                     <ShoppingCart className="mr-2 h-5 w-5" />
                     {inStock ? "Savatga qo'shish" : "Tugadi"}
                   </Button>
                   <Button variant="outline" disabled={!inStock}
-                    className="h-10 w-full rounded-xl border-2 border-[#EE7526] font-bold text-[#EE7526] hover:bg-orange-50 disabled:opacity-50"
+                    className="h-10 w-full rounded-xl border-2 border-[#1d4f8a] font-bold text-[#1d4f8a] hover:bg-blue-50 disabled:opacity-50"
                     onClick={() => { if (!user) { navigate("/login"); return; } handleAddToCart(); navigate("/"); }}>
                     Hozir sotib olish
                   </Button>
@@ -601,7 +600,7 @@ export default function ProductDetail() {
                 {/* Seller info */}
                 <div className="rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 p-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <BadgeCheck className="h-4 w-4 text-[#EE7526]" />
+                    <BadgeCheck className="h-4 w-4 text-[#1d4f8a]" />
                     <p className="text-sm font-bold text-neutral-800">HammaBop Rasmiy</p>
                   </div>
                   <p className="text-xs text-neutral-500">✓ Tekshirilgan sotuvchi</p>
@@ -622,15 +621,15 @@ export default function ProductDetail() {
         <div id="reviews" className="mb-4 overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="border-b border-neutral-100 px-6 py-5">
             <h2 className="flex items-center gap-2 text-lg font-extrabold text-neutral-900">
-              <MessageSquare className="h-5 w-5 text-[#EE7526]" />
+              <MessageSquare className="h-5 w-5 text-[#1d4f8a]" />
               Izohlar va reytinglar
-              {reviews.length > 0 && <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-sm font-bold text-[#EE7526]">{reviews.length}</span>}
+              {reviews.length > 0 && <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-bold text-[#1d4f8a]">{reviews.length}</span>}
             </h2>
           </div>
 
           <div className="p-5 sm:p-8">
             {!reviewsSupported ? (
-              <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-700">Izohlar tizimi aktivlashtirilmoqda.</div>
+              <div className="rounded-2xl bg-blue-50 p-4 text-sm text-amber-700">Izohlar tizimi aktivlashtirilmoqda.</div>
             ) : (
               <>
                 {reviews.length > 0 && (
@@ -663,14 +662,14 @@ export default function ProductDetail() {
 
                 {/* Review form */}
                 {!user ? (
-                  <div className="mb-6 rounded-2xl border-2 border-dashed border-orange-200 p-6 text-center">
+                  <div className="mb-6 rounded-2xl border-2 border-dashed border-blue-200 p-6 text-center">
                     <p className="mb-3 text-neutral-600">Izoh qoldirish uchun kiring</p>
-                    <Button asChild className="rounded-full bg-[#EE7526] text-white px-6">
+                    <Button asChild className="rounded-full bg-[#1d4f8a] text-white px-6">
                       <Link to="/login">Kirish</Link>
                     </Button>
                   </div>
                 ) : myPendingReview ? (
-                  <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                  <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-5">
                     <p className="font-bold text-amber-800">⏳ Izohingiz moderatsiyada</p>
                     <p className="mt-1 text-sm text-amber-700">Admin tasdiqlashini kuting.</p>
                   </div>
@@ -683,7 +682,7 @@ export default function ProductDetail() {
                     {myReview.comment && <p className="mt-1 text-sm text-neutral-700">{myReview.comment}</p>}
                   </div>
                 ) : canReview ? (
-                  <div className="mb-6 rounded-2xl border-2 border-orange-100 bg-orange-50/30 p-5">
+                  <div className="mb-6 rounded-2xl border-2 border-blue-100 bg-blue-50/30 p-5">
                     <h3 className="mb-3 font-bold text-neutral-800">Izoh qoldiring</h3>
                     <div className="mb-3 flex gap-1">
                       {[1,2,3,4,5].map(s => (
@@ -694,9 +693,9 @@ export default function ProductDetail() {
                     </div>
                     <Textarea value={commentInput} onChange={e => setCommentInput(e.target.value)}
                       placeholder="Mahsulot haqida fikringizni yozing..."
-                      className="mb-3 min-h-24 rounded-xl border-orange-100 bg-white focus:border-[#EE7526]" rows={3} />
+                      className="mb-3 min-h-24 rounded-xl border-blue-100 bg-white focus:border-[#1d4f8a]" rows={3} />
                     <Button onClick={() => void submitReview()} disabled={submitting}
-                      className="rounded-full bg-[#EE7526] text-white px-6 hover:bg-[#d8661c]">
+                      className="rounded-full bg-[#1d4f8a] text-white px-6 hover:bg-[#164078]">
                       {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}
                       Yuborish
                     </Button>
@@ -710,7 +709,7 @@ export default function ProductDetail() {
 
                 {/* Reviews list */}
                 {reviewsLoading ? (
-                  <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#EE7526]" /></div>
+                  <BoxLoader className="py-8" />
                 ) : reviews.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 py-10 text-center">
                     <MessageSquare className="h-10 w-10 text-neutral-200" />
@@ -720,8 +719,8 @@ export default function ProductDetail() {
                   <div className="divide-y divide-neutral-100">
                     {reviews.map(review => (
                       <div key={review.id} className="flex gap-4 py-5">
-                        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-orange-100">
-                          <AvatarFallback className="bg-orange-100 font-bold text-[#EE7526]">
+                        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-blue-600">
+                          <AvatarFallback className="bg-blue-100 font-bold text-[#1d4f8a]">
                             {getInitials(review.users?.full_name ?? "?")}
                           </AvatarFallback>
                         </Avatar>
@@ -751,7 +750,7 @@ export default function ProductDetail() {
               <h2 className="text-lg font-extrabold text-neutral-900">O'xshash mahsulotlar</h2>
               {product.category && (
                 <button onClick={() => navigate(`/search?category=${encodeURIComponent(product.category!)}`)}
-                  className="text-sm font-semibold text-[#EE7526] transition hover:underline">
+                  className="text-sm font-semibold text-[#1d4f8a] transition hover:underline">
                   Barchasi →
                 </button>
               )}
@@ -770,7 +769,7 @@ export default function ProductDetail() {
                           className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <ShoppingCart className="h-10 w-10 text-orange-100" />
+                          <ShoppingCart className="h-10 w-10 text-blue-100" />
                         </div>
                       )}
                       {pDiscount && (
@@ -787,7 +786,7 @@ export default function ProductDetail() {
                     <div className="flex flex-1 flex-col p-3">
                       <p className="line-clamp-2 text-xs font-medium leading-relaxed text-neutral-700 flex-1">{p.name}</p>
                       <div className="mt-2">
-                        <p className="font-extrabold text-[#EE7526]">{formatPrice(Number(p.price))}</p>
+                        <p className="font-extrabold text-[#1d4f8a]">{formatPrice(Number(p.price))}</p>
                         {pOrig && pOrig > Number(p.price) && (
                           <p className="text-[10px] text-neutral-400 line-through">{formatPrice(pOrig)}</p>
                         )}
@@ -815,7 +814,7 @@ export default function ProductDetail() {
           </div>
           <div className="flex flex-1 flex-col gap-1.5">
             <Button disabled={!inStock} onClick={handleAddToCart}
-              className="h-11 w-full rounded-xl bg-[#EE7526] text-sm font-bold text-white shadow-md hover:bg-[#d8661c] disabled:opacity-50">
+              className="h-11 w-full rounded-xl bg-[#1d4f8a] text-sm font-bold text-white shadow-md hover:bg-[#164078] disabled:opacity-50">
               <ShoppingCart className="mr-1.5 h-4 w-4" />
               {inStock ? "Savatga qo'shish" : "Tugadi"}
             </Button>

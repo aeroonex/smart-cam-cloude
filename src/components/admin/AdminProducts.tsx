@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import {
   CheckCircle2, Edit3, ExternalLink, Loader2, Package,
   PackagePlus, Plus, RefreshCw, Search, Star, Trash2,
   Upload, X, XCircle,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BoxLoader } from "@/components/BoxLoader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,13 +47,17 @@ type PForm = {
   name: string; description: string; price: string; discount_percent: string;
   stock_count: string; images: string; category: string; store_id: string;
   warranty: string; specs: SpecEntry[];
+  delivery_provider_id: string;
 };
 
 type SpecEntry = { key: string; value: string };
 
+type DeliveryProvider = { id: string; name: string; company_name: string | null; service_fee: number };
+
 const EMPTY: PForm = {
   name: "", description: "", price: "", discount_percent: "",
   stock_count: "", images: "", category: "", store_id: "", warranty: "", specs: [],
+  delivery_provider_id: "",
 };
 
 type BulkRow = { name: string; price: number; category: string; description: string };
@@ -60,6 +65,7 @@ type BulkRow = { name: string; price: number; category: string; description: str
 export function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
+  const [deliveryProviders, setDeliveryProviders] = useState<DeliveryProvider[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("");
@@ -79,12 +85,14 @@ export function AdminProducts() {
 
   async function load() {
     setLoading(true);
-    const [prodRes, storeRes] = await Promise.all([
+    const [prodRes, storeRes, dpRes] = await Promise.all([
       supabase.from("products").select("*").order("created_at", { ascending: false }),
       (supabase.from("stores" as never).select("id, name, commission_percent") as unknown as Promise<{ data: Store[] | null }>),
+      (supabase.from("delivery_providers" as never).select("id, name, company_name, service_fee").eq("is_active", true).order("name") as unknown as Promise<{ data: DeliveryProvider[] | null }>),
     ]);
     setProducts((prodRes.data as Product[]) ?? []);
     setStores(storeRes.data ?? []);
+    setDeliveryProviders(dpRes.data ?? []);
     setLoading(false);
   }
 
@@ -109,6 +117,7 @@ export function AdminProducts() {
     const discPct = Number(addForm.discount_percent) || 0;
     const origPrice = Number(addForm.price);
     const store = stores.find(s => s.id === addForm.store_id);
+    const dp = deliveryProviders.find(d => d.id === addForm.delivery_provider_id);
     const { error } = await supabase.from("products").insert({
       name: addForm.name.trim(),
       description: addForm.description.trim() || null,
@@ -123,6 +132,9 @@ export function AdminProducts() {
       store_name: store?.name ?? null,
       warranty: addForm.warranty.trim() || null,
       status: "active",
+      delivery_provider_id: dp?.id ?? null,
+      delivery_provider_name: dp?.name ?? null,
+      delivery_provider_fee: dp?.service_fee ?? 0,
     } as Record<string, unknown>);
     setSaving(false);
     if (error) toast.error("Qo'shib bo'lmadi: " + error.message);
@@ -135,6 +147,7 @@ export function AdminProducts() {
     const discPct = Number(editForm.discount_percent) || 0;
     const origPrice = Number(editForm.price);
     const store = stores.find(s => s.id === editForm.store_id);
+    const dp = deliveryProviders.find(d => d.id === editForm.delivery_provider_id);
     const { error } = await supabase.from("products").update({
       name: editForm.name.trim(),
       description: editForm.description.trim() || null,
@@ -148,6 +161,9 @@ export function AdminProducts() {
       store_id: editForm.store_id || null,
       store_name: store?.name ?? null,
       warranty: editForm.warranty.trim() || null,
+      delivery_provider_id: dp?.id ?? null,
+      delivery_provider_name: dp?.name ?? null,
+      delivery_provider_fee: dp?.service_fee ?? 0,
     } as Record<string, unknown>).eq("id", editId);
     setSaving(false);
     if (error) toast.error("Saqlashda xato.");
@@ -222,6 +238,7 @@ export function AdminProducts() {
   }
 
   function startEdit(p: Product) {
+    const ep = p as unknown as { warranty?: string; delivery_provider_id?: string };
     setEditForm({
       name: p.name,
       description: p.description ?? "",
@@ -231,8 +248,9 @@ export function AdminProducts() {
       images: (p.images ?? []).join("\n"),
       category: p.category ?? "",
       store_id: p.store_id ?? "",
-      warranty: (p as unknown as { warranty?: string }).warranty ?? "",
+      warranty: ep.warranty ?? "",
       specs: objectToSpecs(p.specifications as Record<string, string> | null),
+      delivery_provider_id: ep.delivery_provider_id ?? "",
     });
     setEditId(p.id);
   }
@@ -268,7 +286,7 @@ export function AdminProducts() {
           </Button>
           <input ref={bulkRef} type="file" accept=".csv,.txt" className="hidden"
             onChange={e => handleBulkFile(e.target.files)} />
-          <Button size="sm" className="rounded-xl gap-1.5 bg-[#EE7526] text-white hover:bg-[#d8661c]"
+          <Button size="sm" className="rounded-xl gap-1.5 bg-[#1d4f8a] text-white hover:bg-[#164078]"
             onClick={() => setShowAdd(v => !v)}>
             <Plus className="h-4 w-4" />{showAdd ? "Yopish" : "Yangi mahsulot"}
           </Button>
@@ -286,12 +304,12 @@ export function AdminProducts() {
             {bulkPreview.map((r, i) => (
               <div key={i} className="flex items-center justify-between px-3 py-2">
                 <span className="font-medium">{r.name}</span>
-                <span className="text-[#EE7526] font-semibold">{formatPrice(r.price)}</span>
+                <span className="text-[#1d4f8a] font-semibold">{formatPrice(r.price)}</span>
               </div>
             ))}
           </div>
           <Button onClick={confirmBulkUpload} disabled={bulkSaving}
-            className="mt-3 rounded-xl bg-[#EE7526] text-white hover:bg-[#d8661c]">
+            className="mt-3 rounded-xl bg-[#1d4f8a] text-white hover:bg-[#164078]">
             {bulkSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
             Yuklashni tasdiqlash
           </Button>
@@ -310,7 +328,7 @@ export function AdminProducts() {
           <Input placeholder="+10 yoki -5 (%)" value={priceUpdatePct}
             onChange={e => setPriceUpdatePct(e.target.value)} className="h-9 w-full sm:w-36 rounded-xl" />
           <Button onClick={applyPriceUpdate} disabled={priceUpdating}
-            variant="outline" className="h-9 rounded-xl border-orange-200 text-[#EE7526] w-full sm:w-auto">
+            variant="outline" className="h-9 rounded-xl border-blue-200 text-[#1d4f8a] w-full sm:w-auto">
             {priceUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             Yangilash
           </Button>
@@ -319,14 +337,14 @@ export function AdminProducts() {
 
       {/* Add form */}
       {showAdd && (
-        <div className="rounded-2xl border border-orange-100 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
           <h3 className="mb-4 flex items-center gap-2 font-bold text-neutral-900">
-            <PackagePlus className="h-5 w-5 text-[#EE7526]" />Yangi mahsulot
+            <PackagePlus className="h-5 w-5 text-[#1d4f8a]" />Yangi mahsulot
           </h3>
-          <ProductFormFields form={addForm} setForm={setAddForm} stores={stores} />
+          <ProductFormFields form={addForm} setForm={setAddForm} stores={stores} deliveryProviders={deliveryProviders} />
           <div className="mt-4 flex gap-2">
             <Button onClick={() => void addProduct()} disabled={saving}
-              className="rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]">
+              className="rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Qo'shish
             </Button>
             <Button variant="ghost" onClick={() => setShowAdd(false)} className="rounded-full">Bekor</Button>
@@ -340,16 +358,16 @@ export function AdminProducts() {
           <div className="w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" style={{ maxHeight: "90vh" }}>
             <div className="mb-4 flex items-center justify-between">
               <h2 className="flex items-center gap-2 font-bold text-neutral-900">
-                <Edit3 className="h-5 w-5 text-[#EE7526]" />Tahrirlash
+                <Edit3 className="h-5 w-5 text-[#1d4f8a]" />Tahrirlash
               </h2>
               <button onClick={() => setEditId(null)} className="rounded-full p-1.5 hover:bg-neutral-100">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <ProductFormFields form={editForm} setForm={setEditForm} stores={stores} />
+            <ProductFormFields form={editForm} setForm={setEditForm} stores={stores} deliveryProviders={deliveryProviders} />
             <div className="mt-4 flex gap-2">
               <Button onClick={() => void saveEdit()} disabled={saving}
-                className="rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]">
+                className="rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}Saqlash
               </Button>
               <Button variant="ghost" onClick={() => setEditId(null)} className="rounded-full">Bekor</Button>
@@ -368,7 +386,7 @@ export function AdminProducts() {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-[#EE7526]" /></div>
+        <BoxLoader className="py-16" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {displayed.map(p => (
@@ -380,8 +398,8 @@ export function AdminProducts() {
                   <img src={p.images[0]} alt={p.name} className="h-40 w-full object-cover"
                     onError={e => { e.currentTarget.style.display = "none"; }} />
                 ) : (
-                  <div className="flex h-40 items-center justify-center bg-orange-50">
-                    <Package className="h-10 w-10 text-orange-200" />
+                  <div className="flex h-40 items-center justify-center bg-blue-50">
+                    <Package className="h-10 w-10 text-blue-200" />
                   </div>
                 )}
                 {p.status !== "active" && (
@@ -390,7 +408,7 @@ export function AdminProducts() {
                   </div>
                 )}
                 {p.is_recommended && (
-                  <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#EE7526] px-2 py-0.5 text-[10px] font-bold text-white">
+                  <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#1d4f8a] px-2 py-0.5 text-[10px] font-bold text-white">
                     <Star className="h-2.5 w-2.5 fill-white" />Tavsiya
                   </span>
                 )}
@@ -409,13 +427,13 @@ export function AdminProducts() {
                   </span>
                 )}
                 {p.category && (
-                  <span className="mb-1.5 ml-1 inline-block rounded-full bg-orange-50 px-2.5 py-0.5 text-[10px] font-medium text-[#EE7526]">
+                  <span className="mb-1.5 ml-1 inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-medium text-[#1d4f8a]">
                     {p.category}
                   </span>
                 )}
                 <p className="font-bold text-neutral-900 line-clamp-2 text-sm">{p.name}</p>
                 <div className="mt-1 flex items-baseline gap-1.5">
-                  <p className="font-semibold text-[#EE7526]">{formatPrice(Number(p.price))}</p>
+                  <p className="font-semibold text-[#1d4f8a]">{formatPrice(Number(p.price))}</p>
                   {p.original_price && (
                     <p className="text-xs text-neutral-400 line-through">{formatPrice(Number(p.original_price))}</p>
                   )}
@@ -439,10 +457,10 @@ export function AdminProducts() {
                   <button onClick={() => void toggleRecommended(p.id, p.is_recommended)}
                     className={`flex w-full items-center justify-center gap-1.5 rounded-full border py-1.5 text-xs font-semibold transition ${
                       p.is_recommended
-                        ? "border-[#EE7526] bg-orange-50 text-[#EE7526]"
+                        ? "border-[#1d4f8a] bg-blue-50 text-[#1d4f8a]"
                         : "border-neutral-200 text-neutral-500 hover:bg-neutral-50"
                     }`}>
-                    <Star className={`h-3.5 w-3.5 ${p.is_recommended ? "fill-[#EE7526]" : ""}`} />
+                    <Star className={`h-3.5 w-3.5 ${p.is_recommended ? "fill-[#1d4f8a]" : ""}`} />
                     {p.is_recommended ? "Tavsiyada" : "Tavsiyaga qo'shish"}
                   </button>
                   <div className="flex gap-1.5">
@@ -478,11 +496,12 @@ export function AdminProducts() {
 
 /* ── Product Form with store + tag-based specs ── */
 function ProductFormFields({
-  form, setForm, stores,
+  form, setForm, stores, deliveryProviders,
 }: {
   form: PForm;
   setForm: React.Dispatch<React.SetStateAction<PForm>>;
   stores: Store[];
+  deliveryProviders: DeliveryProvider[];
 }) {
   const presetKeys = SPEC_PRESETS[form.category] ?? SPEC_PRESETS.default;
   const mediaUrls = form.images.split("\n").map(s => s.trim()).filter(Boolean);
@@ -552,7 +571,7 @@ function ProductFormFields({
           <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Kategoriya</label>
           <select value={form.category}
             onChange={e => setForm(f => ({ ...f, category: e.target.value, specs: [] }))}
-            className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-[#EE7526]/30">
+            className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-[#1d4f8a]/30">
             <option value="">— Tanlang —</option>
             {CATEGORIES.map(c => <option key={c}>{c}</option>)}
           </select>
@@ -562,7 +581,7 @@ function ProductFormFields({
           <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Do'kon / Hamkor</label>
           <select value={form.store_id}
             onChange={e => setForm(f => ({ ...f, store_id: e.target.value }))}
-            className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-[#EE7526]/30">
+            className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-[#1d4f8a]/30">
             <option value="">— Do'kon tanlanmagan —</option>
             {stores.map(s => (
               <option key={s.id} value={s.id}>{s.name} ({s.commission_percent}% komissiya)</option>
@@ -572,12 +591,37 @@ function ProductFormFields({
             <p className="text-xs text-neutral-400">Hamkorlar bo'limidan do'kon qo'shing</p>
           )}
         </div>
+        {/* Delivery provider */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Yetkazib beruvchi</label>
+          <select value={form.delivery_provider_id}
+            onChange={e => setForm(f => ({ ...f, delivery_provider_id: e.target.value }))}
+            className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-[#1d4f8a]/30">
+            <option value="">— Tanlanmagan (bepul) —</option>
+            {deliveryProviders.map(d => (
+              <option key={d.id} value={d.id}>
+                {d.name}{d.company_name ? ` (${d.company_name})` : ""} — {d.service_fee === 0 ? "Bepul" : `${d.service_fee.toLocaleString()} so'm`}
+              </option>
+            ))}
+          </select>
+          {form.delivery_provider_id && (() => {
+            const dp = deliveryProviders.find(d => d.id === form.delivery_provider_id);
+            return dp ? (
+              <p className="text-xs font-medium text-[#1d4f8a]">
+                🚚 {dp.name} · Narxi: {dp.service_fee === 0 ? "Bepul" : `${dp.service_fee.toLocaleString()} so'm`}
+              </p>
+            ) : null;
+          })()}
+          {deliveryProviders.length === 0 && (
+            <p className="text-xs text-neutral-400">Yetkazib berish bo'limidan provayderlarni qo'shing</p>
+          )}
+        </div>
         {/* Warranty */}
         <div className="space-y-1.5">
           <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Kafolat muddati</label>
           <select value={form.warranty}
             onChange={e => setForm(f => ({ ...f, warranty: e.target.value }))}
-            className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-[#EE7526]/30">
+            className="h-10 w-full rounded-xl border border-neutral-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-[#1d4f8a]/30">
             <option value="">— Kafolat yo'q —</option>
             <option value="6 oy">6 oy</option>
             <option value="12 oy">12 oy</option>
@@ -622,8 +666,8 @@ function ProductFormFields({
                     onClick={() => already ? removeSpec(form.specs.findIndex(s => s.key === key)) : addSpec(key)}
                     className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                       already
-                        ? "border-[#EE7526] bg-orange-50 text-[#EE7526]"
-                        : "border-neutral-200 bg-white text-neutral-500 hover:border-[#EE7526] hover:text-[#EE7526]"
+                        ? "border-[#1d4f8a] bg-blue-50 text-[#1d4f8a]"
+                        : "border-neutral-200 bg-white text-neutral-500 hover:border-[#1d4f8a] hover:text-[#1d4f8a]"
                     }`}
                   >
                     {already ? <><span className="mr-1">✓</span>{key}</> : <><span className="mr-1">+</span>{key}</>}

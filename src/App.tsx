@@ -8,6 +8,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { useActivityTracker } from "@/hooks/useActivityTracker";
+import { BoxLoader } from "@/components/BoxLoader";
+import { HeartLoader } from "@/components/HeartLoader";
 
 const Admin = lazy(() => import("./pages/Admin"));
 const Index = lazy(() => import("./pages/Index"));
@@ -15,6 +17,9 @@ const Login = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const SearchResults = lazy(() => import("./pages/SearchResults"));
+const CartPage = lazy(() => import("./pages/CartPage"));
+const OrdersPage = lazy(() => import("./pages/OrdersPage"));
+const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,8 +33,8 @@ const queryClient = new QueryClient({
 });
 
 const PageLoader = () => (
-  <div className="fixed inset-0 flex items-center justify-center bg-white">
-    <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#EE7526] border-t-transparent" />
+  <div className="fixed inset-0 flex flex-col items-center justify-center bg-white gap-4">
+    <HeartLoader size="xl" label="Yuklanmoqda..." />
   </div>
 );
 
@@ -70,6 +75,9 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/admin" element={<Admin />} />

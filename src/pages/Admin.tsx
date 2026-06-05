@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   ArrowLeft, BarChart3, Bell, LayoutDashboard,
-  Loader2, LogOut, Menu, MessageSquare, Package,
-  Settings, ShoppingBag, Store, Users, Wallet, X,
+  LogOut, Menu, MessageSquare, Package,
+  Settings, ShoppingBag, Store, Truck, Users, Wallet, X,
 } from "lucide-react";
+import { BoxLoader } from "@/components/BoxLoader";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { HammaBopLogo } from "@/components/HammaBopLogo";
@@ -19,6 +20,7 @@ import { AdminFinance } from "@/components/admin/AdminFinance";
 import { AdminReviews } from "@/components/admin/AdminReviews";
 import { AdminSystem } from "@/components/admin/AdminSystem";
 import { AdminUsers } from "@/components/admin/AdminUsers";
+import { AdminDelivery } from "@/components/admin/AdminDelivery";
 
 
 const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: string }[] = [
@@ -27,6 +29,7 @@ const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: str
   { id: "products", label: "Mahsulotlar", icon: Package, sub: "Katalog & Sklad" },
   { id: "marketing", label: "Marketing", icon: BarChart3, sub: "Promo & Aksiyalar" },
   { id: "partners", label: "Hamkorlar", icon: Store, sub: "Do'konlar & Komissiya" },
+  { id: "delivery", label: "Yetkazib berish", icon: Truck, sub: "Kuryer & Narxlar" },
   { id: "finance", label: "Moliya", icon: Wallet, sub: "Cashback & Balans" },
   { id: "reviews", label: "Izohlar", icon: MessageSquare, sub: "Moderatsiya" },
   { id: "system", label: "Tizim", icon: Settings, sub: "Logs & Xavfsizlik" },
@@ -59,7 +62,7 @@ export default function Admin() {
   if (sessionLoading || isAdmin === null) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f5f6fa]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#EE7526]" />
+        <BoxLoader />
       </div>
     );
   }
@@ -93,7 +96,7 @@ export default function Admin() {
           <HammaBopLogo size={34} />
           <div className="min-w-0">
             <p className="font-extrabold leading-tight text-white">
-              <span className="text-[#EE7526]">Hamma</span>Bop
+              <span className="text-[#1d4f8a]">Hamma</span>Bop
             </p>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-white/30">Admin Panel</p>
           </div>
@@ -115,7 +118,7 @@ export default function Admin() {
                 onClick={() => handleNav(item.id)}
                 className={`relative flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all ${
                   active
-                    ? "bg-[#EE7526] text-white shadow-lg shadow-orange-500/25"
+                    ? "bg-[#1d4f8a] text-white shadow-lg shadow-orange-500/25"
                     : "text-white/55 hover:bg-white/6 hover:text-white"
                 }`}
               >
@@ -170,7 +173,7 @@ export default function Admin() {
 
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <activeItem.icon className="h-5 w-5 text-[#EE7526]" />
+              <activeItem.icon className="h-5 w-5 text-[#1d4f8a]" />
               <h1 className="font-bold text-neutral-900">{activeItem.label}</h1>
             </div>
             <p className="hidden text-xs text-neutral-400 sm:block">
@@ -193,7 +196,7 @@ export default function Admin() {
               )}
             </button>
             <div className="flex items-center gap-2 rounded-xl border border-neutral-200 px-3 py-1.5">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#EE7526] text-[10px] font-extrabold text-white">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1d4f8a] text-[10px] font-extrabold text-white">
                 A
               </div>
               <span className="hidden text-sm font-medium text-neutral-700 sm:block">Admin</span>
@@ -208,6 +211,7 @@ export default function Admin() {
           {section === "products" && <AdminProducts />}
           {section === "marketing" && <AdminMarketing />}
           {section === "partners" && <AdminPartners />}
+          {section === "delivery" && <AdminDelivery />}
           {section === "finance" && <AdminFinance />}
           {section === "reviews" && <AdminReviews />}
           {section === "system" && <AdminSystem />}

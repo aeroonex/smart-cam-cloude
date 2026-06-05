@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+﻿import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -61,7 +61,7 @@ export function ProfileDialog({ open, onOpenChange, form, onFormChange, saving, 
             <select
               value={form.region}
               onChange={update("region")}
-              className="flex h-12 w-full rounded-2xl border border-[#dbe7d8] bg-white px-4 text-sm outline-none transition focus:border-[#EE7526]"
+              className="flex h-12 w-full rounded-2xl border border-[#dbe7d8] bg-white px-4 text-sm outline-none transition focus:border-[#1d4f8a]"
             >
               <option value="">Hududni tanlang</option>
               {regions.map((r) => (
@@ -71,7 +71,7 @@ export function ProfileDialog({ open, onOpenChange, form, onFormChange, saving, 
           </div>
           <Button
             disabled={saving}
-            className="h-12 w-full rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]"
+            className="h-12 w-full rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]"
             onClick={onSave}
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}

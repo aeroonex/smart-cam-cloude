@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+﻿import { useEffect, useRef } from "react";
 
 /**
  * Yengil, kutubxonasiz WebGL fon — animatsion "plazma" to'lqinlari,
@@ -51,7 +51,7 @@ export function WebGLBackground({ className }: { className?: string }) {
         float d = distance(uv, m);
         float glow = smoothstep(0.45, 0.0, d) * 0.5;
 
-        vec3 c1 = vec3(0.933, 0.459, 0.149); // #EE7526
+        vec3 c1 = vec3(0.933, 0.459, 0.149); // #1d4f8a
         vec3 c2 = vec3(1.0, 0.78, 0.45);     // ochiq sariq
         vec3 c3 = vec3(0.99, 0.93, 0.88);    // deyarli oq
 

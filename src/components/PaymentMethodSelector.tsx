@@ -1,4 +1,4 @@
-type Method = "cash" | "click" | "payme" | "alif" | "uzum";
+﻿type Method = "cash" | "click" | "payme" | "alif" | "uzum";
 
 type Props = {
   value: Method;
@@ -32,7 +32,7 @@ const METHODS: { key: Method; label: string; icon: string; desc: string; color: 
     label: "Alif Nasiya",
     icon: "🏦",
     desc: "3–12 oylik muddatli to'lov",
-    color: "border-orange-200 bg-orange-50",
+    color: "border-blue-200 bg-blue-50",
   },
   {
     key: "uzum",
@@ -54,7 +54,7 @@ export function PaymentMethodSelector({ value, onChange }: Props) {
             onClick={() => onChange(m.key)}
             className={`flex items-center gap-3 rounded-xl border-2 p-3 text-left transition ${
               value === m.key
-                ? `${m.color} border-[#EE7526] shadow-sm`
+                ? `${m.color} border-[#1d4f8a] shadow-sm`
                 : "border-neutral-200 bg-white hover:border-neutral-300"
             }`}
           >
@@ -66,13 +66,13 @@ export function PaymentMethodSelector({ value, onChange }: Props) {
               <p className="text-[11px] text-neutral-500">{m.desc}</p>
             </div>
             {value === m.key && (
-              <span className="ml-auto text-[#EE7526]">✓</span>
+              <span className="ml-auto text-[#1d4f8a]">✓</span>
             )}
           </button>
         ))}
       </div>
       {(value === "alif" || value === "uzum") && (
-        <div className="rounded-xl bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-700">
+        <div className="rounded-xl bg-blue-50 border border-amber-100 px-3 py-2 text-xs text-amber-700">
           {value === "alif"
             ? "Buyurtmadan so'ng Alif skorinig havolasi yuboriladi."
             : "Buyurtmadan so'ng Uzum nasiya portali havolasi yuboriladi."}

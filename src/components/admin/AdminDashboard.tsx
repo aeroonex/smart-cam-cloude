@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
-  ArrowUpRight, Loader2, Package, ShoppingBag, Star,
+  ArrowUpRight, Package, ShoppingBag, Star,
   TrendingUp, Users, Wallet,
 } from "lucide-react";
+import { BoxLoader } from "@/components/BoxLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
 import type { AdminSection } from "./adminTypes";
@@ -69,11 +70,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: AdminSection) =
     yetkazilmoqda: "Kuryerda", mijoz_qabul_qildi: "Yopildi", rad_etildi: "Rad etildi",
   };
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-[#EE7526]" />
-    </div>
-  );
+  if (loading) return <BoxLoader className="py-20" />;
 
   return (
     <div className="space-y-6">
@@ -83,7 +80,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: AdminSection) =
           {
             label: "Bugungi daromad", value: formatPrice(todayRevenue),
             sub: `Bugun ${todayOrders.length} ta buyurtma`,
-            icon: TrendingUp, iconBg: "bg-orange-100", iconColor: "text-[#EE7526]",
+            icon: TrendingUp, iconBg: "bg-blue-100", iconColor: "text-[#1d4f8a]",
           },
           {
             label: "Umumiy daromad", value: formatPrice(totalRevenue),
@@ -138,12 +135,12 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: AdminSection) =
               <div key={d.key} className="group flex flex-1 flex-col items-center gap-1">
                 <div className="relative w-full flex flex-col items-center">
                   {d.rev > 0 && (
-                    <span className="mb-1 text-[9px] font-semibold text-[#EE7526] opacity-0 group-hover:opacity-100 transition">
+                    <span className="mb-1 text-[9px] font-semibold text-[#1d4f8a] opacity-0 group-hover:opacity-100 transition">
                       {Math.round(d.rev / 1000)}k
                     </span>
                   )}
                   <div
-                    className="w-full rounded-t-lg bg-gradient-to-t from-[#EE7526] to-[#f5a460] transition-all hover:from-[#d8661c]"
+                    className="w-full rounded-t-lg bg-gradient-to-t from-[#1d4f8a] to-[#f5a460] transition-all hover:from-[#164078]"
                     style={{ height: `${Math.max(6, (d.rev / maxRev) * 140)}px` }}
                   />
                 </div>
@@ -166,7 +163,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: AdminSection) =
                 "Naqd": "bg-emerald-400",
                 "Karta": "bg-blue-400",
                 "Alif Nasiya": "bg-purple-400",
-                "Uzum Nasiya": "bg-orange-400",
+                "Uzum Nasiya": "bg-blue-600",
               };
               return (
                 <div key={method}>
@@ -176,7 +173,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: AdminSection) =
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-100">
                     <div
-                      className={`h-full rounded-full transition-all ${colors[method] ?? "bg-[#EE7526]"}`}
+                      className={`h-full rounded-full transition-all ${colors[method] ?? "bg-[#1d4f8a]"}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -206,21 +203,21 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: AdminSection) =
                 <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-extrabold ${
                   i === 0 ? "bg-amber-400 text-white" :
                   i === 1 ? "bg-neutral-300 text-white" :
-                  i === 2 ? "bg-amber-600/50 text-white" : "bg-orange-100 text-[#EE7526]"
+                  i === 2 ? "bg-amber-600/50 text-white" : "bg-blue-100 text-[#1d4f8a]"
                 }`}>{i + 1}</span>
                 {p.images?.[0] ? (
                   <img src={p.images[0]} alt="" className="h-10 w-10 rounded-lg border border-neutral-100 object-cover"
                     onError={e => { e.currentTarget.style.display = "none"; }} />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
-                    <Package className="h-4 w-4 text-[#EE7526]" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                    <Package className="h-4 w-4 text-[#1d4f8a]" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-sm font-semibold text-neutral-800">{p.name}</p>
                   <p className="text-xs text-neutral-400">{p.sold_count} ta sotildi</p>
                 </div>
-                <p className="shrink-0 text-sm font-bold text-[#EE7526]">{formatPrice(Number(p.price))}</p>
+                <p className="shrink-0 text-sm font-bold text-[#1d4f8a]">{formatPrice(Number(p.price))}</p>
               </div>
             ))}
           </div>
@@ -234,7 +231,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: AdminSection) =
               <p className="text-xs text-neutral-400">Yangi kelganlar</p>
             </div>
             <button onClick={() => onNavigate("orders")}
-              className="text-xs font-semibold text-[#EE7526] hover:underline">
+              className="text-xs font-semibold text-[#1d4f8a] hover:underline">
               Hammasini →
             </button>
           </div>
@@ -244,7 +241,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: AdminSection) =
             ) : recentOrders.map(o => {
               const items = (o.items as unknown[]) ?? [];
               const statusColor =
-                o.status === "yangi" ? "bg-orange-100 text-orange-700" :
+                o.status === "yangi" ? "bg-blue-100 text-orange-700" :
                 o.status === "rad_etildi" ? "bg-red-100 text-red-600" :
                 o.status === "mijoz_qabul_qildi" ? "bg-emerald-100 text-emerald-700" :
                 "bg-blue-100 text-blue-600";
@@ -264,7 +261,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (s: AdminSection) =
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-sm font-bold text-[#EE7526]">{formatPrice(Number(o.total_amount))}</p>
+                    <p className="text-sm font-bold text-[#1d4f8a]">{formatPrice(Number(o.total_amount))}</p>
                     <p className="text-[10px] text-neutral-400">
                       {new Date(o.created_at).toLocaleDateString("uz-UZ")}
                     </p>

@@ -1,4 +1,4 @@
-import type { Database } from "@/integrations/supabase/types";
+﻿import type { Database } from "@/integrations/supabase/types";
 
 type Order = Database["public"]["Tables"]["orders"]["Row"];
 
@@ -42,14 +42,14 @@ export function OrderTracking({ order }: Props) {
     <div className="space-y-3">
       {/* Animated truck when in delivery */}
       {order.status === "yetkazilmoqda" && (
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-100 px-4 py-3">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 border border-blue-100 px-4 py-3">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm font-semibold text-[#EE7526]">Kuryer yo'lda!</span>
+            <span className="text-sm font-semibold text-[#1d4f8a]">Kuryer yo'lda!</span>
           </div>
           {/* Road animation */}
           <div className="relative h-10 flex items-center">
             <div className="absolute inset-x-0 bottom-1 h-1.5 rounded-full bg-neutral-200 overflow-hidden">
-              <div className="h-full w-1/3 bg-orange-300 rounded-full animate-[slide_2s_linear_infinite]" />
+              <div className="h-full w-1/3 bg-blue-300 rounded-full animate-[slide_2s_linear_infinite]" />
             </div>
             <div
               className="text-3xl animate-[truck_4s_linear_infinite]"
@@ -82,24 +82,24 @@ export function OrderTracking({ order }: Props) {
             <div key={step.key} className="flex flex-1 flex-col items-center">
               <div className="flex w-full items-center">
                 {/* Left line */}
-                <div className={`flex-1 h-0.5 ${i === 0 ? "invisible" : done ? "bg-[#EE7526]" : "bg-neutral-200"}`} />
+                <div className={`flex-1 h-0.5 ${i === 0 ? "invisible" : done ? "bg-[#1d4f8a]" : "bg-neutral-200"}`} />
                 {/* Circle */}
                 <div className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm transition-all ${
                   active
-                    ? "border-[#EE7526] bg-[#EE7526] text-white shadow-lg shadow-orange-200 scale-110"
+                    ? "border-[#1d4f8a] bg-[#1d4f8a] text-white shadow-lg shadow-orange-200 scale-110"
                     : done
-                    ? "border-[#EE7526] bg-[#EE7526] text-white"
+                    ? "border-[#1d4f8a] bg-[#1d4f8a] text-white"
                     : "border-neutral-200 bg-white text-neutral-400"
                 }`}>
                   {done ? (active ? step.icon : "✓") : <span className="text-[10px]">{i + 1}</span>}
                   {active && (
-                    <span className="absolute inset-0 rounded-full animate-ping bg-orange-300 opacity-40" />
+                    <span className="absolute inset-0 rounded-full animate-ping bg-blue-300 opacity-40" />
                   )}
                 </div>
                 {/* Right line */}
-                <div className={`flex-1 h-0.5 ${last ? "invisible" : done && !active ? "bg-[#EE7526]" : i < currentIdx ? "bg-[#EE7526]" : "bg-neutral-200"}`} />
+                <div className={`flex-1 h-0.5 ${last ? "invisible" : done && !active ? "bg-[#1d4f8a]" : i < currentIdx ? "bg-[#1d4f8a]" : "bg-neutral-200"}`} />
               </div>
-              <p className={`mt-1.5 text-center text-[10px] font-semibold leading-tight ${active ? "text-[#EE7526]" : done ? "text-neutral-700" : "text-neutral-400"}`}>
+              <p className={`mt-1.5 text-center text-[10px] font-semibold leading-tight ${active ? "text-[#1d4f8a]" : done ? "text-neutral-700" : "text-neutral-400"}`}>
                 {step.label}
               </p>
             </div>
@@ -108,7 +108,7 @@ export function OrderTracking({ order }: Props) {
       </div>
 
       {/* Current status description */}
-      <div className="flex items-center gap-2 rounded-xl bg-orange-50 border border-orange-100 px-4 py-3">
+      <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
         <span className="text-xl">{current.icon}</span>
         <div>
           <p className="text-sm font-semibold text-neutral-800">{current.label}</p>

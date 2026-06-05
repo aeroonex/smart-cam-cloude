@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { HeroBannerSkeleton } from "@/components/Skeleton";
 
 type Banner = Database["public"]["Tables"]["banners"]["Row"];
 
@@ -14,9 +15,9 @@ const fallbackBanners = [
     title: "BEPUL YETKAZIB BERAMIZ",
     subtitle: "Chegirmali mahsulotlarni tanlang!",
     badge: "KATTA CHEGIRMA",
-    bg: "from-orange-400 to-orange-600",
+    bg: "from-[#1d4f8a] to-[#0f2d5c]",
     accent: "90%gacha",
-    accentText: "text-[#EE7526]",
+    accentText: "text-[#1d4f8a]",
   },
   {
     id: "fallback-2",
@@ -25,9 +26,9 @@ const fallbackBanners = [
     title: "BAHOR SEZONI",
     subtitle: "Eng yangi tendensiyalar sizni kutmoqda",
     badge: "YANGI KOLLEKSIYA",
-    bg: "from-rose-400 to-pink-600",
+    bg: "from-[#164078] to-[#1d4f8a]",
     accent: "−50%",
-    accentText: "text-rose-500",
+    accentText: "text-[#1d4f8a]",
   },
   {
     id: "fallback-3",
@@ -36,15 +37,15 @@ const fallbackBanners = [
     title: "ELEKTRONIKA AKSIYASI",
     subtitle: "Gadjet va aksessuarlarga maxsus narxlar",
     badge: "TOP TAKLIF",
-    bg: "from-violet-500 to-purple-700",
+    bg: "from-[#0d2744] to-[#2860a8]",
     accent: "−40%",
-    accentText: "text-purple-600",
+    accentText: "text-[#1d4f8a]",
   },
 ];
 
+/* Outer: only fetches data, shows skeleton while loading */
 export function HeroBanner() {
-  const [current, setCurrent] = useState(0);
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [banners, setBanners] = useState<Banner[] | null>(null);
 
   useEffect(() => {
     supabase
@@ -54,6 +55,14 @@ export function HeroBanner() {
       .order("sort_order", { ascending: true })
       .then(({ data }) => setBanners(data ?? []));
   }, []);
+
+  if (banners === null) return <HeroBannerSkeleton />;
+  return <HeroBannerInner banners={banners} />;
+}
+
+/* Inner: always mounts with same hook count */
+function HeroBannerInner({ banners }: { banners: Banner[] }) {
+  const [current, setCurrent] = useState(0);
 
   const usingDb = banners.length > 0;
   const slides = usingDb ? banners : fallbackBanners;
@@ -85,7 +94,7 @@ export function HeroBanner() {
       className={`relative overflow-hidden transition-all duration-500 ${
         hasImage ? "bg-neutral-900" : `bg-gradient-to-r ${(slide as typeof fallbackBanners[number]).bg}`
       } ${linkUrl ? "cursor-pointer" : ""}`}
-      style={{ height: 220 }}
+      style={{ height: 130 }}
       onClick={goToLink}
     >
       {/* Rasm (admin yuklagan) */}

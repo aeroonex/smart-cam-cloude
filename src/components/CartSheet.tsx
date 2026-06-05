@@ -1,12 +1,5 @@
-import { CreditCard, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { ProductCard } from "@/components/ProductCard";
+import { Minus, Plus, ShoppingBag, Truck, X } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useCurrency } from "@/hooks/useCurrency";
 import { useI18n } from "@/hooks/useI18n";
 import type { CartItem } from "@/hooks/useCart";
@@ -29,6 +22,9 @@ type Props = {
   onLogin?: () => void;
 };
 
+const BLUE = "#1d4f8a";
+const FREE_THRESHOLD = 150_000;
+
 export function CartSheet({
   open,
   onOpenChange,
@@ -38,129 +34,255 @@ export function CartSheet({
   onRemove,
   onCheckout,
   onGoToCatalog,
-  recommended = [],
-  onAddToCart,
   isLoggedIn,
   onLogin,
 }: Props) {
-  const { format: formatPrice } = useCurrency();
+  const { format } = useCurrency();
   const { t } = useI18n();
-  const suggestions = recommended.slice(0, 4);
+
+  const totalQty = cart.reduce((s, i) => s + i.qty, 0);
+
+  // Har xil provayderlar uchun bir martadan to'lov (unique providers)
+  const deliveryFee = (() => {
+    const seen = new Set<string>();
+    let total = 0;
+    for (const item of cart) {
+      if (item.delivery_provider_id && !seen.has(item.delivery_provider_id)) {
+        seen.add(item.delivery_provider_id);
+        total += item.delivery_provider_fee ?? 0;
+      }
+    }
+    return total;
+  })();
+
+  const grandTotal = cartTotal + deliveryFee;
+  const progressPct = Math.min((cartTotal / FREE_THRESHOLD) * 100, 100);
+  const remaining = Math.max(0, FREE_THRESHOLD - cartTotal);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full max-w-xl border-l border-neutral-200 bg-[#f5f5f5] p-0 sm:max-w-xl">
-        <div className="flex h-full flex-col">
-          <SheetHeader className="border-b border-neutral-200 bg-white px-6 py-5 text-left">
-            <SheetTitle className="flex items-center gap-2 text-xl font-extrabold text-neutral-900">
-              <ShoppingCart className="h-5 w-5 text-[#EE7526]" /> {t("cart")}
-            </SheetTitle>
-          </SheetHeader>
-
-          <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-6">
-            {cart.length ? (
-              <>
-                {cart.map((item) => (
-                  <div key={item.id} className="flex gap-4 rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
-                    <img
-                      src={item.image ?? "/assets/smartcam-outdoor-camera.png"}
-                      alt={item.name}
-                      onError={(e) => { e.currentTarget.src = "/assets/smartcam-outdoor-camera.png"; }}
-                      className="h-20 w-20 shrink-0 rounded-xl object-cover"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <h3 className="line-clamp-2 text-sm font-semibold text-neutral-800">{item.name}</h3>
-                      <p className="mt-1 text-lg font-extrabold text-neutral-900">{formatPrice(item.price)}</p>
-                      <div className="mt-3 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 p-1">
-                          <button
-                            className="flex h-7 w-7 items-center justify-center rounded-full text-neutral-700 transition hover:bg-white"
-                            onClick={() => onUpdateQuantity(item.id, -1)}
-                          >
-                            <Minus className="h-3.5 w-3.5" />
-                          </button>
-                          <span className="min-w-7 text-center text-sm font-bold text-neutral-900">
-                            {item.qty}
-                          </span>
-                          <button
-                            className="flex h-7 w-7 items-center justify-center rounded-full text-neutral-700 transition hover:bg-white"
-                            onClick={() => onUpdateQuantity(item.id, 1)}
-                          >
-                            <Plus className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                        <button
-                          onClick={() => onRemove(item.id)}
-                          className="flex items-center gap-1 text-xs font-semibold text-neutral-400 transition hover:text-red-500"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" /> {t("remove")}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </>
-            ) : (
-              /* Bo'sh savat — AliExpress uslubida */
-              <div className="rounded-2xl bg-white px-6 py-12 text-center shadow-sm">
-                <h3 className="text-xl font-extrabold text-neutral-900">{t("cart_empty_title")}</h3>
-                <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-neutral-400">
-                  {t("cart_empty_text")}
-                </p>
-                <div className="mx-auto mt-6 flex max-w-xs flex-col gap-3">
-                  {!isLoggedIn && onLogin && (
-                    <Button
-                      className="h-11 rounded-full bg-[#EE7526] text-sm font-semibold text-white hover:bg-[#d8661c]"
-                      onClick={() => { onOpenChange(false); onLogin(); }}
-                    >
-                      {t("login_account")}
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    className="h-11 rounded-full border-neutral-200 bg-neutral-100 text-sm font-semibold text-neutral-700 hover:bg-neutral-200"
-                    onClick={() => { onOpenChange(false); onGoToCatalog(); }}
-                  >
-                    {t("to_home")}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Sizga atab ajratib qo'yilgan — tavsiya etilgan mahsulotlar */}
-            {suggestions.length > 0 && onAddToCart && (
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <h3 className="mb-3 text-base font-extrabold text-neutral-900">{t("for_you")}</h3>
-                <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl bg-neutral-200">
-                  {suggestions.map((p) => (
-                    <ProductCard
-                      key={p.id}
-                      product={p}
-                      onAddToCart={(prod) => onAddToCart(prod)}
-                    />
-                  ))}
-                </div>
-              </div>
+      <SheetContent
+        side="right"
+        className="w-full max-w-md border-0 bg-white p-0 flex flex-col shadow-2xl sm:max-w-md [&>button:last-of-type]:hidden pb-24"
+      >
+        {/* ── HEADER ── */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-4">
+          <button
+            onClick={() => onOpenChange(false)}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f0f4fa] text-[#1d4f8a] transition hover:bg-[#dce8f7]"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex flex-col items-center">
+            <h1 className="text-[17px] font-bold text-neutral-900">Savat</h1>
+            {cart.length > 0 && (
+              <span className="text-xs text-neutral-400 mt-0.5">{totalQty} ta mahsulot</span>
             )}
           </div>
+          {/* right spacer */}
+          <div className="w-9" />
+        </div>
 
-          {cart.length > 0 && (
-            <div className="border-t border-neutral-200 bg-white px-6 py-5">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-sm text-neutral-500">{t("total_sum")}</span>
-                <span className="text-2xl font-extrabold text-neutral-900">{formatPrice(cartTotal)}</span>
+        {/* ── BODY ── */}
+        <div className="flex-1 overflow-y-auto">
+          {cart.length > 0 ? (
+            <div className="flex flex-col gap-0">
+
+              {/* Delivery progress strip */}
+              <div className="mx-4 mb-3 rounded-2xl bg-[#f0f4fa] px-4 py-3">
+                {remaining > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Truck className="h-3.5 w-3.5 text-[#1d4f8a]" />
+                        <span className="text-[12px] font-semibold text-[#1d4f8a]">Bepul yetkazish</span>
+                      </div>
+                      <span className="text-[11px] text-neutral-500">{format(remaining)} qoldi</span>
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-white overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${progressPct}%`, background: BLUE }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <span className="text-[13px] font-semibold text-emerald-700">Sizda bepul yetkazib berish bor!</span>
+                  </div>
+                )}
               </div>
-              <Button
-                className="h-12 w-full rounded-full bg-[#EE7526] text-base font-semibold text-white hover:bg-[#d8661c]"
-                onClick={onCheckout}
+
+              {/* Cart items */}
+              <div className="flex flex-col divide-y divide-[#f0f4fa] px-4">
+                {cart.map((item) => (
+                  <CartItemRow
+                    key={item.id}
+                    item={item}
+                    onUpdateQuantity={onUpdateQuantity}
+                    onRemove={onRemove}
+                    formatPrice={format}
+                  />
+                ))}
+              </div>
+
+              {/* Order summary */}
+              <div className="mx-4 mt-4 rounded-2xl bg-[#f0f4fa] overflow-hidden">
+                <div className="px-4 py-4 space-y-2">
+                  <div className="flex items-center justify-between text-[13px]">
+                    <span className="text-neutral-500">Mahsulotlar ({totalQty} ta)</span>
+                    <span className="font-semibold text-neutral-800">{format(cartTotal)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[13px]">
+                    <span className="text-neutral-500">Yetkazib berish</span>
+                    <span className={`font-semibold ${deliveryFee === 0 ? "text-emerald-600" : "text-neutral-800"}`}>
+                      {deliveryFee === 0 ? "Bepul" : format(deliveryFee)}
+                    </span>
+                  </div>
+                  {/* Per-provider breakdown */}
+                  {deliveryFee > 0 && (() => {
+                    const seen = new Set<string>();
+                    const lines: { name: string; fee: number }[] = [];
+                    for (const item of cart) {
+                      if (item.delivery_provider_id && !seen.has(item.delivery_provider_id)) {
+                        seen.add(item.delivery_provider_id);
+                        lines.push({ name: item.delivery_provider_name ?? "Kuryer", fee: item.delivery_provider_fee ?? 0 });
+                      }
+                    }
+                    return lines.map(l => (
+                      <div key={l.name} className="flex items-center justify-between text-[12px] pl-3">
+                        <span className="text-neutral-400">· {l.name}</span>
+                        <span className="text-neutral-500">{l.fee === 0 ? "Bepul" : format(l.fee)}</span>
+                      </div>
+                    ));
+                  })()}
+                  <div className="pt-2 border-t border-[#dce8f7] flex items-center justify-between">
+                    <span className="text-[14px] font-bold text-neutral-900">Jami</span>
+                    <span className="text-[18px] font-extrabold" style={{ color: BLUE }}>
+                      {format(grandTotal)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-6" />
+            </div>
+          ) : (
+            /* ── EMPTY STATE ── */
+            <div className="flex flex-col items-center justify-center h-full px-8 text-center">
+              <div
+                className="mb-6 flex h-24 w-24 items-center justify-center rounded-full"
+                style={{ background: "#f0f4fa" }}
               >
-                <CreditCard className="h-4 w-4" />
-                {t("place_order")}
-              </Button>
+                <ShoppingBag className="h-11 w-11" style={{ color: BLUE, opacity: 0.7 }} />
+              </div>
+              <h3 className="text-[20px] font-extrabold text-neutral-900 leading-snug">
+                Savat bo'sh
+              </h3>
+              <p className="mt-2 text-[13px] text-neutral-400 leading-relaxed max-w-[220px]">
+                Mahsulotlarni qo'shib, qulay xarid qiling
+              </p>
+
+              <div className="mt-8 w-full flex flex-col gap-3">
+                {!isLoggedIn && onLogin && (
+                  <button
+                    onClick={() => { onOpenChange(false); onLogin(); }}
+                    className="h-12 w-full rounded-2xl text-[14px] font-bold text-white transition hover:opacity-90 active:scale-[0.98]"
+                    style={{ background: BLUE }}
+                  >
+                    Kirish
+                  </button>
+                )}
+                <button
+                  onClick={() => { onOpenChange(false); onGoToCatalog(); }}
+                  className="h-12 w-full rounded-2xl border border-[#dce8f7] bg-[#f0f4fa] text-[14px] font-semibold text-[#1d4f8a] transition hover:bg-[#dce8f7] active:scale-[0.98]"
+                >
+                  Mahsulotlarni ko'rish
+                </button>
+              </div>
             </div>
           )}
         </div>
+
+        {/* ── STICKY CHECKOUT ── */}
+        {cart.length > 0 && (
+          <div className="px-4 pb-5 pt-3 bg-white border-t border-[#f0f4fa]">
+            <button
+              onClick={onCheckout}
+              className="h-14 w-full rounded-2xl text-[15px] font-bold text-white transition hover:opacity-90 active:scale-[0.98] shadow-lg shadow-[#1d4f8a33]"
+              style={{ background: `linear-gradient(135deg, #2860a8, ${BLUE})` }}
+            >
+              Rasmiylashtirish · {format(grandTotal)}
+            </button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function CartItemRow({
+  item,
+  onUpdateQuantity,
+  onRemove,
+  formatPrice,
+}: {
+  item: CartItem;
+  onUpdateQuantity: (id: string, delta: number) => void;
+  onRemove: (id: string) => void;
+  formatPrice: (n: number) => string;
+}) {
+  return (
+    <div className="flex gap-3 py-4">
+      {/* Image */}
+      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-[#f0f4fa]">
+        <img
+          src={item.image ?? "/placeholder.svg"}
+          alt={item.name}
+          onError={(e) => { e.currentTarget.src = "/placeholder.svg"; }}
+          className="h-full w-full object-cover"
+        />
+      </div>
+
+      {/* Info */}
+      <div className="flex flex-1 min-w-0 flex-col gap-1">
+        <div className="flex items-start justify-between gap-2">
+          <p className="line-clamp-2 text-[13px] leading-snug text-neutral-700 flex-1">{item.name}</p>
+          <button
+            onClick={() => onRemove(item.id)}
+            className="shrink-0 mt-0.5 h-6 w-6 flex items-center justify-center rounded-full text-neutral-300 hover:text-red-400 hover:bg-red-50 transition"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        <span className="text-[16px] font-extrabold text-neutral-900 leading-none">
+          {formatPrice(item.price * item.qty)}
+        </span>
+        {item.qty > 1 && (
+          <span className="text-[11px] text-neutral-400">{formatPrice(item.price)} × {item.qty}</span>
+        )}
+
+        {/* Qty counter */}
+        <div className="mt-1 flex items-center gap-0 self-start rounded-xl overflow-hidden border border-[#dce8f7]">
+          <button
+            onClick={() => onUpdateQuantity(item.id, -1)}
+            className="flex h-8 w-8 items-center justify-center text-[#1d4f8a] hover:bg-[#f0f4fa] transition font-bold"
+          >
+            <Minus className="h-3.5 w-3.5" />
+          </button>
+          <span className="min-w-[28px] text-center text-[14px] font-bold text-neutral-900 select-none">
+            {item.qty}
+          </span>
+          <button
+            onClick={() => onUpdateQuantity(item.id, 1)}
+            className="flex h-8 w-8 items-center justify-center text-[#1d4f8a] hover:bg-[#f0f4fa] transition font-bold"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

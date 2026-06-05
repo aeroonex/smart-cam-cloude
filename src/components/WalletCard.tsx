@@ -1,4 +1,4 @@
-import { Wallet, Gift, Copy, Users, Check } from "lucide-react";
+﻿import { Wallet, Gift, Copy, Users, Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -34,7 +34,7 @@ export function WalletCard({ cashbackBalance, walletBalance, referralCode, onGet
   const total = cashbackBalance + walletBalance;
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-[#EE7526] to-[#f5a623] p-4 text-white shadow-lg">
+    <div className="rounded-2xl bg-gradient-to-br from-[#1d4f8a] to-[#f5a623] p-4 text-white shadow-lg">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Wallet className="h-5 w-5" />

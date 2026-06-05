@@ -935,6 +935,84 @@ serve(async (req) => {
     };
 
     const payload = await req.json();
+
+    // ── Broadcast (admin panel → all Telegram users) ──────────────────────────
+    if (payload.type === "broadcast") {
+      // Verify caller is an admin via their JWT
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const jwt = authHeader.replace(/^Bearer\s+/i, "");
+      if (!jwt) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Verify JWT and resolve caller's role using service role (bypasses RLS)
+      const { data: { user: authUser }, error: authErr } = await deps.adminClient.auth.getUser(jwt);
+      if (authErr || !authUser) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: caller } = await deps.adminClient
+        .from("users")
+        .select("role")
+        .eq("id", authUser.id)
+        .maybeSingle();
+      if (caller?.role !== "admin") {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const text: string = payload.message ?? "";
+      const imageUrl: string = payload.image_url ?? "";
+
+      if (!text.trim()) {
+        return new Response(JSON.stringify({ error: "Empty message" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Fetch all users with a linked Telegram account
+      const { data: recipients } = await deps.adminClient
+        .from("users")
+        .select("telegram_id")
+        .not("telegram_id", "is", null);
+
+      const chatIds = (recipients ?? [])
+        .map((r) => r.telegram_id)
+        .filter((id): id is number => typeof id === "number");
+
+      let sent = 0;
+      let failed = 0;
+
+      for (const chatId of chatIds) {
+        try {
+          if (imageUrl) {
+            await sendPhoto(deps.botToken, chatId, imageUrl, text);
+          } else {
+            await sendMessage(deps.botToken, chatId, text);
+          }
+          sent++;
+        } catch {
+          failed++;
+        }
+        // Small delay to avoid hitting Telegram rate limits (30 msg/sec)
+        await new Promise((r) => setTimeout(r, 40));
+      }
+
+      console.log(`[broadcast] sent=${sent} failed=${failed} total=${chatIds.length}`);
+      return new Response(
+        JSON.stringify({ ok: true, sent, failed, total: chatIds.length }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const callbackQuery = payload.callback_query as CallbackQuery | undefined;
     const message = (payload.message ?? payload.edited_message) as TelegramMessage | undefined;
 

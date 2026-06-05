@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { Heart, Play, ShoppingCart, Share2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -106,7 +106,7 @@ function VideoSlide({
           onClick={() => { onAddToCart(product); toast.success("Savatga qo'shildi!"); }}
           className="flex flex-col items-center gap-1"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#EE7526]">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1d4f8a]">
             <ShoppingCart className="h-6 w-6 text-white" />
           </div>
           <span className="text-[11px] text-white font-medium">Savat</span>
@@ -124,7 +124,7 @@ function VideoSlide({
       <div className="absolute bottom-4 left-3 right-16 space-y-1">
         <button onClick={() => navigate(`/product/${product.id}`)} className="text-left">
           <p className="font-bold text-white text-base leading-snug line-clamp-2">{product.name}</p>
-          <p className="text-orange-300 font-extrabold text-lg">{formatPrice(Number(product.price))}</p>
+          <p className="text-blue-300 font-extrabold text-lg">{formatPrice(Number(product.price))}</p>
         </button>
         {product.category && (
           <span className="inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-xs text-white">

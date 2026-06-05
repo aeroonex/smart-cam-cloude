@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
-  Activity, AlertTriangle, CheckCircle2, FileText, Loader2,
+  Activity, AlertTriangle, CheckCircle2, FileText,
   Lock, RefreshCw, Save, Shield, Terminal, Webhook,
 } from "lucide-react";
 import { toast } from "sonner";
+import { BoxLoader } from "@/components/BoxLoader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,7 +36,7 @@ export function AdminSystem() {
             onClick={() => setTab(t.id)}
             className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
               tab === t.id
-                ? "bg-[#EE7526] text-white shadow-sm"
+                ? "bg-[#1d4f8a] text-white shadow-sm"
                 : "bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
             }`}
           >
@@ -78,7 +79,7 @@ function AuditLogPanel() {
     setLoading(false);
   }
 
-  if (loading) return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-[#EE7526]" /></div>;
+  if (loading) return <BoxLoader className="py-16" />;
 
   return (
     <div className="space-y-4">
@@ -150,7 +151,7 @@ function WebhookLogsPanel() {
     setLoading(false);
   }
 
-  if (loading) return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-[#EE7526]" /></div>;
+  if (loading) return <BoxLoader className="py-16" />;
 
   return (
     <div className="space-y-4">
@@ -164,7 +165,7 @@ function WebhookLogsPanel() {
         </Button>
       </div>
 
-      <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
+      <div className="rounded-2xl border border-amber-100 bg-blue-50 p-4 text-sm text-amber-700">
         <div className="flex items-start gap-2">
           <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
           <div>
@@ -270,7 +271,7 @@ HammaBop onlayn do'koni orqali xarid qilish quyidagi shartlarga rozilikni bildir
           className="rounded-xl font-mono text-sm resize-none"
         />
         <div className="flex items-center gap-3">
-          <Button onClick={save} className="rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]">
+          <Button onClick={save} className="rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]">
             <Save className="h-4 w-4 mr-1" />
             {saved ? "Saqlandi!" : "Saqlash"}
           </Button>
@@ -305,7 +306,7 @@ function SecurityPanel() {
         {checks.map((c, i) => (
           <div key={i} className={`flex items-start gap-4 rounded-2xl border p-4 ${
             c.status === "ok" ? "border-emerald-100 bg-emerald-50" :
-            c.status === "warning" ? "border-amber-100 bg-amber-50" :
+            c.status === "warning" ? "border-amber-100 bg-blue-50" :
             "border-red-100 bg-red-50"
           }`}>
             <div className="shrink-0 mt-0.5">
@@ -332,23 +333,23 @@ function SecurityPanel() {
 
       <div className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm space-y-3">
         <h4 className="font-bold text-neutral-900 flex items-center gap-2">
-          <Lock className="h-4 w-4 text-[#EE7526]" />Tavsiyalar
+          <Lock className="h-4 w-4 text-[#1d4f8a]" />Tavsiyalar
         </h4>
         <ul className="space-y-2 text-sm text-neutral-600">
           <li className="flex items-start gap-2">
-            <span className="text-[#EE7526] font-bold shrink-0">→</span>
+            <span className="text-[#1d4f8a] font-bold shrink-0">→</span>
             Supabase Dashboard → Authentication → Email confirm yoqilganini tekshiring
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-[#EE7526] font-bold shrink-0">→</span>
+            <span className="text-[#1d4f8a] font-bold shrink-0">→</span>
             Storage buckets uchun to'g'ri RLS policy o'rnating
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-[#EE7526] font-bold shrink-0">→</span>
+            <span className="text-[#1d4f8a] font-bold shrink-0">→</span>
             Admin panelga kirish IP'larni Supabase'da cheklash mumkin
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-[#EE7526] font-bold shrink-0">→</span>
+            <span className="text-[#1d4f8a] font-bold shrink-0">→</span>
             Telegram bot token'ini muntazam yangilab turing
           </li>
         </ul>

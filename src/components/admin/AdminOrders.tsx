@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
-  CheckCircle2, Loader2, Phone, Printer, Truck, User, X, UserCheck,
+  CheckCircle2, Phone, Printer, Truck, User, X, UserCheck,
 } from "lucide-react";
+import { BoxLoader } from "@/components/BoxLoader";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +17,7 @@ type Order = Database["public"]["Tables"]["orders"]["Row"] & {
 type OrderItem = { product_name: string; quantity: number; price: number };
 
 const COLUMNS: { id: Order["status"]; label: string; color: string; dot: string }[] = [
-  { id: "yangi",             label: "Yangi",         color: "bg-orange-50 border-orange-200",  dot: "bg-[#EE7526]" },
+  { id: "yangi",             label: "Yangi",         color: "bg-blue-50 border-blue-200",  dot: "bg-[#1d4f8a]" },
   { id: "qabul_qilindi",     label: "Qabul qilindi", color: "bg-emerald-50 border-emerald-200", dot: "bg-emerald-500" },
   { id: "yetkazilmoqda",     label: "Kuryerda",      color: "bg-blue-50 border-blue-200",       dot: "bg-blue-500" },
   { id: "mijoz_qabul_qildi", label: "Yakunlandi",    color: "bg-neutral-50 border-neutral-200", dot: "bg-neutral-400" },
@@ -32,7 +33,7 @@ function printInvoice(order: Order) {
       *{margin:0;padding:0;box-sizing:border-box}
       body{font-family:'Courier New',monospace;padding:24px;color:#111}
       .hdr{text-align:center;border-bottom:2px dashed #ccc;padding-bottom:16px;margin-bottom:16px}
-      .logo{font-size:22px;font-weight:900}.logo span{color:#EE7526}
+      .logo{font-size:22px;font-weight:900}.logo span{color:#1d4f8a}
       .meta{margin-bottom:16px;font-size:13px;line-height:2}
       table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px}
       th{text-align:left;border-bottom:1px solid #ccc;padding:6px 4px;font-size:11px;text-transform:uppercase}
@@ -131,11 +132,7 @@ export function AdminOrders() {
     return matchStatus && matchQ;
   });
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-[#EE7526]" />
-    </div>
-  );
+  if (loading) return <BoxLoader className="py-20" />;
 
   return (
     <div className="space-y-5">
@@ -151,7 +148,7 @@ export function AdminOrders() {
           <button
             onClick={() => setFilterStatus("all")}
             className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-              filterStatus === "all" ? "bg-[#EE7526] text-white" : "bg-white border border-neutral-200 text-neutral-600"
+              filterStatus === "all" ? "bg-[#1d4f8a] text-white" : "bg-white border border-neutral-200 text-neutral-600"
             }`}
           >
             Barchasi ({orders.length})
@@ -160,7 +157,7 @@ export function AdminOrders() {
             <button key={col.id}
               onClick={() => setFilterStatus(col.id)}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                filterStatus === col.id ? "bg-[#EE7526] text-white" : "bg-white border border-neutral-200 text-neutral-600"
+                filterStatus === col.id ? "bg-[#1d4f8a] text-white" : "bg-white border border-neutral-200 text-neutral-600"
               }`}
             >
               {col.label} ({orders.filter(o => o.status === col.id).length})
@@ -177,7 +174,7 @@ export function AdminOrders() {
             <div
               key={col.id}
               className={`rounded-2xl border-2 p-3 min-h-[200px] transition-all ${col.color} ${
-                draggingId ? "ring-2 ring-offset-1 ring-[#EE7526]/30" : ""
+                draggingId ? "ring-2 ring-offset-1 ring-[#1d4f8a]/30" : ""
               }`}
               onDragOver={e => e.preventDefault()}
               onDrop={async () => {
@@ -218,7 +215,7 @@ export function AdminOrders() {
                         <p className="text-xs font-bold text-neutral-800">
                           #{order.id.slice(0,8).toUpperCase()}
                         </p>
-                        <p className="text-xs font-bold text-[#EE7526] shrink-0">
+                        <p className="text-xs font-bold text-[#1d4f8a] shrink-0">
                           {formatPrice(Number(order.total_amount))}
                         </p>
                       </div>
@@ -288,7 +285,7 @@ export function AdminOrders() {
                           <div className="flex gap-1">
                             <button
                               onClick={() => void saveCourier(order.id)}
-                              className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#EE7526] py-1.5 text-[10px] font-bold text-white hover:bg-[#d8661c] transition"
+                              className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#1d4f8a] py-1.5 text-[10px] font-bold text-white hover:bg-[#164078] transition"
                             >
                               <CheckCircle2 className="h-3 w-3" />
                               {hasCourier ? "Yangilash" : "Biriktirish"}
@@ -327,7 +324,7 @@ export function AdminOrders() {
                       <select
                         value={order.status}
                         onChange={e => void moveOrder(order.id, e.target.value as Order["status"])}
-                        className="mt-2 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[10px] outline-none focus:border-[#EE7526]"
+                        className="mt-2 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-[10px] outline-none focus:border-[#1d4f8a]"
                       >
                         {Object.entries(statusMeta).map(([k, v]) => (
                           <option key={k} value={k}>{v.label}</option>

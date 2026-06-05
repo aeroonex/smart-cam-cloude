@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Building2, DollarSign, Loader2, Plus, Trash2, TrendingUp, X } from "lucide-react";
+import { BoxLoader } from "@/components/BoxLoader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,16 +87,12 @@ export function AdminPartners() {
   const totalPayout = stores.reduce((s, st) => s + st.total_sales * (1 - st.commission_percent / 100), 0);
   const totalCommission = stores.reduce((s, st) => s + st.total_sales * (st.commission_percent / 100), 0);
 
-  if (loading) return (
-    <div className="flex justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-[#EE7526]" />
-    </div>
-  );
+  if (loading) return <BoxLoader className="py-20" />;
 
   if (!tableExists) {
     return (
       <div className="space-y-5">
-        <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-8 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-blue-50 p-8 text-center">
           <Building2 className="mx-auto mb-4 h-12 w-12 text-amber-400" />
           <h3 className="mb-2 font-bold text-amber-800">Do'konlar jadvali mavjud emas</h3>
           <p className="mb-4 text-sm text-amber-700">
@@ -131,7 +128,7 @@ CREATE POLICY "Admin full access" ON stores USING (true);`}
         {[
           { label: "Jami do'konlar", value: String(stores.length), icon: Building2, color: "bg-blue-50 text-blue-600" },
           { label: "Do'konlarga to'lov", value: formatPrice(totalPayout), icon: DollarSign, color: "bg-emerald-50 text-emerald-600" },
-          { label: "Sizning komissiya", value: formatPrice(totalCommission), icon: TrendingUp, color: "bg-orange-50 text-[#EE7526]" },
+          { label: "Sizning komissiya", value: formatPrice(totalCommission), icon: TrendingUp, color: "bg-blue-50 text-[#1d4f8a]" },
         ].map(s => (
           <div key={s.label} className="flex items-center gap-3 rounded-2xl bg-white border border-neutral-100 p-5 shadow-sm">
             <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.color}`}>
@@ -149,14 +146,14 @@ CREATE POLICY "Admin full access" ON stores USING (true);`}
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-neutral-900">Do'konlar ro'yxati</h3>
         <Button size="sm" onClick={() => setShowAdd(v => !v)}
-          className="rounded-xl gap-1.5 bg-[#EE7526] text-white hover:bg-[#d8661c]">
+          className="rounded-xl gap-1.5 bg-[#1d4f8a] text-white hover:bg-[#164078]">
           <Plus className="h-4 w-4" />{showAdd ? "Yopish" : "Yangi do'kon"}
         </Button>
       </div>
 
       {/* Add form */}
       {showAdd && (
-        <div className="rounded-2xl border border-orange-100 bg-white p-5 shadow-sm">
+        <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
           <h3 className="mb-4 font-bold text-neutral-900">Yangi hamkor do'kon</h3>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
@@ -183,7 +180,7 @@ CREATE POLICY "Admin full access" ON stores USING (true);`}
           </div>
           <div className="mt-4 flex gap-2">
             <Button onClick={() => void addStore()} disabled={saving}
-              className="rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]">
+              className="rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Qo'shish
             </Button>
@@ -223,7 +220,7 @@ CREATE POLICY "Admin full access" ON stores USING (true);`}
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-[#EE7526]">
+                      <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-[#1d4f8a]">
                         {s.commission_percent}%
                       </span>
                     </td>

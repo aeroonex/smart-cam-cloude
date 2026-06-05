@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
-  CheckCircle2, Copy, ExternalLink, Gift, Loader2, Megaphone,
+  CheckCircle2, Copy, ExternalLink, Gift, GripVertical, Loader2, Megaphone,
   Plus, Send, Trash2, X, XCircle, ImageIcon, LayoutGrid, Tag,
 } from "lucide-react";
+import { useRef } from "react";
+import { BoxLoader } from "@/components/BoxLoader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +45,7 @@ export function AdminMarketing() {
             onClick={() => setTab(t.id)}
             className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
               tab === t.id
-                ? "bg-[#EE7526] text-white shadow-sm"
+                ? "bg-[#1d4f8a] text-white shadow-sm"
                 : "bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
             }`}
           >
@@ -124,7 +126,7 @@ function PromoCodesPanel() {
       {/* Add form */}
       <div className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
         <h3 className="mb-4 flex items-center gap-2 font-bold text-neutral-900">
-          <Gift className="h-5 w-5 text-[#EE7526]" />Yangi promo kod
+          <Gift className="h-5 w-5 text-[#1d4f8a]" />Yangi promo kod
         </h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -143,7 +145,7 @@ function PromoCodesPanel() {
               <button
                 onClick={() => setForm(f => ({ ...f, discount_type: "percent" }))}
                 className={`flex-1 rounded-xl border py-2 text-sm font-semibold transition ${
-                  form.discount_type === "percent" ? "border-[#EE7526] bg-orange-50 text-[#EE7526]" : "border-neutral-200 text-neutral-500"
+                  form.discount_type === "percent" ? "border-[#1d4f8a] bg-blue-50 text-[#1d4f8a]" : "border-neutral-200 text-neutral-500"
                 }`}
               >
                 Foiz (%)
@@ -151,7 +153,7 @@ function PromoCodesPanel() {
               <button
                 onClick={() => setForm(f => ({ ...f, discount_type: "fixed" }))}
                 className={`flex-1 rounded-xl border py-2 text-sm font-semibold transition ${
-                  form.discount_type === "fixed" ? "border-[#EE7526] bg-orange-50 text-[#EE7526]" : "border-neutral-200 text-neutral-500"
+                  form.discount_type === "fixed" ? "border-[#1d4f8a] bg-blue-50 text-[#1d4f8a]" : "border-neutral-200 text-neutral-500"
                 }`}
               >
                 Summa (so'm)
@@ -179,7 +181,7 @@ function PromoCodesPanel() {
           </div>
         </div>
         <Button onClick={() => void addCode()} disabled={saving}
-          className="mt-4 rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]">
+          className="mt-4 rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           Kod yaratish
         </Button>
@@ -187,7 +189,7 @@ function PromoCodesPanel() {
 
       {/* Codes list */}
       {loading ? (
-        <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-[#EE7526]" /></div>
+        <BoxLoader className="py-10" />
       ) : codes.length === 0 ? (
         <div className="rounded-2xl bg-white border border-neutral-100 py-12 text-center text-neutral-400">
           Hali promo kod yaratilmagan
@@ -212,12 +214,12 @@ function PromoCodesPanel() {
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-neutral-900">{c.code}</span>
                       <button onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Nusxalandi!"); }}
-                        className="text-neutral-400 hover:text-[#EE7526]">
+                        className="text-neutral-400 hover:text-[#1d4f8a]">
                         <Copy className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-3 font-semibold text-[#EE7526]">
+                  <td className="px-4 py-3 font-semibold text-[#1d4f8a]">
                     {c.discount_type === "percent" ? `${c.discount_value}%` : `${c.discount_value.toLocaleString()} so'm`}
                   </td>
                   <td className="px-4 py-3 text-neutral-500">
@@ -256,6 +258,9 @@ function PromoSectionsPanel({ products }: { products: Product[] }) {
   const [form, setForm] = useState({ title: "", bg_color: "#2563EB", text_color: "#ffffff", end_time: "", product_ids: "" });
   const [saving, setSaving] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const [orderSaving, setOrderSaving] = useState(false);
+  const dragIdx = useRef<number | null>(null);
+  const dragOverIdx = useRef<number | null>(null);
 
   useEffect(() => { load(); }, []);
 
@@ -304,6 +309,29 @@ function PromoSectionsPanel({ products }: { products: Product[] }) {
     toast.success("O'chirildi.");
   }
 
+  function handleDragStart(i: number) { dragIdx.current = i; }
+  function handleDragEnter(i: number) {
+    if (dragIdx.current === null || dragIdx.current === i) return;
+    dragOverIdx.current = i;
+    setSections(prev => {
+      const arr = [...prev];
+      const [moved] = arr.splice(dragIdx.current!, 1);
+      arr.splice(i, 0, moved);
+      dragIdx.current = i;
+      return arr;
+    });
+  }
+  async function handleDragEnd() {
+    dragIdx.current = null;
+    dragOverIdx.current = null;
+    setOrderSaving(true);
+    for (let i = 0; i < sections.length; i++) {
+      await supabase.from("promo_sections").update({ sort_order: i }).eq("id", sections[i].id);
+    }
+    setOrderSaving(false);
+    toast.success("Tartib saqlandi!");
+  }
+
   const filteredProducts = products.filter(p =>
     !productSearch || p.name.toLowerCase().includes(productSearch.toLowerCase())
   );
@@ -347,10 +375,10 @@ function PromoSectionsPanel({ products }: { products: Product[] }) {
               className="rounded-xl mb-2" />
             <div className="max-h-36 overflow-y-auto rounded-xl border border-neutral-200 bg-neutral-50">
               {filteredProducts.slice(0, 20).map(p => (
-                <button key={p.id} className="flex w-full items-center justify-between px-3 py-2 text-xs hover:bg-orange-50 transition text-left"
+                <button key={p.id} className="flex w-full items-center justify-between px-3 py-2 text-xs hover:bg-blue-50 transition text-left"
                   onClick={() => setForm(f => ({ ...f, product_ids: f.product_ids ? f.product_ids + "\n" + p.id : p.id }))}>
                   <span className="truncate text-neutral-700">{p.name}</span>
-                  <span className="ml-2 shrink-0 text-[#EE7526] font-semibold">+ Qo'shish</span>
+                  <span className="ml-2 shrink-0 text-[#1d4f8a] font-semibold">+ Qo'shish</span>
                 </button>
               ))}
             </div>
@@ -361,40 +389,97 @@ function PromoSectionsPanel({ products }: { products: Product[] }) {
           </div>
         </div>
         <Button onClick={() => void add()} disabled={saving}
-          className="mt-4 rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]">
+          className="mt-4 rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           Qo'shish
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#EE7526]" /></div>
+        <BoxLoader className="py-8" />
       ) : (
         <div className="space-y-3">
-          {sections.map(s => {
+          {/* Feed preview hint */}
+          {sections.length > 0 && (
+            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+              <p className="mb-2 text-xs font-bold text-blue-700 uppercase tracking-wide">Bosh sahifa tartibi</p>
+              <div className="flex flex-col gap-1.5 text-xs text-blue-600">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-16 rounded bg-blue-200" />
+                  <span className="text-blue-400">6 ta mahsulot</span>
+                </div>
+                {sections.map((s, i) => (
+                  <div key={s.id}>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-16 rounded" style={{ background: s.bg_color, opacity: s.is_active ? 1 : 0.3 }} />
+                      <span className={s.is_active ? "font-semibold" : "text-blue-300 line-through"}>{i + 1}. {s.title}</span>
+                    </div>
+                    {i < sections.length - 1 && (
+                      <div className="ml-2 mt-1 flex items-center gap-2">
+                        <div className="h-2 w-16 rounded bg-blue-200" />
+                        <span className="text-blue-400">6 ta mahsulot</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Drag hint */}
+          {sections.length > 1 && (
+            <div className="flex items-center gap-2 text-xs text-neutral-400">
+              <GripVertical className="h-3.5 w-3.5" />
+              <span>Tartibni o'zgartirish uchun tortib qo'ying {orderSaving && "— saqlanmoqda..."}</span>
+            </div>
+          )}
+
+          {sections.map((s, i) => {
             const sProds = products.filter(p => s.product_ids.includes(p.id));
             return (
-              <div key={s.id} className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
+              <div
+                key={s.id}
+                draggable
+                onDragStart={() => handleDragStart(i)}
+                onDragEnter={() => handleDragEnter(i)}
+                onDragEnd={() => void handleDragEnd()}
+                onDragOver={e => e.preventDefault()}
+                className={`rounded-2xl border bg-white p-4 shadow-sm transition cursor-grab active:cursor-grabbing select-none ${
+                  dragIdx.current === i ? "border-[#1d4f8a] opacity-70 scale-[0.99]" : "border-neutral-100"
+                }`}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg shrink-0" style={{ background: s.bg_color }} />
-                  <div className="flex-1">
-                    <p className="font-bold text-neutral-900">{s.title}</p>
-                    <p className="text-xs text-neutral-400">{sProds.length} mahsulot{s.end_time ? ` · ${new Date(s.end_time).toLocaleString("uz-UZ")}` : ""}</p>
+                  {/* Drag handle */}
+                  <div className="shrink-0 text-neutral-300 hover:text-neutral-500">
+                    <GripVertical className="h-5 w-5" />
+                  </div>
+                  {/* Color + position badge */}
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white shadow-sm"
+                    style={{ background: s.bg_color }}>
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-neutral-900 truncate">{s.title}</p>
+                    <p className="text-xs text-neutral-400">
+                      {sProds.length} mahsulot
+                      {s.end_time ? ` · ${new Date(s.end_time).toLocaleString("uz-UZ")}` : ""}
+                      {" · "}<span className="text-blue-500">pozitsiya #{i + 1}</span>
+                    </p>
                   </div>
                   <button onClick={() => void toggle(s.id, s.is_active)}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition ${
                       s.is_active ? "bg-emerald-100 text-emerald-700" : "bg-neutral-100 text-neutral-500"
                     }`}>
                     {s.is_active ? "Aktiv" : "Yashirin"}
                   </button>
-                  <button onClick={() => void del(s.id)} className="text-red-400 hover:text-red-600">
+                  <button onClick={() => void del(s.id)} className="shrink-0 text-red-400 hover:text-red-600">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
             );
           })}
-          {sections.length === 0 && <p className="text-center text-neutral-400 py-8">Bo'lim yo'q</p>}
+          {sections.length === 0 && <p className="text-center text-neutral-400 py-8">Bo'lim yo'q. Yuqoridan qo'shing.</p>}
         </div>
       )}
     </div>
@@ -449,7 +534,7 @@ function BannersPanel() {
     <div className="space-y-5">
       <div className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
         <h3 className="mb-4 flex items-center gap-2 font-bold text-neutral-900">
-          <ImageIcon className="h-5 w-5 text-[#EE7526]" />Yangi banner
+          <ImageIcon className="h-5 w-5 text-[#1d4f8a]" />Yangi banner
         </h3>
         <div className="space-y-3">
           <div className="space-y-1.5">
@@ -492,14 +577,14 @@ function BannersPanel() {
           </div>
         </div>
         <Button onClick={() => void add()} disabled={saving}
-          className="mt-4 rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]">
+          className="mt-4 rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           Banner qo'shish
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-[#EE7526]" /></div>
+        <BoxLoader className="py-8" />
       ) : (
         <div className="space-y-3">
           {banners.map(b => (
@@ -510,7 +595,7 @@ function BannersPanel() {
                 <p className="font-semibold text-neutral-900 truncate">{b.title || "(sarlavhasiz)"}</p>
                 {b.link_url && (
                   <a href={b.link_url} target="_blank" rel="noreferrer"
-                    className="flex items-center gap-1 text-xs text-[#EE7526] hover:underline truncate">
+                    className="flex items-center gap-1 text-xs text-[#1d4f8a] hover:underline truncate">
                     <ExternalLink className="h-3 w-3 shrink-0" />{b.link_url}
                   </a>
                 )}
@@ -549,15 +634,25 @@ function MailingPanel() {
     if (!message.trim()) { toast.error("Xabar matnini kiriting."); return; }
     setSending(true);
     try {
-      const { error } = await supabase.functions.invoke("telegram-bot", {
+      const { data, error } = await supabase.functions.invoke("telegram-bot", {
         body: { type: "broadcast", message: message.trim(), image_url: imageUrl.trim() || undefined },
       });
       if (error) throw error;
-      toast.success("Xabar yuborildi!");
+      const { sent = 0, failed = 0, total = 0 } = data ?? {};
+      if (failed > 0) {
+        toast.warning(`Yuborildi: ${sent}/${total} ta. ${failed} ta xatolik bilan.`);
+      } else {
+        toast.success(`Xabar ${sent} ta foydalanuvchiga yuborildi!`);
+      }
       setMessage("");
       setImageUrl("");
-    } catch {
-      toast.error("Yuborib bo'lmadi. Edge function ishga tushirilganini tekshiring.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("Forbidden") || msg.includes("403")) {
+        toast.error("Ruxsat yo'q. Faqat adminlar yuborishi mumkin.");
+      } else {
+        toast.error("Yuborib bo'lmadi. Edge function ishga tushirilganini tekshiring.");
+      }
     } finally {
       setSending(false);
     }
@@ -574,7 +669,7 @@ function MailingPanel() {
       {/* Mass message */}
       <div className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
         <h3 className="mb-1 flex items-center gap-2 font-bold text-neutral-900">
-          <Send className="h-5 w-5 text-[#EE7526]" />Ommaviy xabar (Telegram)
+          <Send className="h-5 w-5 text-[#1d4f8a]" />Ommaviy xabar (Telegram)
         </h3>
         <p className="mb-4 text-xs text-neutral-400">Barcha Telegram foydalanuvchilarga xabar yuborish</p>
         <div className="space-y-3">
@@ -590,7 +685,7 @@ function MailingPanel() {
               placeholder="https://... rasm URL" className="rounded-xl" />
           </div>
           <Button onClick={() => void sendMass()} disabled={sending}
-            className="rounded-full bg-[#EE7526] text-white hover:bg-[#d8661c]">
+            className="rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]">
             {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             Yuborish
           </Button>
@@ -606,7 +701,7 @@ function MailingPanel() {
           </div>
           <button
             onClick={() => setAbandonedEnabled(v => !v)}
-            className={`relative h-6 w-11 rounded-full transition-colors ${abandonedEnabled ? "bg-[#EE7526]" : "bg-neutral-200"}`}
+            className={`relative h-6 w-11 rounded-full transition-colors ${abandonedEnabled ? "bg-[#1d4f8a]" : "bg-neutral-200"}`}
           >
             <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${abandonedEnabled ? "translate-x-5" : "translate-x-0.5"}`} />
           </button>
@@ -620,7 +715,7 @@ function MailingPanel() {
           <p className="text-xs text-neutral-400">
             💡 Xabarda mahsulot rasmi va "Sotib olish" tugmasi avtomatik qo'shiladi
           </p>
-          <Button onClick={saveAbandonedSettings} variant="outline" className="rounded-full border-orange-200 text-[#EE7526]">
+          <Button onClick={saveAbandonedSettings} variant="outline" className="rounded-full border-blue-200 text-[#1d4f8a]">
             Sozlamalarni saqlash
           </Button>
         </div>
@@ -671,7 +766,7 @@ function UTMGenerator() {
           <p className="flex-1 truncate text-xs font-mono text-neutral-700">{utmUrl}</p>
           <button
             onClick={() => { navigator.clipboard.writeText(utmUrl); toast.success("Nusxalandi!"); }}
-            className="shrink-0 rounded-lg bg-[#EE7526] px-3 py-1.5 text-xs font-semibold text-white"
+            className="shrink-0 rounded-lg bg-[#1d4f8a] px-3 py-1.5 text-xs font-semibold text-white"
           >
             <Copy className="inline h-3 w-3 mr-1" />Nusxa
           </button>

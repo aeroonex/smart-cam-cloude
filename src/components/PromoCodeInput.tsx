@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Tag, X, Loader2, CheckCircle2 } from "lucide-react";
 import { usePromoCode } from "@/hooks/usePromoCode";
 
@@ -71,7 +71,7 @@ export function PromoCodeInput({ cartTotal, onApplied, onRemoved }: Props) {
         <button
           onClick={() => void handleApply()}
           disabled={loading || !input.trim()}
-          className="rounded-xl bg-[#EE7526] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-[#d8661c] transition"
+          className="rounded-xl bg-[#1d4f8a] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-[#164078] transition"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Qo'lla"}
         </button>

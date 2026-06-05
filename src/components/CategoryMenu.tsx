@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
   Cpu, Monitor, Shirt, Footprints, Home, Car, Baby,
   Gamepad2, Dumbbell, Watch, Briefcase, Wrench, ShoppingBag,
@@ -93,7 +93,7 @@ export function CategoryMenu({ open, onClose }: Props) {
   /* ── DESKTOP ── */
   const Desktop = (
     <div
-      className="absolute left-0 top-full z-40 mt-0.5 hidden sm:flex rounded-b-2xl border border-orange-100 bg-white shadow-2xl overflow-hidden"
+      className="absolute left-0 top-full z-40 mt-0.5 hidden sm:flex rounded-b-2xl border border-blue-100 bg-white shadow-2xl overflow-hidden"
       style={{ width: 700 }}
     >
       {/* Left: category list */}
@@ -106,24 +106,24 @@ export function CategoryMenu({ open, onClose }: Props) {
               <button
                 className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors ${
                   active
-                    ? "bg-orange-50 text-[#EE7526] font-semibold"
-                    : "text-neutral-700 hover:bg-orange-50/60"
+                    ? "bg-blue-50 text-[#1d4f8a] font-semibold"
+                    : "text-neutral-700 hover:bg-blue-50/60"
                 }`}
                 onMouseEnter={() => setHovered(i)}
                 onClick={() => setHovered(i)}
               >
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
-                    active ? "bg-[#EE7526]" : "bg-orange-50"
+                    active ? "bg-[#1d4f8a]" : "bg-blue-50"
                   }`}
                 >
                   <Icon
-                    className={`h-4 w-4 ${active ? "text-white" : "text-[#EE7526]"}`}
+                    className={`h-4 w-4 ${active ? "text-white" : "text-[#1d4f8a]"}`}
                   />
                 </span>
                 <span className="flex-1 leading-tight">{cat.label[lang]}</span>
                 <ChevronRight
-                  className={`h-4 w-4 ${active ? "text-[#EE7526]" : "text-neutral-300"}`}
+                  className={`h-4 w-4 ${active ? "text-[#1d4f8a]" : "text-neutral-300"}`}
                 />
               </button>
             </li>
@@ -141,7 +141,7 @@ export function CategoryMenu({ open, onClose }: Props) {
             <li key={sub.uz}>
               <button
                 onClick={onClose}
-                className="w-full rounded-xl border border-neutral-100 px-3 py-2.5 text-left text-sm font-medium text-neutral-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-[#EE7526]"
+                className="w-full rounded-xl border border-neutral-100 px-3 py-2.5 text-left text-sm font-medium text-neutral-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-[#1d4f8a]"
               >
                 {sub[lang]}
               </button>
@@ -204,7 +204,7 @@ export function CategoryMenu({ open, onClose }: Props) {
       {/* Subcategory view */}
       {mobileSubOpen ? (
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          <h3 className="mb-4 text-lg font-extrabold text-[#EE7526]">
+          <h3 className="mb-4 text-lg font-extrabold text-[#1d4f8a]">
             {categories[activeCat].label[lang]}
           </h3>
           <ul className="space-y-1.5">
@@ -212,7 +212,7 @@ export function CategoryMenu({ open, onClose }: Props) {
               <li key={sub.uz}>
                 <button
                   onClick={onClose}
-                  className="flex w-full items-center justify-between rounded-2xl border border-neutral-100 px-4 py-3.5 text-left text-[14px] font-medium text-neutral-800 transition hover:bg-orange-50 hover:text-[#EE7526]"
+                  className="flex w-full items-center justify-between rounded-2xl border border-neutral-100 px-4 py-3.5 text-left text-[14px] font-medium text-neutral-800 transition hover:bg-blue-50 hover:text-[#1d4f8a]"
                 >
                   {sub[lang]}
                   <ChevronRight className="h-4 w-4 text-neutral-300" />
@@ -238,7 +238,7 @@ export function CategoryMenu({ open, onClose }: Props) {
                 <li key={cat.label.uz}>
                   <button
                     className={`flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition ${
-                      active ? "bg-orange-50" : "bg-white"
+                      active ? "bg-blue-50" : "bg-white"
                     }`}
                     onClick={() => {
                       setSelectedCat(realIdx);
@@ -246,13 +246,13 @@ export function CategoryMenu({ open, onClose }: Props) {
                     }}
                   >
                     {/* Icon circle */}
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-50">
-                      <Icon className="h-5 w-5 text-[#EE7526]" />
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50">
+                      <Icon className="h-5 w-5 text-[#1d4f8a]" />
                     </span>
 
                     <span
                       className={`flex-1 text-[14.5px] font-medium leading-tight ${
-                        active ? "text-[#EE7526] font-semibold" : "text-neutral-800"
+                        active ? "text-[#1d4f8a] font-semibold" : "text-neutral-800"
                       }`}
                     >
                       {cat.label[lang]}
@@ -260,7 +260,7 @@ export function CategoryMenu({ open, onClose }: Props) {
 
                     <ChevronRight
                       className={`h-5 w-5 ${
-                        active ? "text-[#EE7526]" : "text-neutral-300"
+                        active ? "text-[#1d4f8a]" : "text-neutral-300"
                       }`}
                     />
                   </button>

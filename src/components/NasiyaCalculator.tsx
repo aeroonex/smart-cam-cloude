@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Calculator, ExternalLink } from "lucide-react";
 
 type Props = {
@@ -23,10 +23,10 @@ export function NasiyaCalculator({ price }: Props) {
   const commission = totalWithCommission - price;
 
   return (
-    <div className="rounded-xl border border-orange-100 bg-orange-50/60 p-4">
+    <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-4">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between text-sm font-semibold text-[#EE7526]"
+        className="flex w-full items-center justify-between text-sm font-semibold text-[#1d4f8a]"
       >
         <span className="flex items-center gap-2">
           <Calculator className="h-4 w-4" />
@@ -45,7 +45,7 @@ export function NasiyaCalculator({ price }: Props) {
                 onClick={() => setProvider(p)}
                 className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${
                   provider === p
-                    ? "bg-[#EE7526] text-white shadow"
+                    ? "bg-[#1d4f8a] text-white shadow"
                     : "bg-white text-neutral-600 border border-neutral-200"
                 }`}
               >
@@ -85,7 +85,7 @@ export function NasiyaCalculator({ price }: Props) {
             </div>
             <div className="flex justify-between text-xs text-neutral-400">
               <span>Komissiya ({(rate * 100).toFixed(1)}%/oy):</span>
-              <span className="text-orange-500">+{commission.toLocaleString()} so'm</span>
+              <span className="text-blue-600">+{commission.toLocaleString()} so'm</span>
             </div>
           </div>
 
@@ -97,7 +97,7 @@ export function NasiyaCalculator({ price }: Props) {
               rel="noopener noreferrer"
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-semibold transition ${
                 provider === "alif"
-                  ? "bg-[#EE7526] text-white hover:bg-[#d8661c]"
+                  ? "bg-[#1d4f8a] text-white hover:bg-[#164078]"
                   : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
               }`}
               onClick={(e) => { if (provider !== "alif") e.preventDefault(); }}
