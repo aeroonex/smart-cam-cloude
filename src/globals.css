@@ -1013,3 +1013,45 @@
     @apply rounded-2xl border border-blue-100/80 bg-white shadow-[0_8px_32px_rgba(29,79,138,0.08)];
   }
 }
+
+/* ── Android / iOS Safe Area ── */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+/* Status bar padding — push content below Android status bar */
+body {
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+}
+
+/* Bottom nav — above Android gesture bar */
+nav.fixed.bottom-4 {
+  bottom: calc(1rem + var(--sab)) !important;
+}
+
+/* Prevent tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth scrolling on mobile WebView */
+html, body {
+  overscroll-behavior-y: none;
+}
+
+/* Disable text selection on buttons/nav */
+button, a, nav {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Capacitor keyboard — prevent content jump */
+.keyboard-open body {
+  padding-bottom: 0 !important;
+}

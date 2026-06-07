@@ -26,11 +26,13 @@ export default defineConfig(() => ({
     },
   },
   build: {
+    target: ["es2020", "chrome80"],
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('@supabase')) return 'supabase';
+            if (id.includes('@capacitor')) return 'capacitor';
             if (id.includes('@radix-ui') || id.includes('cmdk') || id.includes('vaul')) return 'ui';
             if (id.includes('recharts') || id.includes('d3')) return 'charts';
             if (id.includes('react-router') || id.includes('react-dom') || id.includes('react/')) return 'react';
