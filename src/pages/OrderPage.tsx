@@ -32,10 +32,10 @@ type Step = "profile" | "delivery" | "payment" | "confirm";
 // ── Constants ─────────────────────────────────────────────────────────────
 const PAY_METHODS: { id: PayMethod; label: string; emoji: string; hint: string }[] = [
   { id: "cash",  label: "Naqd pul",    emoji: "💵", hint: "Yetkazganda to'lang" },
-  { id: "click", label: "Click",       emoji: "⚡", hint: "Click ilovasi" },
-  { id: "payme", label: "Payme",       emoji: "💳", hint: "Payme ilovasi" },
-  { id: "alif",  label: "Alif Nasiya", emoji: "🏦", hint: "Muddatli to'lov" },
-  { id: "uzum",  label: "Uzum Bank",   emoji: "🍇", hint: "Uzum Bank" },
+  { id: "click", label: "Click",       emoji: "⚡", hint: "Buyurtmadan so'ng havola yuboriladi" },
+  { id: "payme", label: "Payme",       emoji: "💳", hint: "Buyurtmadan so'ng havola yuboriladi" },
+  { id: "alif",  label: "Alif Nasiya", emoji: "🏦", hint: "Operator siz bilan bog'lanadi" },
+  { id: "uzum",  label: "Uzum Bank",   emoji: "🍇", hint: "Buyurtmadan so'ng havola yuboriladi" },
 ];
 
 const DELIVERY_DATES = (() => {
@@ -249,6 +249,9 @@ export default function OrderPage() {
     }
     if (deliveryType === "delivery" && !selectedProvider) {
       toast.error("Yetkazib beruvchini tanlang"); setStep("delivery"); return;
+    }
+    if (deliveryType === "delivery" && !addressDetail.trim()) {
+      toast.error("Yetkazish manzilini kiriting"); setStep("delivery"); return;
     }
     if (deliveryType === "pickup" && !selectedPickup) {
       toast.error("Olib ketish nuqtasini tanlang"); setStep("delivery"); return;

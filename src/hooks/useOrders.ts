@@ -17,18 +17,25 @@ export function useOrders(user: User | null) {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      toast.error("Buyurtmalarni yuklab bo'lmadi.");
-    } else {
-      setOrders(data ?? []);
+      if (error) {
+        console.error("[useOrders]", error);
+        toast.error("Buyurtmalarni yuklab bo'lmadi.");
+      } else {
+        setOrders(data ?? []);
+      }
+    } catch (err) {
+      console.error("[useOrders] unexpected", err);
+      toast.error("Buyurtmalarni yuklashda xato yuz berdi.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [user]);
 
   useEffect(() => {

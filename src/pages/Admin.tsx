@@ -59,10 +59,15 @@ export default function Admin() {
   useEffect(() => {
     if (sessionLoading) return;
     if (!user) { navigate("/login"); return; }
-    supabase.from("users").select("role").eq("id", user.id).single().then(({ data }) => {
-      if (data?.role === "admin") setIsAdmin(true);
-      else { setIsAdmin(false); toast.error("Admin huquqi yo'q."); navigate("/"); }
-    });
+    supabase.from("users").select("role").eq("id", user.id).single()
+      .then(({ data }) => {
+        if (data?.role === "admin") setIsAdmin(true);
+        else { setIsAdmin(false); toast.error("Admin huquqi yo'q."); navigate("/"); }
+      })
+      .catch(() => {
+        toast.error("Tekshirishda xato yuz berdi.");
+        navigate("/");
+      });
   }, [user, sessionLoading, navigate]);
 
   useEffect(() => {

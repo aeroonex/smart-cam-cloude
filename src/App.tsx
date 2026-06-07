@@ -121,21 +121,28 @@ function AppRoutes() {
     if (loading || !user) return;
     const key = `ob_done_${user.id}`;
     if (localStorage.getItem(key)) return;
-    // Skip onboarding check if already on those pages
     const path = window.location.pathname;
     if (path === "/onboarding" || path === "/login") return;
 
-    import("@/integrations/supabase/client").then(({ supabase }) => {
-      supabase.from("users").select("phone,full_name").eq("id", user.id).single()
-        .then(({ data }) => {
-          if (!data?.phone || !data?.full_name) {
-            navigate("/onboarding", { replace: true });
-          } else {
-            localStorage.setItem(key, "1");
-          }
-        });
-    });
-  }, [user, loading]);
+    let mounted = true;
+    import("@/integrations/supabase/client")
+      .then(({ supabase }) =>
+        supabase.from("users").select("phone,full_name").eq("id", user.id).single()
+      )
+      .then(({ data }) => {
+        if (!mounted) return;
+        if (!data?.phone || !data?.full_name) {
+          navigate("/onboarding", { replace: true });
+        } else {
+          localStorage.setItem(key, "1");
+        }
+      })
+      .catch(() => {
+        // Tarmoq xatosi — redirect qilmaymiz, keyingi yuklashda qayta tekshiriladi
+      });
+
+    return () => { mounted = false; };
+  }, [user, loading, navigate]);
 
   if (loading) return <PageLoader />;
 
