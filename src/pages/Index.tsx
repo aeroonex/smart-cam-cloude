@@ -786,57 +786,18 @@ const Index = () => {
                 <span className="text-[9px] text-neutral-300">Profil</span>
               </div>
             ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div>
-                    <LiquidBtn active={false} label="Profil"
-                      color="#8B5CF6" bubbleBg="rgba(139,92,246,0.14)" onClick={() => {}}>
-                      <Avatar className="h-[21px] w-[21px]">
-                        <AvatarImage src={profile?.avatar_url ?? undefined} />
-                        <AvatarFallback className="bg-violet-400 text-[7px] font-bold text-white">
-                          {getInitials(profile?.full_name || user.email)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </LiquidBtn>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" side="top"
-                  className="w-56 rounded-2xl border-0 p-2 mb-3"
-                  style={{ backdropFilter: "blur(24px)", background: "rgba(255,255,255,0.90)", boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
-                  <div className="px-3 py-2">
-                    <p className="font-bold text-neutral-900">{profile?.full_name || user.email}</p>
-                    <p className="truncate text-xs text-neutral-500">{user.email}</p>
-                    {(cashbackBalance > 0 || walletBalance > 0) && (
-                      <p className="mt-1 text-xs font-semibold text-[#EE7526]">
-                        💰 {(cashbackBalance + walletBalance).toLocaleString()} so'm
-                      </p>
-                    )}
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => void showOrders()} className="rounded-xl py-2.5">
-                    <Package className="mr-2 h-4 w-4" /> {t("my_orders")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { setActiveSection("wallet"); window.scrollTo({ top: 0 }); }} className="rounded-xl py-2.5">
-                    <Wallet className="mr-2 h-4 w-4" /> Hamyon & Bonuslar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setProfileOpen(true)} className="rounded-xl py-2.5">
-                    <UserRound className="mr-2 h-4 w-4" /> {t("edit_profile")}
-                  </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem onClick={() => navigate("/admin")} className="rounded-xl py-2.5 text-[#EE7526]">
-                      <LayoutDashboard className="mr-2 h-4 w-4" /> {t("admin_panel")}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="rounded-xl py-2.5 text-red-500 focus:text-red-500"
-                    onClick={async () => { await signOut(); toast.success(t("logged_out")); goHome(); }}>
-                    <LogOut className="mr-2 h-4 w-4" /> {t("logout")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <LiquidBtn active={false} label="Kabinet"
+                color="#8B5CF6" bubbleBg="rgba(139,92,246,0.14)" onClick={() => navigate("/profile")}>
+                <Avatar className="h-[21px] w-[21px]">
+                  <AvatarImage src={profile?.avatar_url ?? undefined} />
+                  <AvatarFallback className="bg-violet-400 text-[7px] font-bold text-white">
+                    {getInitials(profile?.full_name || user.email)}
+                  </AvatarFallback>
+                </Avatar>
+              </LiquidBtn>
             ) : (
-              <LiquidBtn active={false} label="Kirish"
-                color="#8B5CF6" bubbleBg="rgba(139,92,246,0.14)" onClick={() => navigate("/login")}>
+              <LiquidBtn active={false} label="Kabinet"
+                color="#8B5CF6" bubbleBg="rgba(139,92,246,0.14)" onClick={() => navigate("/profile")}>
                 <UserRound className="h-[21px] w-[21px]" strokeWidth={1.8} />
               </LiquidBtn>
             )}
@@ -1131,9 +1092,14 @@ function LiquidBtn({ active, label, color, bubbleBg, onClick, children, badge }:
   active: boolean; label: string; color: string; bubbleBg: string;
   onClick: () => void; children: React.ReactNode; badge?: number;
 }) {
+  function handleClick() {
+    // Haptic feedback
+    try { if ("vibrate" in navigator) navigator.vibrate(active ? 6 : 10); } catch {}
+    onClick();
+  }
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className="relative flex flex-col items-center justify-center gap-0.5 w-[56px] py-2 select-none"
       style={{
         color: active ? color : "#8e8e93",
