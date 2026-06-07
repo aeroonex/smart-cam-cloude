@@ -97,9 +97,9 @@ const Index = () => {
   const { cart, cartCount, cartTotal, addToCart, updateQuantity, removeFromCart, clearCart } = useCart();
   const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(user);
   const { profile, form, setForm, saving, profileOpen, setProfileOpen, save, upsertForOrder } = useProfile(user);
-  const { currency, setCurrency } = useCurrency();
+  const { currency, setCurrency, format: formatPrice } = useCurrency();
   const { t, lang, setLang } = useI18n();
-  const { wishlistIds, toggleWishlist, inWishlist } = useWishlist();
+  const { wishlistIds, toggleWishlist, inWishlist } = useWishlist(user);
   const { viewedIds, track: trackViewed } = useRecentlyViewed(user);
   const { walletBalance, cashbackBalance, referralCode, ensureReferralCode } = useWallet(user);
   const saleTimer = useSaleTimer();
@@ -214,7 +214,11 @@ const Index = () => {
     if (!user) { navigate("/login"); return; }
     setActiveSection("orders");
     window.scrollTo({ top: 0, behavior: "smooth" });
-    await reloadOrders();
+    try {
+      await reloadOrders();
+    } catch {
+      toast.error("Buyurtmalarni yuklashda xato yuz berdi.");
+    }
   };
 
   const openCheckout = () => {
@@ -231,7 +235,7 @@ const Index = () => {
 
   const placeOrder = async (opts: {
     paymentMethod: string; promoCode?: string;
-    discountAmount: number; deliveryFee: number; addressDetail?: string;
+    discountAmount: number; deliveryFee: number; addressDetail?: string; walletUsed?: number;
   }) => {
     if (!user) { navigate("/login"); return; }
     if (!cart.length) { toast.error("Savat hozircha bo'sh."); return; }
@@ -239,49 +243,85 @@ const Index = () => {
       toast.error("Buyurtma uchun ism, telefon va hududni kiriting."); return;
     }
     setPlacingOrder(true);
-    const profileOk = await upsertForOrder(user);
-    if (!profileOk) { setPlacingOrder(false); return; }
+    try {
+      const profileOk = await upsertForOrder(user);
+      if (!profileOk) return;
 
-    const orderItems: OrderItem[] = cart.map((item) => ({
-      product_id: item.id, product_name: item.name, price: item.price, quantity: item.qty,
-    }));
+      const orderItems: OrderItem[] = cart.map((item) => ({
+        product_id: item.id, product_name: item.name, price: item.price, quantity: item.qty,
+      }));
 
-    const finalTotal = Math.max(0, cartTotal - opts.discountAmount) + opts.deliveryFee;
+      const walletDeduction = opts.walletUsed ?? 0;
+      const finalTotal = Math.max(0, cartTotal - opts.discountAmount) + opts.deliveryFee - walletDeduction;
 
-    const { data: order, error } = await supabase.from("orders").insert({
-      user_id: user.id, items: orderItems, total_amount: finalTotal, status: "yangi",
-      payment_status: "unpaid", customer_name: form.full_name, customer_phone: form.phone,
-      customer_region: form.region, notes: form.notes || null,
-      payment_method: opts.paymentMethod,
-      promo_code: opts.promoCode ?? null,
-      discount_amount: opts.discountAmount,
-      order_delivery_fee: opts.deliveryFee,
-      address_detail: opts.addressDetail ?? null,
-    }).select("*").single();
+      const { data: order, error } = await supabase.from("orders").insert({
+        user_id: user.id, items: orderItems, total_amount: finalTotal, status: "yangi",
+        payment_status: "unpaid", customer_name: form.full_name, customer_phone: form.phone,
+        customer_region: form.region, notes: form.notes || null,
+        payment_method: opts.paymentMethod,
+        promo_code: opts.promoCode ?? null,
+        discount_amount: opts.discountAmount,
+        order_delivery_fee: opts.deliveryFee,
+        address_detail: opts.addressDetail ?? null,
+      }).select("*").single();
 
-    setPlacingOrder(false);
-    if (error) { toast.error("Buyurtma yuborilmadi. Iltimos, qayta urinib ko'ring."); return; }
-
-    const totalCashback = cart.reduce((sum, item) => {
-      const p = products.find((pr) => pr.id === item.id);
-      return sum + (p?.cashback_amount ?? 0) * item.qty;
-    }, 0);
-    if (totalCashback > 0 && user) {
-      await supabase.from("users").update({ cashback_balance: cashbackBalance + totalCashback }).eq("id", user.id);
-    }
-
-    if (opts.promoCode) {
-      const { data: promo } = await supabase.from("promo_codes").select("uses_count").eq("code", opts.promoCode).single();
-      if (promo) {
-        await supabase.from("promo_codes").update({ uses_count: promo.uses_count + 1 }).eq("code", opts.promoCode);
+      if (error) {
+        toast.error("Buyurtma yuborilmadi. Iltimos, qayta urinib ko'ring.");
+        return;
       }
-    }
 
-    clearCart(); setCheckoutOpen(false);
-    setForm((prev) => ({ ...prev, notes: "" }));
-    if (totalCashback > 0) toast.success(`${totalCashback.toLocaleString()} so'm cashback yig'ildi!`);
-    setSuccessOrderId(order.id);
-    await reloadOrders();
+      // Buyurtma muvaffaqiyatli — endi savat va UI yangilanadi
+      clearCart();
+      setCheckoutOpen(false);
+      setForm((prev) => ({ ...prev, notes: "" }));
+      setSuccessOrderId(order.id);
+
+      // Hamyon / cashback ayirish (ishlatilgan bo'lsa)
+      if (walletDeduction > 0) {
+        const totalBal = cashbackBalance + walletBalance;
+        const newCashback = Math.max(0, cashbackBalance - walletDeduction);
+        const remainingDeduction = walletDeduction - cashbackBalance;
+        const newWallet = remainingDeduction > 0 ? Math.max(0, walletBalance - remainingDeduction) : walletBalance;
+        const { error: wErr } = await supabase
+          .from("users")
+          .update({ cashback_balance: newCashback, wallet_balance: newWallet })
+          .eq("id", user.id);
+        if (wErr) console.error("[wallet deduction]", wErr);
+        else toast.success(`Hamyondan −${walletDeduction.toLocaleString()} so'm ishlatildi`);
+        void totalBal; // suppress unused warning
+      }
+
+      // Cashback va promo — buyurtmadan keyin, xato bo'lsa bloklash shart emas
+      const totalCashback = cart.reduce((sum, item) => {
+        const p = products.find((pr) => pr.id === item.id);
+        return sum + (p?.cashback_amount ?? 0) * item.qty;
+      }, 0);
+      if (totalCashback > 0) {
+        const { error: cbErr } = await supabase
+          .from("users")
+          .update({ cashback_balance: cashbackBalance + totalCashback })
+          .eq("id", user.id);
+        if (cbErr) console.error("[cashback update]", cbErr);
+        else toast.success(`${totalCashback.toLocaleString()} so'm cashback yig'ildi!`);
+      }
+
+      if (opts.promoCode) {
+        const { data: promo } = await supabase
+          .from("promo_codes").select("uses_count").eq("code", opts.promoCode).single();
+        if (promo) {
+          const { error: promoErr } = await supabase
+            .from("promo_codes").update({ uses_count: promo.uses_count + 1 }).eq("code", opts.promoCode);
+          if (promoErr) console.error("[promo increment]", promoErr);
+        }
+      }
+
+      await reloadOrders();
+    } catch (err) {
+      console.error("[placeOrder]", err);
+      toast.error("Buyurtma berishda kutilmagan xato yuz berdi.");
+    } finally {
+      setPlacingOrder(false);
+    }
   };
 
   const openTelegramLink = async (type: "connect" | "order", orderId?: string) => {
@@ -701,7 +741,7 @@ const Index = () => {
                         {product.images?.[0] && <img src={product.images[0]} alt={product.name} className="h-full w-full object-contain" />}
                       </div>
                       <p className="line-clamp-2 text-xs font-medium text-neutral-800">{product.name}</p>
-                      <p className="mt-1 text-sm font-bold text-[#1d4f8a]">{product.price.toLocaleString()} so'm</p>
+                      <p className="mt-1 text-sm font-bold text-[#1d4f8a]">{formatPrice(Number(product.price))}</p>
                       <button onClick={() => { addToCart(product); setWishlistOpen(false); }}
                         className="mt-2 w-full rounded-lg bg-[#1d4f8a] py-1.5 text-xs font-semibold text-white">Savatga</button>
                     </div>
@@ -827,6 +867,8 @@ const Index = () => {
         placing={placingOrder}
         onPlace={(opts) => void placeOrder(opts)}
         deliveryFee={checkoutDeliveryFee}
+        cashbackBalance={cashbackBalance}
+        walletBalance={walletBalance}
       />
 
       {successOrderId && (
@@ -840,12 +882,19 @@ const Index = () => {
 };
 
 // ── SALE CARD (for flash sale horizontal scroll) ──
+type ExtendedProduct = Product & {
+  discount_percent?: number;
+  original_price?: number;
+  warranty?: string;
+};
+
 function SaleCard({ product, onAddToCart }: { product: Product; onAddToCart: (p: Product) => void }) {
   const navigate = useNavigate();
   const { format } = useCurrency();
   const { cart } = useCart();
-  const discountPct = (product as unknown as { discount_percent?: number }).discount_percent;
-  const origPrice = (product as unknown as { original_price?: number }).original_price;
+  const ep = product as ExtendedProduct;
+  const discountPct = ep.discount_percent;
+  const origPrice = ep.original_price;
   const img = product.images?.[0] ?? null;
   const qty = cart.find(i => i.id === product.id)?.qty ?? 0;
 
@@ -922,9 +971,10 @@ function CatalogCard({ product, onAddToCart, inWishlist, onToggleWishlist }: {
   const outOfStock = product.stock_count === 0;
   const inCart = cart.some(item => item.id === product.id);
   const cartQty = cart.find(item => item.id === product.id)?.qty ?? 0;
-  const discountPct = (product as unknown as { discount_percent?: number }).discount_percent;
-  const origPrice = (product as unknown as { original_price?: number }).original_price;
-  const warranty = (product as unknown as { warranty?: string }).warranty;
+  const ep = product as ExtendedProduct;
+  const discountPct = ep.discount_percent;
+  const origPrice = ep.original_price;
+  const warranty = ep.warranty;
   const sold = product.sold_count;
   const rating = sold > 0 ? (4.1 + (product.id.charCodeAt(0) % 9) / 10).toFixed(1) : null;
 

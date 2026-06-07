@@ -14,8 +14,9 @@ async function fetchProducts(): Promise<Product[]> {
     .limit(500);
 
   if (error) {
+    console.error("[useProducts]", error);
     toast.error("Mahsulotlarni yuklashda xato yuz berdi.");
-    return [];
+    throw error; // react-query retry mexanizmi ishlashi uchun
   }
   return data ?? [];
 }

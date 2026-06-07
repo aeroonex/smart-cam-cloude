@@ -26,8 +26,10 @@ type Props = {
   form: CheckoutForm;
   onFormChange: (form: CheckoutForm) => void;
   placing: boolean;
-  onPlace: (opts: { paymentMethod: PaymentMethod; promoCode?: string; discountAmount: number; deliveryFee: number; addressDetail?: string }) => void;
+  onPlace: (opts: { paymentMethod: PaymentMethod; promoCode?: string; discountAmount: number; deliveryFee: number; addressDetail?: string; walletUsed?: number }) => void;
   deliveryFee?: number;
+  cashbackBalance?: number;
+  walletBalance?: number;
 };
 
 export function CheckoutDialog({
@@ -40,6 +42,8 @@ export function CheckoutDialog({
   placing,
   onPlace,
   deliveryFee = 0,
+  cashbackBalance = 0,
+  walletBalance = 0,
 }: Props) {
   const { format: formatPrice } = useCurrency();
   const update =
@@ -51,8 +55,11 @@ export function CheckoutDialog({
   const [discountAmount, setDiscountAmount] = useState(0);
   const [appliedCode, setAppliedCode] = useState("");
   const [addressDetail, setAddressDetail] = useState("");
+  const [useWallet, setUseWallet] = useState(false);
 
-  const finalTotal = Math.max(0, cartTotal - discountAmount) + deliveryFee;
+  const totalAvailableBalance = cashbackBalance + walletBalance;
+  const walletDeduction = useWallet ? Math.min(totalAvailableBalance, Math.max(0, cartTotal - discountAmount) + deliveryFee) : 0;
+  const finalTotal = Math.max(0, cartTotal - discountAmount) + deliveryFee - walletDeduction;
 
   function handlePromoApplied(discount: number, code: string) {
     setDiscountAmount(discount);
@@ -127,6 +134,40 @@ export function CheckoutDialog({
               onApplied={handlePromoApplied}
               onRemoved={handlePromoRemoved}
             />
+
+            {/* Wallet / cashback balance */}
+            {totalAvailableBalance > 0 && (
+              <button
+                type="button"
+                onClick={() => setUseWallet(v => !v)}
+                className={`w-full flex items-center justify-between rounded-xl border-2 px-3 py-2.5 transition ${
+                  useWallet
+                    ? "border-emerald-400 bg-emerald-50"
+                    : "border-neutral-200 bg-white"
+                }`}
+              >
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-lg">💰</span>
+                  <div className="text-left">
+                    <p className={`font-semibold ${useWallet ? "text-emerald-700" : "text-neutral-700"}`}>
+                      Hamyon balansidan foydalanish
+                    </p>
+                    <p className="text-xs text-neutral-400">
+                      Mavjud: {formatPrice(totalAvailableBalance)}
+                    </p>
+                  </div>
+                </div>
+                <div className={`h-5 w-9 rounded-full transition-colors ${useWallet ? "bg-emerald-500" : "bg-neutral-200"}`}>
+                  <div className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${useWallet ? "translate-x-4" : "translate-x-0"}`} />
+                </div>
+              </button>
+            )}
+            {useWallet && walletDeduction > 0 && (
+              <div className="flex justify-between text-sm text-emerald-600 font-semibold px-1">
+                <span>Hamyondan chegirma:</span>
+                <span>−{formatPrice(walletDeduction)}</span>
+              </div>
+            )}
           </div>
 
           {/* ── Right: Delivery & payment ── */}
@@ -169,7 +210,7 @@ export function CheckoutDialog({
             <Button
               disabled={placing || !cart.length}
               className="h-12 w-full rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078] text-base font-bold"
-              onClick={() => onPlace({ paymentMethod, promoCode: appliedCode || undefined, discountAmount, deliveryFee, addressDetail: addressDetail || undefined })}
+              onClick={() => onPlace({ paymentMethod, promoCode: appliedCode || undefined, discountAmount, deliveryFee, addressDetail: addressDetail || undefined, walletUsed: walletDeduction || undefined })}
             >
               {placing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Buyurtma berish · {formatPrice(finalTotal)}

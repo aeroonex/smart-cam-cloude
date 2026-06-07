@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Tag, X, Loader2, CheckCircle2 } from "lucide-react";
 import { usePromoCode } from "@/hooks/usePromoCode";
 
@@ -14,16 +14,15 @@ export function PromoCodeInput({ cartTotal, onApplied, onRemoved }: Props) {
 
   async function handleApply() {
     if (!input.trim()) return;
-    const ok = await applyCode(input, cartTotal);
-    if (ok) {
-      onApplied(0, ""); // will be updated below via applied state
-    }
+    await applyCode(input, cartTotal);
   }
 
-  // sync applied state to parent
-  if (applied) {
-    onApplied(applied.discountAmount, applied.code.code);
-  }
+  // Render loop xatosini oldini olish uchun useEffect ishlatiladi
+  useEffect(() => {
+    if (applied) {
+      onApplied(applied.discountAmount, applied.code.code);
+    }
+  }, [applied]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleRemove() {
     remove();

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Loader2, MapPin, Phone, User } from "lucide-react";
+import { ChevronLeft, ChevronRight, Gift, Loader2, MapPin, Phone, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionContext } from "@/components/session-context-provider";
+import { useWallet } from "@/hooks/useWallet";
 import { regions } from "@/constants";
 import { haptic } from "@/utils/haptic";
 import { toast } from "sonner";
@@ -180,12 +181,16 @@ type GeoResult = {
 export default function OnboardingPage() {
   const { user } = useSessionContext();
   const navigate  = useNavigate();
+  const { redeemReferralCode } = useWallet(user);
   const [step, setStep]     = useState(0);
   const [dir,  setDir]      = useState<"f"|"b">("f");
   const [name, setName]     = useState("");
   const [phone, setPhone]   = useState("");
   const [region, setRegion] = useState("");
   const [saving, setSaving] = useState(false);
+  const [refInput, setRefInput]   = useState("");
+  const [refLoading, setRefLoading] = useState(false);
+  const [refApplied, setRefApplied] = useState(false);
   const [geoLoad, setGeoLoad] = useState(false);
   const [geoResult, setGeoResult] = useState<GeoResult | null>(null);
   const [geoError, setGeoError]   = useState("");
@@ -394,8 +399,57 @@ export default function OnboardingPage() {
         </div>
       </div>
 
+      {/* Referral code (optional) */}
+      <div className="ob-fade mt-6" style={{ animationDelay:".3s" }}>
+        {!refApplied ? (
+          <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-4 py-3">
+            <p className="text-xs font-semibold text-neutral-500 mb-2 flex items-center gap-1.5">
+              <Gift className="h-3.5 w-3.5 text-yellow-500" />
+              Referal kodingiz bormi? (ixtiyoriy)
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={refInput}
+                onChange={e => setRefInput(e.target.value.toUpperCase())}
+                placeholder="Masalan: AB12CD"
+                className="flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-mono tracking-widest outline-none focus:border-[#1d4f8a]"
+              />
+              <button
+                onClick={async () => {
+                  if (!refInput.trim()) return;
+                  setRefLoading(true);
+                  const result = await redeemReferralCode(refInput);
+                  setRefLoading(false);
+                  if (result.ok) {
+                    setRefApplied(true);
+                    haptic.success();
+                    toast.success(result.message);
+                  } else {
+                    haptic.error();
+                    toast.error(result.message);
+                  }
+                }}
+                disabled={refLoading || !refInput.trim()}
+                className="rounded-xl bg-[#1d4f8a] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
+              >
+                {refLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Qo'lla"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-center gap-2">
+            <span className="text-emerald-600 text-lg">🎁</span>
+            <div>
+              <p className="text-sm font-semibold text-emerald-700">Referal kod qabul qilindi!</p>
+              <p className="text-xs text-emerald-600">+5 000 so'm bonus hisobingizga qo'shildi</p>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* CTA */}
-      <div className="ob-fade mt-10" style={{ animationDelay:".35s" }}>
+      <div className="ob-fade mt-4" style={{ animationDelay:".35s" }}>
         <button onClick={() => go(1)}
           className="ob-btn w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-semibold text-white bg-[#1d4f8a]">
           Boshlash

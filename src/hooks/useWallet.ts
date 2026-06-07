@@ -2,6 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
+const REFERRAL_BONUS = 5_000; // so'm
+
 async function fetchWallet(userId: string) {
   const { data } = await supabase
     .from("users")
@@ -42,5 +44,41 @@ export function useWallet(user: User | null) {
     invalidate();
   }
 
-  return { walletBalance, cashbackBalance, referralCode, load: invalidate, ensureReferralCode, addCashback };
+  // Yangi foydalanuvchi referal kodini kiritganda — ikkalasiga bonus
+  async function redeemReferralCode(code: string): Promise<{ ok: boolean; message: string }> {
+    if (!user) return { ok: false, message: "Avval tizimga kiring" };
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return { ok: false, message: "Kod bo'sh" };
+
+    // Kodning egasini topish
+    const { data: referrer, error } = await supabase
+      .from("users")
+      .select("id, cashback_balance, referral_code")
+      .eq("referral_code", trimmed)
+      .neq("id", user.id)
+      .single();
+
+    if (error || !referrer) {
+      return { ok: false, message: "Referal kod topilmadi yoki noto'g'ri" };
+    }
+
+    // Yangi foydalanuvchiga bonus
+    const { error: newUserErr } = await supabase
+      .from("users")
+      .update({ cashback_balance: cashbackBalance + REFERRAL_BONUS })
+      .eq("id", user.id);
+
+    if (newUserErr) return { ok: false, message: "Bonus qo'shishda xato" };
+
+    // Taklif qiluvchiga ham bonus
+    await supabase
+      .from("users")
+      .update({ cashback_balance: (referrer.cashback_balance ?? 0) + REFERRAL_BONUS })
+      .eq("id", referrer.id);
+
+    invalidate();
+    return { ok: true, message: `+${REFERRAL_BONUS.toLocaleString()} so'm bonus qo'shildi!` };
+  }
+
+  return { walletBalance, cashbackBalance, referralCode, load: invalidate, ensureReferralCode, addCashback, redeemReferralCode };
 }

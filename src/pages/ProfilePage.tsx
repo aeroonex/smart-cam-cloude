@@ -433,8 +433,10 @@ export default function ProfilePage() {
         {l.account_services}
       </p>
       <div className="mx-4 bg-white rounded-2xl shadow-sm overflow-hidden">
-        <MenuItem icon={<HelpCircle className="h-5 w-5 text-blue-400" />} label={l.faq}     onClick={() => {}} />
-        <MenuItem icon={<Mail className="h-5 w-5 text-violet-400" />}    label={l.contact}  onClick={() => {}} />
+        <MenuItem icon={<HelpCircle className="h-5 w-5 text-blue-400" />} label={l.faq}
+          onClick={() => window.open("https://t.me/HammaBopSupport", "_blank", "noopener,noreferrer")} />
+        <MenuItem icon={<Mail className="h-5 w-5 text-violet-400" />} label={l.contact}
+          onClick={() => window.open("tel:+998901234567")} />
 
         {/* App download */}
         <div className="flex items-center justify-between px-4 py-3.5 border-t border-slate-50">
@@ -444,7 +446,9 @@ export default function ProfilePage() {
             </div>
             <span className="text-[14px] font-medium text-slate-800">{l.app}</span>
           </div>
-          <button className="flex items-center gap-1.5 border border-slate-200 rounded-xl px-3 py-1.5 text-[12px] font-semibold text-slate-600 bg-slate-50 active:scale-95 transition">
+          <button
+            onClick={() => toast.info("Ilova tez kunda Play Store va App Store da paydo bo'ladi!")}
+            className="flex items-center gap-1.5 border border-slate-200 rounded-xl px-3 py-1.5 text-[12px] font-semibold text-slate-600 bg-slate-50 active:scale-95 transition">
             <Download className="h-3.5 w-3.5" /> {l.download}
           </button>
         </div>
@@ -552,8 +556,9 @@ export default function ProfilePage() {
         </button>
         {openSection === "about" && (
           <div className="border-t border-slate-50">
-            <SubItem icon={<MapPin className="h-4 w-4 text-emerald-500" />}  label={l.pickup_points} onClick={() => navigate("/track")} />
-            <SubItem icon={<Briefcase className="h-4 w-4 text-blue-400" />}  label={l.vacancies}     onClick={() => {}} last />
+            <SubItem icon={<MapPin className="h-4 w-4 text-emerald-500" />}  label={l.pickup_points} onClick={() => navigate("/pickup-points")} />
+            <SubItem icon={<Briefcase className="h-4 w-4 text-blue-400" />}  label={l.vacancies}
+              onClick={() => window.open("https://t.me/HammaBopSupport", "_blank", "noopener,noreferrer")} last />
           </div>
         )}
       </div>
@@ -574,9 +579,12 @@ export default function ProfilePage() {
         </button>
         {openSection === "partner" && (
           <div className="border-t border-slate-50">
-            <SubItem icon={<ShoppingBag className="h-4 w-4 text-orange-500" />}    label={l.sell_with_us}    onClick={() => {}} />
-            <SubItem icon={<LayoutDashboard className="h-4 w-4 text-violet-500" />} label={l.seller_cabinet}  onClick={() => {}} />
-            <SubItem icon={<MapPin className="h-4 w-4 text-emerald-500" />}         label={l.open_pickup}     onClick={() => {}} last />
+            <SubItem icon={<ShoppingBag className="h-4 w-4 text-orange-500" />}    label={l.sell_with_us}
+              onClick={() => window.open("https://t.me/HammaBopSupport", "_blank", "noopener,noreferrer")} />
+            <SubItem icon={<LayoutDashboard className="h-4 w-4 text-violet-500" />} label={l.seller_cabinet}
+              onClick={() => window.open("https://t.me/HammaBopSupport", "_blank", "noopener,noreferrer")} />
+            <SubItem icon={<MapPin className="h-4 w-4 text-emerald-500" />}         label={l.open_pickup}
+              onClick={() => window.open("https://t.me/HammaBopSupport", "_blank", "noopener,noreferrer")} last />
           </div>
         )}
       </div>

@@ -8,10 +8,12 @@ import { useCart } from "@/hooks/useCart";
 import { useProducts } from "@/hooks/useProducts";
 import { useCurrency } from "@/hooks/useCurrency";
 import { AddToCartButton } from "@/components/AddToCartButton";
+import { useSessionContext } from "@/components/session-context-provider";
 
 export default function WishlistPage() {
   const navigate = useNavigate();
-  const { wishlistIds, toggleWishlist, inWishlist } = useWishlist();
+  const { user } = useSessionContext();
+  const { wishlistIds, toggleWishlist, inWishlist } = useWishlist(user);
   const { products, loading } = useProducts();
   const { format } = useCurrency();
   const { addToCart } = useCart();
