@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import {
-  ArrowLeft, BarChart3, Bell, LayoutDashboard,
+  ArrowLeft, BarChart3, Bell, LayoutDashboard, Paintbrush,
   LogOut, MapPin, Menu, MessageSquare, Package, Shield,
   Settings, ShoppingBag, Store, Truck, Users, Wallet, X,
 } from "lucide-react";
@@ -24,6 +24,9 @@ import { AdminDelivery } from "@/components/admin/AdminDelivery";
 import { AdminTaxReport } from "@/components/admin/AdminTaxReport";
 import { AdminAuditLogs } from "@/components/admin/AdminAuditLogs";
 import { AdminPickupPoints } from "@/components/admin/AdminPickupPoints";
+import { AdminMerchant } from "@/components/admin/AdminMerchant";
+import { AdminBranding } from "@/components/admin/AdminBranding";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 
 const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: string }[] = [
@@ -40,11 +43,14 @@ const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: str
   { id: "tax", label: "Soliq Hisoboti", icon: BarChart3, sub: "YATT uchun Excel" },
   { id: "audit", label: "Audit Logs", icon: Shield, sub: "Adminlar harakati" },
   { id: "pickup_points", label: "Topshirish nuqtalari", icon: MapPin, sub: "Xaritada boshqarish" },
+  { id: "merchant", label: "Merchant / To'lov", icon: Store, sub: "Click & Payme integratsiya" },
+  { id: "branding", label: "Brend sozlamalari", icon: Paintbrush, sub: "Logo, nom, rang" },
 ] as const;
 
 export default function Admin() {
   const navigate = useNavigate();
   const { user, loading: sessionLoading } = useSessionContext();
+  const { settings } = useSiteSettings();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [section, setSection] = useState<AdminSection>("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -99,10 +105,15 @@ export default function Admin() {
       >
         {/* Logo */}
         <div className="flex h-[65px] items-center gap-3 border-b border-white/10 px-5">
-          <HammaBopLogo size={34} />
+          {settings.logo_url ? (
+            <img src={settings.logo_url} alt="logo" className="h-8 w-8 rounded-xl object-contain bg-white/10 p-0.5" />
+          ) : (
+            <HammaBopLogo size={34} />
+          )}
           <div className="min-w-0">
             <p className="font-extrabold leading-tight text-white">
-              <span className="text-[#1d4f8a]">Hamma</span>Bop
+              <span style={{ color: settings.brand_color }}>{settings.site_name_part1}</span>
+              {settings.site_name_part2}
             </p>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-white/30">Admin Panel</p>
           </div>
@@ -241,6 +252,8 @@ export default function Admin() {
             </div>
           )}
           {section === "pickup_points" && <AdminPickupPoints />}
+          {section === "merchant" && <AdminMerchant />}
+          {section === "branding" && <AdminBranding />}
         </main>
       </div>
     </div>

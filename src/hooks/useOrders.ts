@@ -37,8 +37,15 @@ export function useOrders(user: User | null) {
       return;
     }
 
+    void load();
+
     const channel = supabase
       .channel(`smartcam-orders-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` },
+        () => { void load(); },
+      )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `user_id=eq.${user.id}` },

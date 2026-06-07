@@ -11,6 +11,7 @@ import type { ErrorInfo, ReactNode } from "react";
 import { useActivityTracker } from "@/hooks/useActivityTracker";
 import { BoxLoader } from "@/components/BoxLoader";
 import { HeartLoader } from "@/components/HeartLoader";
+import { SiteSettingsProvider } from "@/hooks/useSiteSettings";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -48,6 +49,9 @@ const OrdersPage = lazy(() => import("./pages/OrdersPage"));
 const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 const TrackPage = lazy(() => import("./pages/TrackPage"));
 const OrderPage = lazy(() => import("./pages/OrderPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
+const PickupPointsPage = lazy(() => import("./pages/PickupPointsPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,7 +106,29 @@ function SwipeBack() {
 
 function AppRoutes() {
   const { loading, user } = useSessionContext();
+  const navigate = useNavigate();
   useActivityTracker(user?.id);
+
+  /* Check onboarding after auth loads */
+  useEffect(() => {
+    if (loading || !user) return;
+    const key = `ob_done_${user.id}`;
+    if (localStorage.getItem(key)) return;
+    // Skip onboarding check if already on those pages
+    const path = window.location.pathname;
+    if (path === "/onboarding" || path === "/login") return;
+
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("users").select("phone,full_name").eq("id", user.id).single()
+        .then(({ data }) => {
+          if (!data?.phone || !data?.full_name) {
+            navigate("/onboarding", { replace: true });
+          } else {
+            localStorage.setItem(key, "1");
+          }
+        });
+    });
+  }, [user, loading]);
 
   if (loading) return <PageLoader />;
 
@@ -119,6 +145,9 @@ function AppRoutes() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/track" element={<TrackPage />} />
         <Route path="/order" element={<OrderPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/pickup-points" element={<PickupPointsPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
@@ -130,6 +159,7 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <SessionContextProvider>
+          <SiteSettingsProvider>
           <I18nProvider>
           <CurrencyProvider>
           <Toaster />
@@ -140,6 +170,7 @@ const App = () => (
           </BrowserRouter>
           </CurrencyProvider>
           </I18nProvider>
+          </SiteSettingsProvider>
         </SessionContextProvider>
       </TooltipProvider>
     </QueryClientProvider>
@@ -147,3 +178,4 @@ const App = () => (
 );
 
 export default App;
+

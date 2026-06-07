@@ -13,7 +13,6 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { HammaBopLogo } from "@/components/HammaBopLogo";
 import { NasiyaCalculator } from "@/components/NasiyaCalculator";
 import { useSessionContext } from "@/components/session-context-provider";
 import { useCart } from "@/hooks/useCart";
@@ -192,29 +191,20 @@ export default function ProductDetail() {
     <div className="min-h-screen bg-[#f5f5f5]">
 
       {/* ══════════ HEADER ══════════ */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#1d4f8a] shadow-lg">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
-          <Link to="/" className="flex shrink-0 items-center gap-2 text-white">
-            <HammaBopLogo size={28} dark />
-            <span className="hidden font-extrabold text-lg tracking-tight sm:block">
-              Hamma<span className="text-blue-200">Bop</span>
-            </span>
-          </Link>
+      <header className="sticky top-0 z-40 bg-[#1d4f8a] shadow-lg">
+        <div className="flex items-center gap-2 px-3 py-2.5">
           <button onClick={() => navigate(-1)}
-            className="ml-1 flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/30">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Orqaga</span>
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30">
+            <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="flex-1" />
+          <p className="flex-1 truncate text-sm font-semibold text-white px-1">{product.name}</p>
           <button onClick={() => setWished(w => !w)}
-            className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-sm text-white transition hover:bg-white/30">
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30">
             <Heart className={`h-4 w-4 ${wished ? "fill-white" : ""}`} />
-            <span className="hidden sm:inline">Sevimli</span>
           </button>
           <button onClick={shareProduct}
-            className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-sm text-white transition hover:bg-white/30">
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30">
             <Share2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Ulashish</span>
           </button>
         </div>
       </header>
@@ -390,82 +380,78 @@ export default function ProductDetail() {
             </div>
 
             {/* ── PRODUCT INFO ── */}
-            <div className="space-y-3 p-4 lg:p-5">
-              {/* Warranty badge — Uzum style */}
-              {warranty && (
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-neutral-400">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                  Kafolat {warranty}
-                </div>
-              )}
-
-              {/* Category + title */}
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="space-y-2 p-3 lg:p-4">
+              {/* Category + discount + warranty in one row */}
+              <div className="flex flex-wrap items-center gap-1.5">
                 {product.category && (
                   <button onClick={() => navigate(`/search?category=${encodeURIComponent(product.category!)}`)}
-                    className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-[#1d4f8a] hover:bg-blue-100">
+                    className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-[#1d4f8a] hover:bg-blue-100">
                     {product.category}
                   </button>
                 )}
                 {discountPct && (
-                  <span className="rounded-full bg-red-500 px-2.5 py-0.5 text-xs font-bold text-white">-{discountPct}%</span>
+                  <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">-{discountPct}%</span>
+                )}
+                {warranty && (
+                  <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                    <ShieldCheck className="h-3 w-3" /> {warranty}
+                  </span>
                 )}
               </div>
-              <h1 className="text-xl font-extrabold leading-tight text-neutral-900 sm:text-2xl">{product.name}</h1>
 
-              {/* Rating + meta */}
-              <div className="flex flex-wrap items-center gap-2 text-sm">
+              <h1 className="text-lg font-extrabold leading-snug text-neutral-900 sm:text-xl">{product.name}</h1>
+
+              {/* Rating + meta + stock in one row */}
+              <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
                 {reviews.length > 0 && (
                   <div className="flex items-center gap-1">
                     <div className="flex gap-0.5">
                       {[1,2,3,4,5].map(s => (
-                        <Star key={s} className={`h-3.5 w-3.5 ${s <= Math.round(avgRating) ? "fill-amber-400 text-amber-400" : "fill-neutral-200 text-neutral-200"}`} />
+                        <Star key={s} className={`h-3 w-3 ${s <= Math.round(avgRating) ? "fill-amber-400 text-amber-400" : "fill-neutral-200 text-neutral-200"}`} />
                       ))}
                     </div>
                     <span className="font-semibold text-amber-500">{avgRating.toFixed(1)}</span>
-                    <a href="#reviews" className="text-neutral-400 hover:text-[#1d4f8a]">({reviews.length})</a>
+                    <a href="#reviews" className="text-neutral-400">({reviews.length})</a>
                   </div>
                 )}
-                <span className="text-neutral-400">{product.sold_count} ta sotildi</span>
+                <span>{product.sold_count} ta sotildi</span>
+                {!inStock ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 font-semibold text-red-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> Yo'q
+                  </span>
+                ) : lowStock ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+                    {product.stock_count} ta qoldi
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Mavjud
+                  </span>
+                )}
               </div>
 
               {/* Price */}
-              <div className="rounded-xl bg-blue-50 px-4 py-3">
+              <div className="rounded-xl bg-blue-50 px-3 py-2">
                 <div className="flex items-baseline gap-2">
-                  <p className="text-3xl font-extrabold tracking-tight text-neutral-900">
+                  <p className="text-2xl font-extrabold tracking-tight text-neutral-900">
                     {formatPrice(Number(product.price))}
                   </p>
                   {origPrice && origPrice > Number(product.price) && (
-                    <p className="text-sm text-neutral-400 line-through">{formatPrice(origPrice)}</p>
+                    <p className="text-xs text-neutral-400 line-through">{formatPrice(origPrice)}</p>
+                  )}
+                  {discountPct && origPrice && (
+                    <p className="text-xs font-semibold text-emerald-600">
+                      {formatPrice(origPrice - Number(product.price))} tejaysiz
+                    </p>
                   )}
                 </div>
-                {discountPct && origPrice && (
-                  <p className="mt-0.5 text-xs font-semibold text-emerald-600">
-                    {formatPrice(origPrice - Number(product.price))} tejaysiz
-                  </p>
-                )}
                 {product.cashback_amount > 0 && (
-                  <div className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[#1d4f8a]">
+                  <div className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#1d4f8a]">
                     <Gift className="h-3 w-3" /> +{product.cashback_amount.toLocaleString()} so'm cashback
                   </div>
                 )}
               </div>
-
-              {/* Stock */}
-              {!inStock ? (
-                <div className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> Omborda yo'q
-                </div>
-              ) : lowStock ? (
-                <div className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
-                  Faqat <b>{product.stock_count} ta</b> qoldi
-                </div>
-              ) : (
-                <div className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Omborda mavjud
-                </div>
-              )}
 
               {/* Sizes */}
               {sizes.length > 0 && (
