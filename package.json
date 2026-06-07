@@ -11,9 +11,21 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "cross-env NODE_ENV=production node server/index.cjs"
+    "start": "cross-env NODE_ENV=production node server/index.cjs",
+    "android:init": "cap add android",
+    "android:sync": "vite build && cap sync android",
+    "android:open": "cap open android",
+    "android:run": "vite build && cap sync android && cap run android",
+    "android:build": "vite build && cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -83,6 +95,7 @@
     "cross-env": "^7.0.3"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.0",
     "@dyad-sh/react-vite-component-tagger": "^0.9.0",
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.15",

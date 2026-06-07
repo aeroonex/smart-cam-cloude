@@ -1,29 +1,36 @@
-/** Qurilmada haptik vibratsiya (Android + ba'zi brauzerlarda ishlaydi) */
-function vibe(pattern: number | number[]) {
-  try {
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate(pattern);
-    }
-  } catch {
-    // silent — ba'zi qurilmalar qo'llab-quvvatlamaydi
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
+
+const isNative = () =>
+  typeof (window as any).Capacitor !== "undefined" &&
+  (window as any).Capacitor.isNativePlatform();
+
+async function impact(style: ImpactStyle) {
+  if (isNative()) {
+    await Haptics.impact({ style });
+  } else if ("vibrate" in navigator) {
+    const ms = style === ImpactStyle.Light ? 8 : style === ImpactStyle.Medium ? 18 : 35;
+    navigator.vibrate(ms);
+  }
+}
+
+async function notify(type: NotificationType) {
+  if (isNative()) {
+    await Haptics.notification({ type });
+  } else if ("vibrate" in navigator) {
+    if (type === NotificationType.Success) navigator.vibrate([10, 60, 15]);
+    else if (type === NotificationType.Error) navigator.vibrate([30, 80, 30, 80, 30]);
+    else navigator.vibrate([20, 40, 20]);
   }
 }
 
 export const haptic = {
-  /** Yengil teginish — tugma bosilganda */
-  light:   () => vibe(8),
-  /** O'rtacha — muhim harakatlar */
-  medium:  () => vibe(18),
-  /** Kuchli — ogohlantirish, xato */
-  heavy:   () => vibe(35),
-  /** Muvaffaqiyat — buyurtma, saqlash */
-  success: () => vibe([10, 60, 15]),
-  /** Xato — tekshiruvdan o'tmadi */
-  error:   () => vibe([30, 80, 30, 80, 30]),
-  /** Tab almashtirish */
-  tab:     () => vibe(6),
-  /** Tanlash (chip, radio) */
-  select:  () => vibe(12),
-  /** Uzun bosish */
-  long:    () => vibe([0, 50, 30]),
+  light:   () => impact(ImpactStyle.Light),
+  medium:  () => impact(ImpactStyle.Medium),
+  heavy:   () => impact(ImpactStyle.Heavy),
+  success: () => notify(NotificationType.Success),
+  error:   () => notify(NotificationType.Error),
+  warning: () => notify(NotificationType.Warning),
+  tab:     () => impact(ImpactStyle.Light),
+  select:  () => impact(ImpactStyle.Medium),
+  long:    () => impact(ImpactStyle.Heavy),
 };

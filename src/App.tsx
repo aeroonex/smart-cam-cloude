@@ -12,6 +12,8 @@ import { useActivityTracker } from "@/hooks/useActivityTracker";
 import { BoxLoader } from "@/components/BoxLoader";
 import { HeartLoader } from "@/components/HeartLoader";
 import { SiteSettingsProvider } from "@/hooks/useSiteSettings";
+import { useAndroidBackButton } from "@/hooks/useAndroid";
+import { SplashScreen } from "@capacitor/splash-screen";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -108,6 +110,11 @@ function AppRoutes() {
   const { loading, user } = useSessionContext();
   const navigate = useNavigate();
   useActivityTracker(user?.id);
+  useAndroidBackButton();
+
+  useEffect(() => {
+    SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
+  }, []);
 
   /* Check onboarding after auth loads */
   useEffect(() => {
