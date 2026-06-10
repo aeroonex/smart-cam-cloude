@@ -255,7 +255,7 @@ export default function SearchResults() {
       <header className="sticky top-0 z-50 bg-[#1d4f8a] shadow-md">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-3 py-2.5 sm:px-6">
           <Link to="/" className="flex shrink-0 items-center gap-2 text-white transition hover:opacity-90">
-            <HammaBopLogo size={34} dark />
+            <HammaBopLogo size={34} />
             <span className="hidden font-extrabold sm:block text-lg">Hamma<span className="text-blue-200">Bop</span></span>
           </Link>
 
@@ -484,7 +484,7 @@ export default function SearchResults() {
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-2 gap-px bg-neutral-200 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
                 {products.map((p) => (
-                  <ProductCard key={p.id} product={p} onAddToCart={(prod) => { addToCart(prod); toast.success("Savatga qo'shildi!"); }} />
+                  <ProductCard key={p.id} product={p} onAddToCart={(prod) => { addToCart(prod); }} />
                 ))}
               </div>
             ) : (
@@ -518,7 +518,7 @@ export default function SearchResults() {
                           </p>
                         </div>
                         <button
-                          onClick={(e) => { e.stopPropagation(); addToCart(p); toast.success("Savatga qo'shildi!"); }}
+                          onClick={(e) => { e.stopPropagation(); addToCart(p); }}
                           className="rounded-full bg-[#1d4f8a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#164078]"
                         >
                           {t("add_to_cart")}

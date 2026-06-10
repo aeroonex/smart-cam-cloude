@@ -1,9 +1,9 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react"; // dark mode removed
 import {
   CheckCircle2, ChevronDown, Heart, Home, LayoutDashboard, Loader2,
   LogOut, MapPin, MessageCircle, Package, Play, Search, ShieldCheck, ShoppingCart, Sparkles, Star, UserRound, Wallet,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { OrderSuccess } from "@/components/OrderSuccess";
 import { CategoryMenu } from "@/components/CategoryMenu";
 import { CheckoutDialog } from "@/components/CheckoutDialog";
 import { HammaBopLogo } from "@/components/HammaBopLogo";
+import { BottomNav } from "@/components/BottomNav";
 import { HeroBanner } from "@/components/HeroBanner";
 import { OrdersList } from "@/components/OrdersList";
 import { ProductCard } from "@/components/ProductCard";
@@ -24,7 +25,6 @@ import { PromoSection } from "@/components/PromoSection";
 import { RecentlyViewed } from "@/components/RecentlyViewed";
 import { VideoCatalog } from "@/components/VideoCatalog";
 import { WalletCard } from "@/components/WalletCard";
-import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { useSessionContext } from "@/components/session-context-provider";
 import { useCart } from "@/hooks/useCart";
 import { useCurrency, type Currency } from "@/hooks/useCurrency";
@@ -36,12 +36,14 @@ import type { Lang } from "@/lib/i18n";
 import { regions } from "@/constants";
 import { AddToCartButton } from "@/components/AddToCartButton";
 import { ProductCardSkeleton, CategoryIconsSkeleton, SaleCardSkeleton } from "@/components/Skeleton";
-import { AITryOn } from "@/components/AITryOn";
 import { useOrders } from "@/hooks/useOrders";
 import { useProducts } from "@/hooks/useProducts";
+import { PullToRefresh } from "@/components/PullToRefresh";
+import { useQueryClient } from "@tanstack/react-query";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { getInitials } from "@/lib/format";
+import { haptic } from "@/utils/haptic";
 import type { Database } from "@/integrations/supabase/types";
 import { useQuery } from "@tanstack/react-query";
 
@@ -78,22 +80,21 @@ function useSaleTimer() {
 }
 
 const CATEGORY_ICONS = [
-  { key: "Kiyim-kechak", label: "Kiyim-kechak", emoji: "👕" },
-  { key: "Mobil telefonlar", label: "Telefonlar", emoji: "📱" },
-  { key: "Sport & Sog'liq", label: "Sport", emoji: "⚽" },
-  { key: "Bolalar tovarlari", label: "Bolalar", emoji: "🧸" },
-  { key: "Kompyuter & Noutbuk", label: "Kompyuter", emoji: "💻" },
-  { key: "Uy va ofis", label: "Uy & Ofis", emoji: "🏠" },
-  { key: "Go'zallik & Parfyumeriya", label: "Go'zallik", emoji: "💄" },
-  { key: "Avtomobil", label: "Avto", emoji: "🚗" },
-  { key: "Soatlar & Zargarlik", label: "Soatlar", emoji: "⌚" },
-  { key: "O'yinlar & Hobby", label: "O'yinlar", emoji: "🎮" },
+  { key: "Kiyim-kechak", label: "Kiyim" },
+  { key: "Poyabzal", label: "Poyabzal" },
+  { key: "Sumkalar", label: "Sumkalar" },
+  { key: "Kompyuter & Noutbuk", label: "Elektron" },
+  { key: "Soatlar & Zargarlik", label: "Soatlar" },
+  { key: "Go'zallik & Parfyumeriya", label: "Go'zallik" },
+  { key: "Uy va ofis", label: "Oshxona" },
+  { key: "O'yinlar & Hobby", label: "O'yinlar" },
 ];
 
 const Index = () => {
   const navigate = useNavigate();
   const { loading: sessionLoading, user, signOut } = useSessionContext();
   const { products, loading: productsLoading } = useProducts();
+  const queryClient = useQueryClient();
   const { cart, cartCount, cartTotal, addToCart, updateQuantity, removeFromCart, clearCart } = useCart();
   const { orders, loading: ordersLoading, reload: reloadOrders } = useOrders(user);
   const { profile, form, setForm, saving, profileOpen, setProfileOpen, save, upsertForOrder } = useProfile(user);
@@ -101,7 +102,7 @@ const Index = () => {
   const { t, lang, setLang } = useI18n();
   const { wishlistIds, toggleWishlist, inWishlist } = useWishlist(user);
   const { viewedIds, track: trackViewed } = useRecentlyViewed(user);
-  const { walletBalance, cashbackBalance, referralCode, ensureReferralCode } = useWallet(user);
+  const { walletBalance, cashbackBalance, referralCode, transactions: walletTxs, ensureReferralCode } = useWallet(user);
   const saleTimer = useSaleTimer();
 
   const [region, setRegion] = useState<string>(() => localStorage.getItem("hammabop_region") ?? "Toshkent shahri");
@@ -137,13 +138,22 @@ const Index = () => {
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
   }, [user?.id]);
+  const location = useLocation();
   const [activeSection, setActiveSection] = useState<ActiveSection>("home");
+  useEffect(() => {
+    const s = (location.state as { section?: string } | null)?.section;
+    if (s === "wallet") { setActiveSection("wallet"); return; }
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get("tab");
+    if (tabParam === "catalog") setActiveSection("catalog");
+    else if (tabParam === "orders") setActiveSection("orders");
+    else if (!tabParam) setActiveSection("home");
+  }, [location.state, location.search]);
   const [catalogCategory, setCatalogCategory] = useState("");
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("recommended");
   const [searchInput, setSearchInput] = useState("");
   const [videoCatalogOpen, setVideoCatalogOpen] = useState(false);
-  const [aiTryOnOpen, setAiTryOnOpen] = useState(false);
   const [walletBannerHidden, setWalletBannerHidden] = useState(false);
 
   const { data: adminData } = useQuery({
@@ -291,18 +301,23 @@ const Index = () => {
         void totalBal; // suppress unused warning
       }
 
-      // Cashback va promo — buyurtmadan keyin, xato bo'lsa bloklash shart emas
+      // Cashback — RPC orqali atomik increment (stale closure muammosini oldini oladi)
       const totalCashback = cart.reduce((sum, item) => {
         const p = products.find((pr) => pr.id === item.id);
         return sum + (p?.cashback_amount ?? 0) * item.qty;
       }, 0);
       if (totalCashback > 0) {
-        const { error: cbErr } = await supabase
-          .from("users")
-          .update({ cashback_balance: cashbackBalance + totalCashback })
-          .eq("id", user.id);
-        if (cbErr) console.error("[cashback update]", cbErr);
-        else toast.success(`${totalCashback.toLocaleString()} so'm cashback yig'ildi!`);
+        const { error: cbErr } = await supabase.rpc("increment_cashback", {
+          user_id: user.id,
+          amount: totalCashback,
+        });
+        if (cbErr) {
+          // RPC mavjud bo'lmasa fallback: re-fetch qilib yangilaymiz
+          const { data: fresh } = await supabase.from("users").select("cashback_balance").eq("id", user.id).single();
+          const current = fresh?.cashback_balance ?? 0;
+          await supabase.from("users").update({ cashback_balance: current + totalCashback }).eq("id", user.id);
+        }
+        toast.success(`${totalCashback.toLocaleString()} so'm cashback yig'ildi!`);
       }
 
       if (opts.promoCode) {
@@ -355,34 +370,31 @@ const Index = () => {
   const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
-    <div className="min-h-screen bg-[#f0f4fa] pb-28">
+    <PullToRefresh
+      onRefresh={async () => {
+        await queryClient.invalidateQueries({ queryKey: ["products"] });
+        await reloadOrders?.();
+      }}
+    >
+    <div className="min-h-screen bg-white pb-28">
 
-      {/* ── TOP BAR (Uzum style) ── */}
-      <div className="sticky top-0 z-50 bg-white shadow-sm">
-        <div className="mx-auto max-w-[1280px]">
+      {/* ── TOP BAR (Evira style) ── */}
+      <div className="sticky top-0 z-50 bg-white border-b border-neutral-100">
+        <div className="mx-auto max-w-[1280px] px-4 pt-4 pb-3">
 
-          {/* Row 1: Location + icons */}
-          <div className="flex items-center justify-between px-4 pt-3 pb-1">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 text-[15px] font-bold text-neutral-900">
-                  <MapPin className="h-4 w-4 text-[#1d4f8a]" />
-                  {region.replace(" shahri", "").replace(" viloyati", "")}
-                  <ChevronDown className="h-4 w-4 text-neutral-400" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto rounded-xl z-50">
-                {regions.map((r) => (
-                  <DropdownMenuItem key={r} onClick={() => chooseRegion(r)}
-                    className={`rounded-lg text-sm ${region === r ? "font-semibold text-[#1d4f8a]" : ""}`}>{r}</DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+          {/* Row 1: Greeting + icons */}
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-[12px] text-neutral-400 font-medium">
+                {new Date().getHours() < 12 ? "Good Morning 🌤️" : new Date().getHours() < 18 ? "Good Afternoon ☀️" : "Good Evening 🌙"}
+              </p>
+              <p className="text-[17px] font-bold text-neutral-900 leading-tight">
+                {profile?.full_name?.split(" ")[0] ?? (user ? "Salom!" : "Mehmon")}
+              </p>
+            </div>
 
             <div className="flex items-center gap-2">
-              <DarkModeToggle />
-
-              {/* Lang pill */}
+              {/* Lang */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="rounded-full border border-neutral-200 px-2.5 py-1 text-xs font-semibold text-neutral-600">{lang.toUpperCase()}</button>
@@ -390,13 +402,14 @@ const Index = () => {
                 <DropdownMenuContent align="end" className="rounded-xl z-50">
                   {LANGS.map((l) => (
                     <DropdownMenuItem key={l.code} onClick={() => setLang(l.code)}
-                      className={`rounded-lg text-sm ${lang === l.code ? "font-semibold text-[#1d4f8a]" : ""}`}>{l.label}</DropdownMenuItem>
+                      className={`rounded-lg text-sm ${lang === l.code ? "font-semibold" : ""}`}>{l.label}</DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <button onClick={() => navigate("/wishlist")} className="relative p-1">
-                <Heart className={`h-6 w-6 ${wishlistIds.length > 0 ? "fill-red-500 text-red-500" : "text-neutral-700"}`} />
+              {/* Wishlist */}
+              <button onClick={() => navigate("/wishlist")} className="relative w-9 h-9 flex items-center justify-center rounded-full border border-neutral-200">
+                <Heart className={`h-[18px] w-[18px] ${wishlistIds.length > 0 ? "fill-red-500 text-red-500" : "text-neutral-700"}`} />
                 {wishlistIds.length > 0 && (
                   <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
                     {wishlistIds.length}
@@ -406,25 +419,36 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Row 2: Search bar */}
-          <div className="px-4 pb-3">
-            <div className="flex items-center overflow-hidden rounded-xl border border-neutral-200 bg-[#f5f5f5]">
-              <Search className="ml-3 h-4 w-4 shrink-0 text-neutral-400" />
+          {/* Row 2: Search + location */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-2 bg-[#F5F5F5] rounded-2xl px-4 py-2.5">
+              <Search className="h-4 w-4 shrink-0 text-neutral-400" />
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") doSearch(); }}
                 placeholder={t("search_placeholder")}
-                className="flex-1 min-w-0 bg-transparent px-2 py-2.5 text-sm outline-none"
+                className="flex-1 min-w-0 bg-transparent text-[13px] outline-none"
               />
               {searchInput && (
-                <button onClick={() => setSearchInput("")} className="px-2 text-neutral-400 font-bold">✕</button>
+                <button onClick={() => setSearchInput("")} className="text-neutral-400 text-sm">✕</button>
               )}
-              <button onClick={doSearch} className="bg-[#1d4f8a] px-4 py-2.5 text-sm font-semibold text-white">
-                {t("search_btn")}
-              </button>
             </div>
+            {/* Location filter button */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[#F5F5F5] shrink-0">
+                  <MapPin className="h-4 w-4 text-neutral-700" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto rounded-xl z-50">
+                {regions.map((r) => (
+                  <DropdownMenuItem key={r} onClick={() => chooseRegion(r)}
+                    className={`rounded-lg text-sm ${region === r ? "font-semibold" : ""}`}>{r}</DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -435,8 +459,8 @@ const Index = () => {
           <>
             {/* Wallet/cashback banner */}
             {user && (walletBalance + cashbackBalance) > 0 && !walletBannerHidden && (
-              <div className="mx-3 mt-3 flex items-center gap-3 rounded-2xl bg-[#e8f0fb] border border-[#b8d0f0] px-4 py-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1d4f8a] flex-shrink-0">
+              <div className="mx-4 mt-4 flex items-center gap-3 rounded-2xl bg-[#F5F5F5] px-4 py-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-black flex-shrink-0">
                   <Wallet className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -446,69 +470,57 @@ const Index = () => {
                   <p className="text-xs text-neutral-500">hamyoningizdagi bonus mablag'</p>
                 </div>
                 <button onClick={() => setWalletBannerHidden(true)} className="p-1 text-neutral-400">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 4.411m0 0L21 21" />
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             )}
 
-            {/* Hero Banner */}
-            <div className="mx-3 mt-3 overflow-hidden rounded-2xl">
-              <HeroBanner />
+            {/* Special Offers — Hero Banner */}
+            <div className="mx-4 mt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-bold text-[16px] text-neutral-900">Special Offers</h2>
+                <button className="text-[13px] text-neutral-400 font-medium">See All</button>
+              </div>
+              <div className="overflow-hidden rounded-2xl">
+                <HeroBanner />
+              </div>
             </div>
 
-            {/* Category icons — mobile: 2-row scroll | desktop: wrap to fill */}
-            {(() => {
-              const catBtn = (key: string, label: string, emoji: string) => (
-                <button key={key || "all"} onClick={() => goCatalog(key)}
-                  className="flex flex-col items-center gap-1 shrink-0 w-[68px]">
-                  <div className="h-[52px] w-[52px] rounded-full bg-white shadow-sm border border-neutral-100 flex items-center justify-center text-[22px]">
-                    {emoji}
-                  </div>
-                  <span className="text-[10px] font-medium text-neutral-600 text-center leading-tight w-full">{label}</span>
-                </button>
-              );
-              const aiBtn = (
-                <button key="__ai__" onClick={() => setAiTryOnOpen(true)}
-                  className="flex flex-col items-center gap-1 shrink-0 w-[68px]">
-                  <div className="h-[52px] w-[52px] rounded-full flex items-center justify-center shadow-md"
-                    style={{ background: "linear-gradient(145deg, #6d28d9, #8b5cf6, #7c3aed)" }}>
-                    <span className="text-[15px] font-extrabold text-white tracking-tight">AI</span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-violet-600 text-center leading-tight w-full">OnexAI</span>
-                </button>
-              );
-              const allItems = [
-                catBtn(CATEGORY_ICONS[0].key, CATEGORY_ICONS[0].label, CATEGORY_ICONS[0].emoji),
-                aiBtn,
-                ...CATEGORY_ICONS.slice(1).map(c => catBtn(c.key, c.label, c.emoji)),
-                catBtn("", "Barchasi", "🗂️"),
-              ];
-              return (
-                <>
-                  {/* Mobile: 2-row horizontal scroll */}
-                  <div className="mt-3 overflow-x-auto px-3 sm:hidden" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-                    <div className="grid gap-x-2 gap-y-2 pb-1" style={{
-                      gridTemplateRows: "repeat(2, auto)",
-                      gridAutoFlow: "column",
-                      gridAutoColumns: "68px",
-                      width: "max-content",
-                    }}>
-                      {allItems}
-                    </div>
-                  </div>
-                  {/* Desktop: spread across full width */}
-                  <div className="mt-3 hidden sm:flex flex-wrap justify-around gap-y-3 px-3 pb-1">
-                    {allItems}
-                  </div>
-                </>
-              );
-            })()}
+            {/* Category icons — Evira style: simple gray circles */}
+            <div className="mt-5 px-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-bold text-[16px] text-neutral-900">Kategoriyalar</h2>
+                <button onClick={() => goCatalog()} className="text-[13px] text-neutral-400 font-medium">See All</button>
+              </div>
+              <div className="overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                <div className="flex gap-4 pb-1" style={{ width: "max-content" }}>
+                  {[
+                    { key: "Kiyim-kechak", label: "Clothes", icon: "👕" },
+                    { key: "Poyabzal", label: "Shoes", icon: "👟" },
+                    { key: "Sumkalar", label: "Bags", icon: "👜" },
+                    { key: "Kompyuter & Noutbuk", label: "Electronics", icon: "📱" },
+                    { key: "Soatlar & Zargarlik", label: "Watch", icon: "⌚" },
+                    { key: "Go'zallik & Parfyumeriya", label: "Jewelry", icon: "💍" },
+                    { key: "Uy va ofis", label: "Kitchen", icon: "🍳" },
+                    { key: "O'yinlar & Hobby", label: "Toys", icon: "🎮" },
+                  ].map((c) => (
+                    <button key={c.key} onClick={() => goCatalog(c.key)}
+                      className="flex flex-col items-center gap-1.5 shrink-0">
+                      <div className="h-14 w-14 rounded-full bg-[#F5F5F5] flex items-center justify-center text-[22px]">
+                        {c.icon}
+                      </div>
+                      <span className="text-[11px] font-medium text-neutral-600">{c.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Flash Sale section with timer */}
             {productsLoading ? (
-              <div className="mx-3 mt-4 overflow-hidden rounded-2xl p-4 space-y-3" style={{ background: "linear-gradient(135deg, #0d2744 0%, #1d4f8a 60%, #2860a8 100%)" }}>
+              <div className="mx-4 mt-5 overflow-hidden rounded-2xl p-4 space-y-3 bg-neutral-900">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1.5">
                     <div className="h-4 w-36 rounded skeleton" style={{ background: "rgba(255,255,255,0.15)", backgroundSize: "200% 100%", animation: "shimmer 1.6s ease-in-out infinite" }} />
@@ -523,19 +535,19 @@ const Index = () => {
                 </div>
               </div>
             ) : saleProducts.length > 0 && (
-              <div className="mx-3 mt-4 overflow-hidden rounded-2xl" style={{ background: "linear-gradient(135deg, #0d2744 0%, #1d4f8a 60%, #2860a8 100%)" }}>
+              <div className="mx-4 mt-5 overflow-hidden rounded-2xl bg-neutral-900">
                 <div className="flex items-center justify-between px-4 py-3">
                   <div>
-                    <p className="font-bold text-white text-[15px]">Yozgi chegirmalar</p>
-                    <p className="text-[11px] text-white/50 mt-0.5">haftaning barcha foydali takliflari</p>
+                    <p className="font-bold text-white text-[15px]">⚡ Flash Sale</p>
+                    <p className="text-[11px] text-white/60 mt-0.5">Bugungi maxsus takliflar</p>
                   </div>
                   <div className="flex items-center gap-1">
                     {[pad(saleTimer.h), pad(saleTimer.m), pad(saleTimer.s)].map((v, i) => (
                       <span key={i} className="flex items-center gap-1">
-                        <span className="bg-white text-neutral-900 font-bold text-[13px] rounded-lg px-2 py-1 min-w-[32px] text-center">
+                        <span className="bg-white/20 backdrop-blur-sm text-white font-bold text-[13px] rounded-xl px-2 py-1 min-w-[32px] text-center border border-white/20">
                           {v}
                         </span>
-                        {i < 2 && <span className="text-white font-bold text-sm">:</span>}
+                        {i < 2 && <span className="text-white/80 font-bold text-sm">:</span>}
                       </span>
                     ))}
                   </div>
@@ -566,20 +578,28 @@ const Index = () => {
               </div>
             )}
 
-            {/* Filter tabs */}
-            <div className="mt-4 flex items-center gap-2 overflow-x-auto px-3 pb-0.5" style={{ scrollbarWidth: "none" }}>
-              {([
-                { key: "recommended", label: "Tavsiya etilgan" },
-                { key: "sale", label: "Chegirmali" },
-                { key: "top", label: "Top mahsulotlar" },
-              ] as { key: Tab; label: string }[]).map((c) => (
-                <button key={c.key} onClick={() => setTab(c.key)}
-                  className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold transition ${
-                    tab === c.key ? "bg-[#1d4f8a] text-white" : "bg-white text-neutral-600 border border-neutral-200"
-                  }`}>
-                  {c.label}
-                </button>
-              ))}
+            {/* Most Popular — Evira style */}
+            <div className="mt-5 px-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-bold text-[16px] text-neutral-900">Most Popular</h2>
+                <button className="text-[13px] text-neutral-400 font-medium">See All</button>
+              </div>
+              <div className="flex items-center gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+                {([
+                  { key: "recommended", label: "All" },
+                  { key: "sale", label: "Chegirma" },
+                  { key: "top", label: "Top" },
+                ] as { key: Tab; label: string }[]).map((c) => (
+                  <button key={c.key} onClick={() => setTab(c.key)}
+                    className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold transition ${
+                      tab === c.key
+                        ? "bg-black text-white"
+                        : "bg-[#F5F5F5] text-neutral-600"
+                    }`}>
+                    {c.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Recently Viewed */}
@@ -598,8 +618,8 @@ const Index = () => {
                   <PromoSection key={block.section.id} section={block.section} products={block.sectionProducts}
                     onAddToCart={addToCart} inWishlist={inWishlist} onToggleWishlist={toggleWishlist} />
                 ) : (
-                  <div key={`chunk-${bi}`} className="mt-3 px-3">
-                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                  <div key={`chunk-${bi}`} className="mt-3 px-4">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                       {block.items.map((product) => (
                         <ProductCard key={product.id} product={product}
                           onAddToCart={addToCart} inWishlist={inWishlist(product.id)}
@@ -621,27 +641,36 @@ const Index = () => {
             <footer className="mt-8 border-t border-neutral-200 bg-white px-4 py-8">
               <div className="flex items-center gap-2 mb-3">
                 <HammaBopLogo size={28} />
-                <span className="font-extrabold text-lg"><span className="text-[#1d4f8a]">Hamma</span>Bop</span>
+                <span className="font-extrabold text-lg"><span className="text-[#111111]">Hamma</span>Bop</span>
               </div>
               <p className="text-sm text-neutral-500 mb-4">{t("footer_about")}</p>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="font-bold mb-2">{t("for_buyers")}</p>
                   <ul className="space-y-1 text-neutral-500">
-                    <li><button onClick={goHome} className="hover:text-[#1d4f8a]">{t("home")}</button></li>
-                    <li><button onClick={() => void showOrders()} className="hover:text-[#1d4f8a]">{t("my_orders")}</button></li>
-                    <li><button onClick={() => setCartOpen(true)} className="hover:text-[#1d4f8a]">{t("my_cart")}</button></li>
+                    <li><button onClick={goHome} className="hover:text-[#111111]">{t("home")}</button></li>
+                    <li><button onClick={() => void showOrders()} className="hover:text-[#111111]">{t("my_orders")}</button></li>
+                    <li><button onClick={() => setCartOpen(true)} className="hover:text-[#111111]">{t("my_cart")}</button></li>
                   </ul>
                 </div>
                 <div>
                   <p className="font-bold mb-2">{t("help")}</p>
                   <ul className="space-y-1 text-neutral-500">
-                    <li><a href="tel:+998901234567" className="hover:text-[#1d4f8a]">+998 90 123 45 67</a></li>
-                    <li><a href="https://t.me/HammaBopSupport" target="_blank" rel="noopener noreferrer" className="hover:text-[#1d4f8a]">Telegram</a></li>
+                    <li><a href="tel:+998901234567" className="hover:text-[#111111]">+998 90 123 45 67</a></li>
+                    <li><a href="https://t.me/HammaBopSupport" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111]">Telegram</a></li>
                   </ul>
                 </div>
               </div>
-              <p className="mt-6 text-center text-xs text-neutral-400">
+              <div className="mt-6 flex flex-wrap justify-center gap-3 text-xs text-neutral-400">
+                <Link to="/privacy" className="hover:text-[#111111] underline underline-offset-2">
+                  Maxfiylik Siyosati
+                </Link>
+                <span>·</span>
+                <Link to="/terms" className="hover:text-[#111111] underline underline-offset-2">
+                  Foydalanish shartlari
+                </Link>
+              </div>
+              <p className="mt-2 text-center text-xs text-neutral-400">
                 © HammaBop {new Date().getFullYear()}. {t("rights_reserved")}
               </p>
             </footer>
@@ -668,7 +697,7 @@ const Index = () => {
                     Telegram ulangan
                   </span>
                 ) : (
-                  <Button variant="outline" className="rounded-full border-blue-200 text-[#1d4f8a]"
+                  <Button variant="outline" className="rounded-full border-blue-200 text-[#111111]"
                     onClick={() => void openTelegramLink("connect")}
                     disabled={telegramLinkLoading === "connect"}>
                     {telegramLinkLoading === "connect"
@@ -677,7 +706,7 @@ const Index = () => {
                     Telegram ulash
                   </Button>
                 )}
-                <Button className="rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]" onClick={goHome}>
+                <Button className="rounded-full bg-[#111111] text-white hover:bg-[#000000]" onClick={goHome}>
                   {t("continue_shopping")}
                 </Button>
               </div>
@@ -694,6 +723,7 @@ const Index = () => {
               walletBalance={walletBalance}
               referralCode={referralCode}
               onGetReferral={ensureReferralCode}
+              transactions={walletTxs}
             />
             <div className="rounded-2xl bg-white p-5 shadow-sm space-y-3">
               <h2 className="font-bold text-neutral-800">Cashback qanday ishlaydi?</h2>
@@ -704,7 +734,7 @@ const Index = () => {
                 <p>🔗 Referal havolangizdan foydalangan har bir do'sting uchun bonus!</p>
               </div>
             </div>
-            <Button onClick={goHome} className="w-full rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]">
+            <Button onClick={goHome} className="w-full rounded-full bg-[#111111] text-white hover:bg-[#000000]">
               Xaridga o'tish
             </Button>
           </div>
@@ -728,7 +758,7 @@ const Index = () => {
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <Heart className="mb-3 h-12 w-12 text-neutral-200" />
                   <p className="font-semibold text-neutral-500">Hali sevimli mahsulot yo'q</p>
-                  <button onClick={() => setWishlistOpen(false)} className="mt-3 text-sm font-semibold text-[#1d4f8a]">Mahsulotlarni ko'rish</button>
+                  <button onClick={() => setWishlistOpen(false)} className="mt-3 text-sm font-semibold text-[#111111]">Mahsulotlarni ko'rish</button>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
@@ -741,9 +771,9 @@ const Index = () => {
                         {product.images?.[0] && <img src={product.images[0]} alt={product.name} className="h-full w-full object-contain" />}
                       </div>
                       <p className="line-clamp-2 text-xs font-medium text-neutral-800">{product.name}</p>
-                      <p className="mt-1 text-sm font-bold text-[#1d4f8a]">{formatPrice(Number(product.price))}</p>
+                      <p className="mt-1 text-sm font-bold text-[#111111]">{formatPrice(Number(product.price))}</p>
                       <button onClick={() => { addToCart(product); setWishlistOpen(false); }}
-                        className="mt-2 w-full rounded-lg bg-[#1d4f8a] py-1.5 text-xs font-semibold text-white">Savatga</button>
+                        className="mt-2 w-full rounded-lg bg-[#111111] py-1.5 text-xs font-semibold text-white">Savatga</button>
                     </div>
                   ))}
                 </div>
@@ -753,13 +783,6 @@ const Index = () => {
         </div>
       )}
 
-      {/* ── AI TRY-ON ── */}
-      {aiTryOnOpen && (
-        <AITryOn
-          products={products}
-          onClose={() => setAiTryOnOpen(false)}
-        />
-      )}
 
       {/* ── VIDEO CATALOG ── */}
       {videoCatalogOpen && (
@@ -775,75 +798,11 @@ const Index = () => {
         />
       )}
 
-      {/* ── BOTTOM NAV — Liquid Glass (Flutter-style bubble) ── */}
-      <nav className="fixed bottom-4 left-0 right-0 z-[200] px-5 pointer-events-none">
-        <div className="mx-auto max-w-sm pointer-events-auto">
-          <div
-            className="flex items-center justify-around rounded-[36px] px-1 py-1.5"
-            style={{
-              background: "rgba(255,255,255,0.62)",
-              backdropFilter: "blur(30px) saturate(180%)",
-              WebkitBackdropFilter: "blur(30px) saturate(180%)",
-              border: "1.5px solid rgba(255,255,255,0.75)",
-              boxShadow: "0 4px 30px rgba(0,0,0,0.08), 0 1px 0 rgba(255,255,255,1) inset, 0 -1px 0 rgba(0,0,0,0.04) inset",
-            }}
-          >
-            {/* Bosh sahifa — Orange */}
-            <LiquidBtn active={activeSection === "home"} label="Bosh sahifa"
-              color="#FF6B35" bubbleBg="rgba(255,107,53,0.14)" onClick={goHome}>
-              <Home className="h-[21px] w-[21px]" strokeWidth={activeSection === "home" ? 2.2 : 1.8} />
-            </LiquidBtn>
-
-            {/* Katalog — Blue */}
-            <LiquidBtn active={activeSection === "catalog"} label="Katalog"
-              color="#3B82F6" bubbleBg="rgba(59,130,246,0.14)" onClick={() => goCatalog()}>
-              <svg className="h-[21px] w-[21px]" fill="none" stroke="currentColor"
-                strokeWidth={activeSection === "catalog" ? 2.2 : 1.8} viewBox="0 0 24 24">
-                <rect x="3" y="3" width="8" height="8" rx="1.5" />
-                <rect x="13" y="3" width="8" height="8" rx="1.5" />
-                <rect x="3" y="13" width="8" height="8" rx="1.5" />
-                <rect x="13" y="13" width="8" height="8" rx="1.5" />
-              </svg>
-            </LiquidBtn>
-
-            {/* Savat — Amber */}
-            <LiquidBtn active={false} label="Savat"
-              color="#F59E0B" bubbleBg="rgba(245,158,11,0.14)" onClick={() => navigate("/cart")}
-              badge={cartCount > 0 ? cartCount : undefined}>
-              <ShoppingCart className="h-[21px] w-[21px]" strokeWidth={1.8} />
-            </LiquidBtn>
-
-            {/* Buyurtmalar — Teal */}
-            <LiquidBtn active={activeSection === "orders"} label="Buyurtmalar"
-              color="#10B981" bubbleBg="rgba(16,185,129,0.14)" onClick={() => navigate("/orders")}>
-              <Package className="h-[21px] w-[21px]" strokeWidth={1.8} />
-            </LiquidBtn>
-
-            {/* Profil — Purple */}
-            {sessionLoading ? (
-              <div className="flex flex-col items-center gap-0.5 w-[56px] py-2">
-                <Loader2 className="h-[21px] w-[21px] animate-spin text-neutral-300" />
-                <span className="text-[9px] text-neutral-300">Profil</span>
-              </div>
-            ) : user ? (
-              <LiquidBtn active={false} label="Kabinet"
-                color="#8B5CF6" bubbleBg="rgba(139,92,246,0.14)" onClick={() => navigate("/profile")}>
-                <Avatar className="h-[21px] w-[21px]">
-                  <AvatarImage src={profile?.avatar_url ?? undefined} />
-                  <AvatarFallback className="bg-violet-400 text-[7px] font-bold text-white">
-                    {getInitials(profile?.full_name || user.email)}
-                  </AvatarFallback>
-                </Avatar>
-              </LiquidBtn>
-            ) : (
-              <LiquidBtn active={false} label="Kabinet"
-                color="#8B5CF6" bubbleBg="rgba(139,92,246,0.14)" onClick={() => navigate("/profile")}>
-                <UserRound className="h-[21px] w-[21px]" strokeWidth={1.8} />
-              </LiquidBtn>
-            )}
-          </div>
-        </div>
-      </nav>
+      {/* ── BOTTOM NAV ── */}
+      <BottomNav
+        active={activeSection === "home" ? "home" : activeSection === "catalog" ? "catalog" : activeSection === "orders" ? "orders" : "home"}
+        cartCount={cartCount > 0 ? cartCount : undefined}
+      />
 
       {/* Modals */}
       <CartSheet
@@ -878,6 +837,7 @@ const Index = () => {
         />
       )}
     </div>
+    </PullToRefresh>
   );
 };
 
@@ -917,7 +877,7 @@ function SaleCard({ product, onAddToCart }: { product: Product; onAddToCart: (p:
           </span>
         )}
         {qty > 0 && (
-          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#1d4f8a] text-[10px] font-bold text-white">
+          <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#111111] text-[10px] font-bold text-white">
             {qty}
           </span>
         )}
@@ -1009,7 +969,7 @@ function CatalogCard({ product, onAddToCart, inWishlist, onToggleWishlist }: {
           </div>
         )}
         {inCart && !outOfStock && (
-          <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-[#1d4f8a] px-2 py-0.5 text-[10px] font-bold text-white shadow">
+          <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-[#111111] px-2 py-0.5 text-[10px] font-bold text-white shadow">
             <CheckCircle2 className="h-3 w-3" /> {cartQty} ta
           </div>
         )}
@@ -1079,7 +1039,7 @@ function CatalogSection({ products, loading, category, onCategoryChange, onAddTo
               onClick={() => onCategoryChange(cat)}
               className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-all ${
                 category === cat
-                  ? "border-[#1d4f8a] bg-[#1d4f8a] text-white"
+                  ? "border-black bg-black text-white"
                   : "border-neutral-200 bg-white text-neutral-600"
               }`}
             >
@@ -1091,7 +1051,7 @@ function CatalogSection({ products, loading, category, onCategoryChange, onAddTo
 
       <div className="px-3 py-2 text-xs text-neutral-400 font-medium">
         {loading ? "" : `${filtered.length} ta mahsulot`}
-        {category && <span className="ml-1 text-[#1d4f8a]">· {category}</span>}
+        {category && <span className="ml-1 text-[#111111]">· {category}</span>}
       </div>
 
       <div className="px-3 pb-4">
@@ -1124,87 +1084,11 @@ function CatalogSection({ products, loading, category, onCategoryChange, onAddTo
             <Search className="mb-3 h-10 w-10 text-neutral-300" />
             <p className="font-semibold text-neutral-500">Mahsulot topilmadi</p>
             <button onClick={() => { setSearch(""); onCategoryChange(""); }}
-              className="mt-2 text-sm font-semibold text-[#1d4f8a]">Filterni tozalash</button>
+              className="mt-2 text-sm font-semibold text-[#111111]">Filterni tozalash</button>
           </div>
         )}
       </div>
     </div>
-  );
-}
-
-function NavBtn({ active, label, onClick, children }: {
-  active: boolean; label: string; onClick: () => void; children: React.ReactNode;
-}) {
-  return <LiquidBtn active={active} label={label} color="#EE7526" bubbleBg="rgba(238,117,38,0.13)" onClick={onClick}>{children}</LiquidBtn>;
-}
-
-function LiquidBtn({ active, label, color, bubbleBg, onClick, children, badge }: {
-  active: boolean; label: string; color: string; bubbleBg: string;
-  onClick: () => void; children: React.ReactNode; badge?: number;
-}) {
-  function handleClick() {
-    // Haptic feedback
-    try { if ("vibrate" in navigator) navigator.vibrate(active ? 6 : 10); } catch {}
-    onClick();
-  }
-  return (
-    <button
-      onClick={handleClick}
-      className="relative flex flex-col items-center justify-center gap-0.5 w-[56px] py-2 select-none"
-      style={{
-        color: active ? color : "#8e8e93",
-        transition: "color 0.3s ease",
-      }}
-    >
-      {/* Liquid bubble background */}
-      <span
-        className="absolute inset-0 rounded-[20px]"
-        style={{
-          background: bubbleBg,
-          transform: active ? "scale(1)" : "scale(0)",
-          opacity: active ? 1 : 0,
-          transition: "transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease",
-          transformOrigin: "center bottom",
-        }}
-      />
-      {/* Shine on bubble */}
-      {active && (
-        <span
-          className="absolute left-2 top-1.5 h-[6px] rounded-full pointer-events-none"
-          style={{
-            width: "40%",
-            background: "rgba(255,255,255,0.55)",
-            filter: "blur(1px)",
-          }}
-        />
-      )}
-      {/* Icon */}
-      <span
-        className="relative z-10"
-        style={{
-          transform: active ? "scale(1.12) translateY(-1px)" : "scale(1)",
-          transition: "transform 0.45s cubic-bezier(0.34,1.56,0.64,1)",
-        }}
-      >
-        {children}
-      </span>
-      {/* Label */}
-      <span
-        className="relative z-10 text-[9px] font-semibold leading-none"
-        style={{
-          opacity: active ? 1 : 0.7,
-          transition: "opacity 0.3s ease",
-        }}
-      >
-        {label}
-      </span>
-      {/* Badge */}
-      {badge !== undefined && badge > 0 && (
-        <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white leading-none z-20 shadow-sm">
-          {badge}
-        </span>
-      )}
-    </button>
   );
 }
 

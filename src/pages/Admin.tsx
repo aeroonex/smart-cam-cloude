@@ -1,8 +1,8 @@
 ﻿import { useEffect, useState } from "react";
 import {
   ArrowLeft, BarChart3, Bell, LayoutDashboard, Paintbrush,
-  LogOut, MapPin, Menu, MessageSquare, Package, Shield,
-  Settings, ShoppingBag, Store, Truck, Users, Wallet, X,
+  LogOut, MapPin, Menu, MessageSquare, Package, Play, Shield,
+  Settings, ShoppingBag, Store, Truck, Users, UserCog, Wallet, X,
 } from "lucide-react";
 import { BoxLoader } from "@/components/BoxLoader";
 import { Link, useNavigate } from "react-router-dom";
@@ -26,6 +26,9 @@ import { AdminAuditLogs } from "@/components/admin/AdminAuditLogs";
 import { AdminPickupPoints } from "@/components/admin/AdminPickupPoints";
 import { AdminMerchant } from "@/components/admin/AdminMerchant";
 import { AdminBranding } from "@/components/admin/AdminBranding";
+import { AdminDeployment } from "@/components/admin/AdminDeployment";
+import { AdminSellers } from "@/components/admin/AdminSellers";
+import { AdminPush } from "@/components/admin/AdminPush";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 
@@ -34,8 +37,10 @@ const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: str
   { id: "orders", label: "Buyurtmalar", icon: ShoppingBag, sub: "Kanban boshqaruv" },
   { id: "products", label: "Mahsulotlar", icon: Package, sub: "Katalog & Sklad" },
   { id: "marketing", label: "Marketing", icon: BarChart3, sub: "Promo & Aksiyalar" },
+  { id: "push", label: "Bildirishnomalar", icon: Bell, sub: "Push yuborish" },
   { id: "partners", label: "Hamkorlar", icon: Store, sub: "Do'konlar & Komissiya" },
   { id: "delivery", label: "Yetkazib berish", icon: Truck, sub: "Kuryer & Narxlar" },
+  { id: "sellers", label: "Sotuvchilar", icon: UserCog, sub: "Hisob & Analitika" },
   { id: "finance", label: "Moliya", icon: Wallet, sub: "Cashback & Balans" },
   { id: "reviews", label: "Izohlar", icon: MessageSquare, sub: "Moderatsiya" },
   { id: "system", label: "Tizim", icon: Settings, sub: "Logs & Xavfsizlik" },
@@ -45,6 +50,7 @@ const NAV: { id: AdminSection; label: string; icon: React.ElementType; sub?: str
   { id: "pickup_points", label: "Topshirish nuqtalari", icon: MapPin, sub: "Xaritada boshqarish" },
   { id: "merchant", label: "Merchant / To'lov", icon: Store, sub: "Click & Payme integratsiya" },
   { id: "branding", label: "Brend sozlamalari", icon: Paintbrush, sub: "Logo, nom, rang" },
+  { id: "deployment", label: "Deploy Wizard", icon: Play, sub: "White-label yangi mijoz" },
 ] as const;
 
 export default function Admin() {
@@ -234,6 +240,8 @@ export default function Admin() {
           {section === "marketing" && <AdminMarketing />}
           {section === "partners" && <AdminPartners />}
           {section === "delivery" && <AdminDelivery />}
+          {section === "sellers" && <AdminSellers />}
+          {section === "push" && <AdminPush />}
           {section === "finance" && <AdminFinance />}
           {section === "reviews" && <AdminReviews />}
           {section === "system" && <AdminSystem />}
@@ -259,6 +267,7 @@ export default function Admin() {
           {section === "pickup_points" && <AdminPickupPoints />}
           {section === "merchant" && <AdminMerchant />}
           {section === "branding" && <AdminBranding />}
+          {section === "deployment" && <AdminDeployment />}
         </main>
       </div>
     </div>

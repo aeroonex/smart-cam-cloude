@@ -5,4 +5,9 @@ const SUPABASE_URL = "https://vhbrbptcnkzkfdbxehgt.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoYnJicHRjbmt6a2ZkYnhlaGd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNTQwNDMsImV4cCI6MjA5NTYzMDA0M30.Wragfs8DslAEX_Gb7doVdTsTXsNNsXjEXlS8fMndx4Y";
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    flowType: "pkce",
+    detectSessionInUrl: true,
+  },
+});

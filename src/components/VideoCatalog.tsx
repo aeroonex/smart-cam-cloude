@@ -76,7 +76,7 @@ function VideoSlide({
         <img
           src={src}
           alt={product.name}
-          className="h-full w-full object-contain"
+          className="h-full w-full object-cover"
           onClick={() => navigate(`/product/${product.id}`)}
         />
       ) : (
@@ -94,7 +94,7 @@ function VideoSlide({
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
 
       {/* Right action buttons */}
-      <div className="absolute right-3 bottom-32 flex flex-col gap-4 items-center">
+      <div className="absolute right-3 bottom-48 flex flex-col gap-4 items-center">
         <button onClick={onToggleWishlist} className="flex flex-col items-center gap-1">
           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm">
             <Heart className={`h-6 w-6 ${inWishlist ? "fill-red-500 text-red-500" : "text-white"}`} />
@@ -103,7 +103,7 @@ function VideoSlide({
         </button>
 
         <button
-          onClick={() => { onAddToCart(product); toast.success("Savatga qo'shildi!"); }}
+          onClick={() => onAddToCart(product)}
           className="flex flex-col items-center gap-1"
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1d4f8a]">
@@ -121,7 +121,7 @@ function VideoSlide({
       </div>
 
       {/* Bottom info */}
-      <div className="absolute bottom-4 left-3 right-16 space-y-1">
+      <div className="absolute bottom-24 left-3 right-16 space-y-1">
         <button onClick={() => navigate(`/product/${product.id}`)} className="text-left">
           <p className="font-bold text-white text-base leading-snug line-clamp-2">{product.name}</p>
           <p className="text-blue-300 font-extrabold text-lg">{formatPrice(Number(product.price))}</p>
@@ -158,13 +158,13 @@ export function VideoCatalog({ products, onClose, onAddToCart, inWishlist, onTog
   );
   if (videoProducts.length === 0) return null;
 
-  const SNAP_THRESHOLD = 55;
+  const SNAP_THRESHOLD = 40;
 
   function snapTo(newIdx: number) {
     setSnapping(true);
     setDragOffset(0);
     setIdx(newIdx);
-    setTimeout(() => setSnapping(false), 320);
+    setTimeout(() => setSnapping(false), 260);
   }
 
   function onTouchStart(e: React.TouchEvent) {
@@ -232,15 +232,10 @@ export function VideoCatalog({ products, onClose, onAddToCart, inWishlist, onTog
       {/* Close */}
       <button
         onClick={onClose}
-        className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
+        className="absolute right-4 top-10 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/30 backdrop-blur-sm"
       >
         <X className="h-5 w-5 text-white" />
       </button>
-
-      {/* Counter */}
-      <div className="absolute top-5 left-1/2 -translate-x-1/2 z-20 rounded-full bg-black/40 px-3 py-1 text-xs text-white pointer-events-none">
-        {idx + 1} / {videoProducts.length}
-      </div>
 
       {/* Slides container — real-time drag + snap */}
       <div
@@ -248,7 +243,7 @@ export function VideoCatalog({ products, onClose, onAddToCart, inWishlist, onTog
         style={{
           transform: `translateY(${-dragOffset}px)`,
           transition: snapping
-            ? "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+            ? "transform 0.26s cubic-bezier(0.33, 1, 0.68, 1)"
             : "none",
           willChange: "transform",
         }}
@@ -270,20 +265,6 @@ export function VideoCatalog({ products, onClose, onAddToCart, inWishlist, onTog
         ))}
       </div>
 
-      {/* Progress dots (o'ng tomon) */}
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-1.5 pointer-events-none">
-        {videoProducts.slice(0, 10).map((_, i) => (
-          <div
-            key={i}
-            className={`rounded-full transition-all duration-300 ${
-              i === idx ? "h-5 w-1.5 bg-white" : "h-1.5 w-1.5 bg-white/35"
-            }`}
-          />
-        ))}
-        {videoProducts.length > 10 && (
-          <span className="text-[10px] text-white/50 text-center">···</span>
-        )}
-      </div>
     </div>
   );
 }

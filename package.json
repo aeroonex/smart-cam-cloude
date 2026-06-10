@@ -19,11 +19,15 @@
     "android:build": "vite build && cap sync android"
   },
   "dependencies": {
+    "@aparajita/capacitor-biometric-auth": "^9.0.0",
+    "@capacitor-mlkit/barcode-scanning": "^7.3.0",
     "@capacitor/android": "^8.4.0",
     "@capacitor/app": "^8.1.0",
     "@capacitor/core": "^8.4.0",
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/push-notifications": "^8.0.0",
+    "@capacitor/share": "^8.0.0",
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
     "@hookform/resolvers": "^3.9.0",
@@ -109,6 +113,7 @@
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
     "postcss": "^8.4.47",
+    "sharp": "^0.34.5",
     "ssh2": "^1.17.0",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",

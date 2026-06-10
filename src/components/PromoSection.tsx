@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ShoppingCart, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCurrency } from "@/hooks/useCurrency";
+import { normalizeImageUrl } from "@/utils/imageUrl";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -200,7 +201,7 @@ export function PromoSection({ section, products, onAddToCart }: Props) {
                 {/* Image */}
                 <div className="relative bg-neutral-50" style={{ height: 144 }}>
                   {img ? (
-                    <img src={img} alt={product.name} className="h-full w-full object-cover" loading="lazy" />
+                    <img src={normalizeImageUrl(img)} alt={product.name} className="h-full w-full object-cover" loading="lazy" />
                   ) : (
                     <div className="flex h-full items-center justify-center">
                       <ShoppingCart className="h-10 w-10 text-neutral-200" />

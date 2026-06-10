@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, BellRing, Package, X } from "lucide-react";
+import { Package, Search, X } from "lucide-react";
 import { OrdersList } from "@/components/OrdersList";
 import { OrderSuccess } from "@/components/OrderSuccess";
 import { OrderCardSkeleton } from "@/components/Skeleton";
@@ -88,22 +88,22 @@ export default function OrdersPage() {
   /* Not logged in */
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#f4f6fb]">
-        <header className="bg-white border-b border-neutral-100 px-4 py-3.5 flex items-center gap-3">
-          <button onClick={() => navigate(-1)}
-            className="h-9 w-9 flex items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
-            <ArrowLeft className="h-5 w-5" />
+      <div className="min-h-screen bg-white">
+        <header className="sticky top-0 z-30 bg-white border-b border-neutral-100 px-4 py-4 flex items-center justify-between">
+          <h1 className="text-[20px] font-extrabold text-neutral-900">Buyurtmalarim</h1>
+          <button onClick={() => navigate("/search")}
+            className="h-9 w-9 flex items-center justify-center rounded-full bg-[#F5F5F5]">
+            <Search className="h-4.5 w-4.5 text-neutral-600" style={{ width: 18, height: 18 }} />
           </button>
-          <h1 className="font-extrabold text-neutral-900">Buyurtmalarim</h1>
         </header>
         <div className="flex flex-col items-center justify-center py-24 px-8 text-center">
-          <div className="h-20 w-20 rounded-3xl bg-[#1d4f8a]/10 flex items-center justify-center mb-5">
-            <Package className="h-10 w-10 text-[#1d4f8a]" />
+          <div className="h-20 w-20 rounded-3xl bg-[#F5F5F5] flex items-center justify-center mb-5">
+            <Package className="h-10 w-10 text-neutral-400" />
           </div>
-          <h2 className="text-xl font-extrabold text-neutral-900">Kirish talab etiladi</h2>
-          <p className="mt-2 text-sm text-neutral-500">Buyurtmalarni ko'rish uchun hisobingizga kiring</p>
+          <h2 className="text-[20px] font-extrabold text-neutral-900">Kirish talab etiladi</h2>
+          <p className="mt-2 text-[14px] text-neutral-400">Buyurtmalarni ko'rish uchun hisobingizga kiring</p>
           <button onClick={() => navigate("/login")}
-            className="mt-6 h-12 rounded-2xl bg-[#1d4f8a] px-10 text-sm font-bold text-white active:scale-95 transition-transform">
+            className="mt-6 rounded-2xl bg-black px-10 py-3.5 text-[14px] font-bold text-white active:scale-95 transition-transform">
             Kirish
           </button>
         </div>
@@ -112,47 +112,32 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f6fb]">
+    <div className="min-h-screen bg-white">
 
       {/* ── Header ── */}
-      <header className="sticky top-0 z-30 bg-white border-b border-neutral-100 px-4 py-3.5 flex items-center gap-3">
-        <button onClick={() => navigate(-1)}
-          className="h-9 w-9 flex items-center justify-center rounded-full bg-neutral-100 text-neutral-600 active:scale-95 transition-transform">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="flex-1 font-extrabold text-neutral-900 text-[17px]">Buyurtmalarim</h1>
-        {/* Notification bell indicator */}
-        <div className="relative">
-          <button
-            onClick={() => navigate("/profile")}
-            className="h-9 w-9 flex items-center justify-center rounded-full bg-neutral-100 text-neutral-500"
-          >
-            <BellRing className="h-4.5 w-4.5" style={{ width: 18, height: 18 }} />
+      <header className="sticky top-0 z-30 bg-white border-b border-neutral-100 px-4 py-4 flex items-center justify-between">
+        <h1 className="text-[20px] font-extrabold text-neutral-900">Buyurtmalarim</h1>
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigate("/search")}
+            className="h-9 w-9 flex items-center justify-center rounded-full bg-[#F5F5F5]">
+            <Search className="text-neutral-600" style={{ width: 18, height: 18 }} />
           </button>
-          {hasTelegram === false && !bannerDismissed && (
-            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-amber-400 border-2 border-white" />
-          )}
         </div>
       </header>
 
-      <div className="pt-3">
+      <div>
         {/* ── Telegram banner ── */}
         {hasTelegram === false && !bannerDismissed && user && (
-          <TelegramBanner userId={user.id} onDismiss={dismissBanner} />
+          <div className="mx-4 mt-3">
+            <TelegramBanner userId={user.id} onDismiss={dismissBanner} />
+          </div>
         )}
 
-        {/* ── Loading ── */}
-        {loading ? (
-          <div className="px-3 space-y-3">
-            {[0,1,2].map(i => <OrderCardSkeleton key={i} />)}
-          </div>
-        ) : (
-          <OrdersList
-            orders={orders}
-            loading={loading}
-            onScrollToCatalog={() => navigate("/")}
-          />
-        )}
+        <OrdersList
+          orders={orders}
+          loading={loading}
+          onScrollToCatalog={() => navigate("/")}
+        />
       </div>
 
       {/* ── Order success popup ── */}

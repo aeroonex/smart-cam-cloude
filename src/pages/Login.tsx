@@ -1,23 +1,155 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { useSessionContext } from "@/components/session-context-provider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { HammaBopLogo } from "@/components/HammaBopLogo";
+import { Eye, EyeOff, Fingerprint } from "lucide-react";
+import {
+  hasBiometricSession, isBiometricAvailable, biometricSignIn, enableBiometricLogin,
+} from "@/hooks/useBiometric";
 
-const REDIRECT_URL = window.location.origin;
+const REDIRECT_URL = Capacitor.isNativePlatform()
+  ? "uz.hammabop.app://login-callback"
+  : window.location.origin;
+
+type View = "lets_in" | "login" | "signup";
+
+/* ── Let's you in illustration ── */
+function LetsInIllustration() {
+  return (
+    <svg viewBox="0 0 280 260" className="w-64 h-56" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* desk / table */}
+      <rect x="40" y="195" width="200" height="12" rx="6" fill="#E8E8E8"/>
+      <rect x="70" y="207" width="14" height="40" rx="4" fill="#E0E0E0"/>
+      <rect x="196" y="207" width="14" height="40" rx="4" fill="#E0E0E0"/>
+      {/* monitor */}
+      <rect x="80" y="120" width="120" height="78" rx="10" fill="#1A1A1A"/>
+      <rect x="88" y="128" width="104" height="62" rx="6" fill="#2D2D2D"/>
+      <rect x="125" y="198" width="30" height="8" rx="3" fill="#E0E0E0"/>
+      {/* screen content */}
+      <rect x="96" y="136" width="50" height="6" rx="3" fill="#4D4D4D"/>
+      <rect x="96" y="148" width="88" height="4" rx="2" fill="#3D3D3D"/>
+      <rect x="96" y="158" width="72" height="4" rx="2" fill="#3D3D3D"/>
+      <rect x="96" y="168" width="40" height="14" rx="4" fill="white"/>
+      <rect x="100" y="172" width="32" height="6" rx="2" fill="#1A1A1A"/>
+      {/* person sitting */}
+      <circle cx="185" cy="145" r="18" fill="#D4A574"/>
+      {/* hair */}
+      <path d="M168 140 C168 125 202 125 202 140" fill="#3D2314"/>
+      {/* body */}
+      <rect x="168" y="162" width="34" height="38" rx="10" fill="#4A90D9"/>
+      {/* arms */}
+      <path d="M168 175 L148 188" stroke="#D4A574" strokeWidth="10" strokeLinecap="round"/>
+      <path d="M202 175 L218 185" stroke="#D4A574" strokeWidth="10" strokeLinecap="round"/>
+      {/* cloud thought */}
+      <ellipse cx="225" cy="110" rx="22" ry="14" fill="white" stroke="#E8E8E8" strokeWidth="1.5"/>
+      <ellipse cx="213" cy="120" rx="8" ry="6" fill="white" stroke="#E8E8E8" strokeWidth="1.5"/>
+      <ellipse cx="207" cy="126" rx="5" ry="4" fill="white" stroke="#E8E8E8" strokeWidth="1.5"/>
+      {/* cart icon in cloud */}
+      <path d="M217 107 L219 113 L227 113 L225 107" stroke="#1A1A1A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <circle cx="220" cy="115" r="1.5" fill="#1A1A1A"/>
+      <circle cx="225" cy="115" r="1.5" fill="#1A1A1A"/>
+    </svg>
+  );
+}
+
+/* ── Reusable input field ── */
+function InputField({
+  type, placeholder, value, onChange, icon, rightIcon, onRightClick,
+}: {
+  type: string; placeholder: string; value: string;
+  onChange: (v: string) => void;
+  icon: React.ReactNode; rightIcon?: React.ReactNode; onRightClick?: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 h-[54px] border border-neutral-200 rounded-2xl px-4 bg-white focus-within:border-neutral-400 transition-colors">
+      <span className="text-neutral-400 shrink-0">{icon}</span>
+      <input
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="flex-1 text-[14px] text-neutral-900 bg-transparent outline-none placeholder:text-neutral-300"
+      />
+      {rightIcon && (
+        <button type="button" onClick={onRightClick} className="text-neutral-400 shrink-0">
+          {rightIcon}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ── Google icon ── */
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 512 512" className="h-5 w-5 shrink-0">
+      <path fill="#FBBB00" d="M113.47,309.408L95.648,375.94l-65.139,1.378C11.042,341.211,0,299.9,0,256c0-42.451,10.324-82.483,28.624-117.732h0.014l57.992,10.632l25.404,57.644c-5.317,15.501-8.215,32.141-8.215,49.456C103.821,274.792,107.225,292.797,113.47,309.408z"/>
+      <path fill="#518EF8" d="M507.527,208.176C510.467,223.662,512,239.655,512,256c0,18.328-1.927,36.206-5.598,53.451c-12.462,58.683-45.025,109.925-90.134,146.187l-0.014-0.014l-73.044-3.727l-10.338-64.535c29.932-17.554,53.324-45.025,65.646-77.911h-136.89V208.176h138.887L507.527,208.176L507.527,208.176z"/>
+      <path fill="#28B446" d="M416.253,455.624l0.014,0.014C372.396,490.901,316.666,512,256,512c-97.491,0-182.252-54.491-225.491-134.681l82.961-67.91c21.619,57.698,77.278,98.771,142.53,98.771c28.047,0,54.323-7.582,76.87-20.818L416.253,455.624z"/>
+      <path fill="#F14336" d="M419.404,58.936l-82.933,67.896c-23.335-14.586-50.919-23.012-80.471-23.012c-66.729,0-123.429,42.957-143.965,102.724l-83.397-68.276h-0.014C71.23,56.123,157.06,0,256,0C318.115,0,375.068,22.126,419.404,58.936z"/>
+    </svg>
+  );
+}
+
+/* ── Email icon ── */
+function EmailIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="4" width="20" height="16" rx="3"/>
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+    </svg>
+  );
+}
+
+/* ── Lock icon ── */
+function LockIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  );
+}
+
+/* ── User icon ── */
+function UserIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
+  );
+}
 
 export default function Login() {
   const navigate = useNavigate();
   const { user } = useSessionContext();
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [view, setView] = useState<View>("lets_in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [remember, setRemember] = useState(false);
+  const [bioReady, setBioReady] = useState(false);
 
   useEffect(() => {
-    if (user) navigate("/", { replace: true });
+    if (!hasBiometricSession()) return;
+    isBiometricAvailable().then(setBioReady);
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    supabase.from("users").select("role").eq("id", user.id).single().then(({ data }) => {
+      if (!active) return;
+      const r = (data as any)?.role;
+      const dest = r === "admin" ? "/admin" : (r === "seller" || r === "courier") ? "/seller" : "/";
+      navigate(dest, { replace: true });
+    });
+    return () => { active = false; };
   }, [navigate, user]);
 
   const handleGoogle = async () => {
@@ -29,154 +161,227 @@ export default function Login() {
     if (error) { toast.error("Kirish xatosi: " + error.message); setLoading(false); }
   };
 
+  const handleBiometric = async () => {
+    setLoading(true);
+    const ok = await biometricSignIn();
+    if (!ok) { toast.error("Biometrik kirish bekor qilindi"); setLoading(false); }
+  };
+
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) { toast.error("Email va parolni kiriting."); return; }
     setLoading(true);
-    if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { toast.error("Xato: " + error.message); setLoading(false); }
-      else navigate("/", { replace: true });
+
+    if (view === "login") {
+      const ident = email.trim();
+      const effectiveEmail = ident.includes("@") ? ident : `${ident.toLowerCase()}@seller.hammabop.app`;
+      const { data, error } = await supabase.auth.signInWithPassword({ email: effectiveEmail, password });
+      if (error) { toast.error("Xato: " + error.message); setLoading(false); return; }
+      const uid = data.user?.id;
+      let dest = "/";
+      if (uid) {
+        const { data: row } = await supabase.from("users").select("role,is_active").eq("id", uid).single();
+        if (row && (row as any).is_active === false) {
+          await supabase.auth.signOut();
+          toast.error("Hisobingiz bloklangan.");
+          setLoading(false); return;
+        }
+        const r = (row as any)?.role;
+        dest = r === "admin" ? "/admin" : (r === "seller" || r === "courier") ? "/seller" : "/";
+      }
+      void enableBiometricLogin();
+      navigate(dest, { replace: true });
     } else {
       const { error } = await supabase.auth.signUp({
         email, password,
         options: { data: { full_name: name } },
       });
       if (error) { toast.error("Xato: " + error.message); setLoading(false); }
-      else { toast.success("Ro'yxatdan o'tdingiz! Emailingizni tasdiqlang."); setMode("login"); setLoading(false); }
+      else { toast.success("Ro'yxatdan o'tdingiz! Emailingizni tasdiqlang."); setView("login"); setLoading(false); }
     }
   };
 
+  /* ════════════════════
+      VIEW: LETS IN
+  ════════════════════ */
+  if (view === "lets_in") return (
+    <div className="min-h-screen bg-white flex flex-col px-6 py-10">
+      {/* Illustration */}
+      <div className="flex-1 flex items-center justify-center">
+        <LetsInIllustration />
+      </div>
+
+      {/* Title */}
+      <h1 className="text-[30px] font-bold text-neutral-900 mb-7">Let's you in</h1>
+
+      {/* Google */}
+      <button
+        onClick={handleGoogle}
+        disabled={loading}
+        className="w-full h-[54px] border border-neutral-200 rounded-2xl flex items-center gap-3 px-5 mb-3 text-[14px] font-medium text-neutral-700 hover:bg-neutral-50 transition disabled:opacity-60"
+      >
+        <GoogleIcon />
+        Continue with Google
+      </button>
+
+      {/* Biometric */}
+      {bioReady && (
+        <button
+          onClick={handleBiometric}
+          disabled={loading}
+          className="w-full h-[54px] border border-neutral-200 rounded-2xl flex items-center gap-3 px-5 mb-3 text-[14px] font-medium text-neutral-700 hover:bg-neutral-50 transition disabled:opacity-60"
+        >
+          <Fingerprint className="h-5 w-5 text-neutral-500 shrink-0" />
+          Barmoq izi / Face ID
+        </button>
+      )}
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 my-4">
+        <div className="flex-1 h-px bg-neutral-200" />
+        <span className="text-[13px] text-neutral-400">or</span>
+        <div className="flex-1 h-px bg-neutral-200" />
+      </div>
+
+      {/* Password signin */}
+      <button
+        onClick={() => setView("login")}
+        className="w-full h-[54px] bg-black text-white rounded-2xl font-semibold text-[15px] mb-6 transition active:scale-[0.98]"
+      >
+        Sign in with password
+      </button>
+
+      {/* Signup link */}
+      <p className="text-center text-[14px] text-neutral-500">
+        Don't have an account?{" "}
+        <button onClick={() => setView("signup")} className="font-bold text-neutral-900">
+          Sign up
+        </button>
+      </p>
+    </div>
+  );
+
+  /* ════════════════════
+      VIEW: LOGIN / SIGNUP FORM
+  ════════════════════ */
+  const isSignup = view === "signup";
+
   return (
-    <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center">
-      {/* Background */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[#060d1a]" />
-        <div className="absolute -top-40 -left-40 w-[700px] h-[700px] rounded-full bg-[#1d4f8a] opacity-35 blur-[120px]" />
-        <div className="absolute top-20 right-0 w-[600px] h-[600px] rounded-full bg-[#2860a8] opacity-25 blur-[100px]" />
-        <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] rounded-full bg-[#164078] opacity-30 blur-[110px]" />
-        <div className="absolute -bottom-20 right-10 w-[400px] h-[400px] rounded-full bg-[#0d2744] opacity-40 blur-[90px]" />
-      </div>
+    <div className="min-h-screen bg-white flex flex-col px-6 py-10">
+      {/* Back button */}
+      <button
+        onClick={() => setView("lets_in")}
+        className="w-9 h-9 border border-neutral-200 rounded-xl flex items-center justify-center mb-8 shrink-0"
+      >
+        <svg className="h-5 w-5 text-neutral-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5M12 5l-7 7 7 7"/>
+        </svg>
+      </button>
 
-      <div className="relative z-10 w-full max-w-[420px] mx-4">
-        <div className="bg-white rounded-[20px] shadow-2xl px-8 py-8">
+      {/* Title */}
+      <h1 className="text-[30px] font-bold text-neutral-900 leading-tight mb-8">
+        {isSignup ? "Create your\nAccount" : "Login to your\nAccount"}
+      </h1>
 
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-6">
-            <div className="flex items-center gap-2 mb-1">
-              <HammaBopLogo size={32} />
-              <span className="text-xl font-extrabold text-neutral-900 tracking-tight">HammaBop</span>
-            </div>
-            <p className="text-xs text-neutral-400 mt-1">Online Marketplace</p>
-          </div>
+      <form onSubmit={handleEmail} className="flex flex-col gap-4">
+        {/* Name — signup only */}
+        {isSignup && (
+          <InputField
+            type="text"
+            placeholder="Full Name"
+            value={name}
+            onChange={setName}
+            icon={<UserIcon />}
+          />
+        )}
 
-          <h1 className="text-lg font-bold text-neutral-900 text-center mb-5">
-            {mode === "login" ? "Hisobingizga kiring" : "Ro'yxatdan o'ting"}
-          </h1>
+        {/* Email */}
+        <InputField
+          type={isSignup ? "email" : "text"}
+          placeholder={isSignup ? "Email" : "Email or username"}
+          value={email}
+          onChange={setEmail}
+          icon={<EmailIcon />}
+        />
 
-          <form onSubmit={handleEmail} className="flex flex-col gap-3">
-            {/* Name — only signup */}
-            {mode === "signup" && (
-              <div>
-                <label className="text-sm font-semibold text-[#151717] block mb-1">Ism</label>
-                <div className="login-input-wrap">
-                  <svg height="20" viewBox="0 -2 32 32" width="20" xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="text-neutral-400 shrink-0">
-                    <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m-5 6s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zM11 3.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5m.5 2.5a.5.5 0 0 0 0 1h4a.5.5 0 0 0 0-1zm2 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h2a.5.5 0 0 0 0-1z"/>
-                  </svg>
-                  <input
-                    type="text"
-                    className="login-input"
-                    placeholder="Ismingizni kiriting"
-                    value={name}
-                    onChange={e => setName(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
+        {/* Password */}
+        <InputField
+          type={showPwd ? "text" : "password"}
+          placeholder="Password"
+          value={password}
+          onChange={setPassword}
+          icon={<LockIcon />}
+          rightIcon={showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          onRightClick={() => setShowPwd(v => !v)}
+        />
 
-            {/* Email */}
-            <div>
-              <label className="text-sm font-semibold text-[#151717] block mb-1">Email</label>
-              <div className="login-input-wrap">
-                <svg height="18" viewBox="0 0 32 32" width="18" xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="text-neutral-400 shrink-0">
-                  <path d="m30.853 13.87a15 15 0 0 0 -29.729 4.082 15.1 15.1 0 0 0 12.876 12.918 15.6 15.6 0 0 0 2.016.13 14.85 14.85 0 0 0 7.715-2.145 1 1 0 1 0 -1.031-1.711 13.007 13.007 0 1 1 5.458-6.529 2.149 2.149 0 0 1 -4.158-.759v-10.856a1 1 0 0 0 -2 0v1.726a8 8 0 1 0 .2 10.325 4.135 4.135 0 0 0 7.83.274 15.2 15.2 0 0 0 .823-7.455zm-14.853 8.13a6 6 0 1 1 6-6 6.006 6.006 0 0 1 -6 6z"/>
-                </svg>
-                <input
-                  type="email"
-                  className="login-input"
-                  placeholder="Email manzilingiz"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div>
-              <label className="text-sm font-semibold text-[#151717] block mb-1">Parol</label>
-              <div className="login-input-wrap">
-                <svg height="18" viewBox="-64 0 512 512" width="18" xmlns="http://www.w3.org/2000/svg" fill="currentColor" className="text-neutral-400 shrink-0">
-                  <path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/>
-                  <path d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"/>
-                </svg>
-                <input
-                  type="password"
-                  className="login-input"
-                  placeholder="Parolingiz"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-3 w-full h-[50px] rounded-[10px] bg-[#1d4f8a] text-white text-[15px] font-medium hover:bg-[#164078] transition disabled:opacity-60 cursor-pointer"
-            >
-              {loading ? "Yuklanmoqda..." : mode === "login" ? "Kirish" : "Ro'yxatdan o'tish"}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-neutral-700 mt-3 mb-3">
-            {mode === "login" ? "Hisob yo'qmi?" : "Hisobingiz bormi?"}
-            <span
-              className="ml-1 text-[#1d4f8a] font-medium cursor-pointer"
-              onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            >
-              {mode === "login" ? "Ro'yxatdan o'ting" : "Kirish"}
-            </span>
-          </p>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-3">
-            <div className="flex-1 h-px bg-neutral-200" />
-            <span className="text-xs text-neutral-400">yoki</span>
-            <div className="flex-1 h-px bg-neutral-200" />
-          </div>
-
-          {/* Google */}
-          <button
-            onClick={handleGoogle}
-            disabled={loading}
-            className="w-full h-[50px] rounded-[10px] border border-[#ededef] bg-white flex items-center justify-center gap-2.5 text-sm font-medium text-neutral-700 hover:border-[#1d4f8a] transition disabled:opacity-60 cursor-pointer"
+        {/* Remember me */}
+        <label className="flex items-center gap-2.5 cursor-pointer select-none">
+          <div
+            onClick={() => setRemember(v => !v)}
+            className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${remember ? "bg-black border-black" : "border-neutral-300"}`}
           >
-            <svg viewBox="0 0 512 512" className="h-5 w-5 shrink-0">
-              <path fill="#FBBB00" d="M113.47,309.408L95.648,375.94l-65.139,1.378C11.042,341.211,0,299.9,0,256c0-42.451,10.324-82.483,28.624-117.732h0.014l57.992,10.632l25.404,57.644c-5.317,15.501-8.215,32.141-8.215,49.456C103.821,274.792,107.225,292.797,113.47,309.408z"/>
-              <path fill="#518EF8" d="M507.527,208.176C510.467,223.662,512,239.655,512,256c0,18.328-1.927,36.206-5.598,53.451c-12.462,58.683-45.025,109.925-90.134,146.187l-0.014-0.014l-73.044-3.727l-10.338-64.535c29.932-17.554,53.324-45.025,65.646-77.911h-136.89V208.176h138.887L507.527,208.176L507.527,208.176z"/>
-              <path fill="#28B446" d="M416.253,455.624l0.014,0.014C372.396,490.901,316.666,512,256,512c-97.491,0-182.252-54.491-225.491-134.681l82.961-67.91c21.619,57.698,77.278,98.771,142.53,98.771c28.047,0,54.323-7.582,76.87-20.818L416.253,455.624z"/>
-              <path fill="#F14336" d="M419.404,58.936l-82.933,67.896c-23.335-14.586-50.919-23.012-80.471-23.012c-66.729,0-123.429,42.957-143.965,102.724l-83.397-68.276h-0.014C71.23,56.123,157.06,0,256,0C318.115,0,375.068,22.126,419.404,58.936z"/>
-            </svg>
-            Google bilan kirish
-          </button>
-        </div>
+            {remember && (
+              <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            )}
+          </div>
+          <span className="text-[13px] text-neutral-600">Remember me</span>
+        </label>
 
-        <p className="text-center text-xs text-white/40 mt-5">
-          © 2025 HammaBop ·{" "}
-          <a href="/" className="hover:text-white/60 transition">Bosh sahifa</a>
-        </p>
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full h-[54px] bg-black text-white rounded-2xl font-semibold text-[15px] mt-2 transition active:scale-[0.98] disabled:opacity-60"
+        >
+          {loading ? "Yuklanmoqda..." : isSignup ? "Sign up" : "Sign in"}
+        </button>
+      </form>
+
+      {/* Forgot password */}
+      {!isSignup && (
+        <p className="text-center text-[13px] text-neutral-500 mt-4">Forgot the password?</p>
+      )}
+
+      {/* Or continue with */}
+      <div className="flex items-center gap-3 my-5">
+        <div className="flex-1 h-px bg-neutral-200" />
+        <span className="text-[12px] text-neutral-400">or continue with</span>
+        <div className="flex-1 h-px bg-neutral-200" />
       </div>
+
+      {/* Social icons row */}
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={handleGoogle}
+          disabled={loading}
+          className="w-[54px] h-[54px] border border-neutral-200 rounded-2xl flex items-center justify-center hover:bg-neutral-50 transition disabled:opacity-60"
+        >
+          <GoogleIcon />
+        </button>
+        {bioReady && (
+          <button
+            onClick={handleBiometric}
+            disabled={loading}
+            className="w-[54px] h-[54px] border border-neutral-200 rounded-2xl flex items-center justify-center hover:bg-neutral-50 transition disabled:opacity-60"
+          >
+            <Fingerprint className="h-5 w-5 text-neutral-500" />
+          </button>
+        )}
+      </div>
+
+      {/* Switch mode */}
+      <p className="text-center text-[14px] text-neutral-500 mt-6">
+        {isSignup ? "Already have an account? " : "Don't have an account? "}
+        <button
+          onClick={() => setView(isSignup ? "login" : "signup")}
+          className="font-bold text-neutral-900"
+        >
+          {isSignup ? "Sign in" : "Sign up"}
+        </button>
+      </p>
     </div>
   );
 }

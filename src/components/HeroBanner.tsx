@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { HeroBannerSkeleton } from "@/components/Skeleton";
+import { normalizeImageUrl } from "@/utils/imageUrl";
 
 type Banner = Database["public"]["Tables"]["banners"]["Row"];
 
@@ -100,7 +101,7 @@ function HeroBannerInner({ banners }: { banners: Banner[] }) {
       {/* Rasm (admin yuklagan) */}
       {hasImage && (
         <img
-          src={(slide as Banner).image_url}
+          src={normalizeImageUrl((slide as Banner).image_url)}
           alt={(slide as Banner).title ?? "Banner"}
           className="absolute inset-0 h-full w-full object-cover"
         />
