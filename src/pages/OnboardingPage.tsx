@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Gift, Loader2, MapPin, Phone, User } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionContext } from "@/components/session-context-provider";
 import { useWallet } from "@/hooks/useWallet";
+import { ReferralBonusPopup } from "@/components/ReferralBonusPopup";
 import { regions } from "@/constants";
 import { haptic } from "@/utils/haptic";
 import { toast } from "sonner";
@@ -191,6 +192,8 @@ export default function OnboardingPage() {
   const [refInput, setRefInput]   = useState("");
   const [refLoading, setRefLoading] = useState(false);
   const [refApplied, setRefApplied] = useState(false);
+  const [refBonusAmount, setRefBonusAmount] = useState(0);
+  const [showBonusPopup, setShowBonusPopup] = useState(false);
   const [geoLoad, setGeoLoad] = useState(false);
   const [geoResult, setGeoResult] = useState<GeoResult | null>(null);
   const [geoError, setGeoError]   = useState("");
@@ -341,18 +344,21 @@ export default function OnboardingPage() {
   const Shell = ({ children }: { children: React.ReactNode }) => (
     <div className="flex flex-col h-full">
       {/* top nav */}
-      <div className="px-4 pt-4 pb-2 shrink-0">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="px-5 pt-12 pb-0 shrink-0">
+        <div className="flex items-center gap-4 mb-8">
           <button onClick={() => go(step-1)}
-            className="ob-btn h-9 w-9 rounded-xl bg-white border border-neutral-100 shadow-sm flex items-center justify-center">
-            <ChevronLeft className="h-5 w-5 text-neutral-500" />
+            className="ob-btn h-10 w-10 rounded-2xl border border-neutral-200 bg-white flex items-center justify-center">
+            <ChevronLeft className="h-5 w-5 text-neutral-900" />
           </button>
-          <div className="flex-1"><ProgressBar step={step} /></div>
-          <span className="text-xs font-semibold text-neutral-400">{step}/3</span>
+          <div className="flex-1 h-[3px] bg-neutral-100 rounded-full overflow-hidden">
+            <div className="h-full bg-black rounded-full transition-all duration-500"
+              style={{ width:`${(step/3)*100}%` }} />
+          </div>
+          <span className="text-xs font-bold text-neutral-400 w-7 text-right">{step}/3</span>
         </div>
       </div>
       {/* scrollable body */}
-      <div className={`${slide} flex-1 overflow-y-auto px-4 pb-6`}>
+      <div className={`${slide} flex-1 overflow-y-auto px-5 pb-8`}>
         {children}
       </div>
     </div>
@@ -360,149 +366,175 @@ export default function OnboardingPage() {
 
   /* ══════ STEP 0 — WELCOME ══════ */
   if (step === 0) return (
-    <div className="fixed inset-0 bg-white flex flex-col px-6 py-10 overflow-y-auto">
-      <style>{CSS}</style>
+    <div className="fixed inset-0 bg-white flex flex-col overflow-hidden">
+      <style>{CSS}{WORD_CSS}</style>
+      {showBonusPopup && user && (
+        <ReferralBonusPopup
+          userId={user.id}
+          bonusAmount={refBonusAmount}
+          onClose={() => setShowBonusPopup(false)}
+        />
+      )}
 
-      {/* Logo */}
-      <div className="ob-fade flex items-center gap-2 mb-12" style={{ animationDelay:".05s" }}>
-        <div className="h-8 w-8 rounded-lg bg-[#1d4f8a] flex items-center justify-center">
-          <svg width="18" height="18" viewBox="0 0 36 36" fill="none">
-            <path d="M7 6C7 6 7 8 8.5 9.5L11 12L11 24C11 26 9 27.5 7.5 29L7.5 30L13 30L13 18.5L23 18.5L23 30L28.5 30L28.5 29C27 27.5 25 26 25 24L25 12L27.5 9.5C29 8 29 6 29 6L23 6C23 6 23 8 21.5 9.5L19 12L17 12L14.5 9.5C13 8 13 6 13 6Z" fill="white"/>
-          </svg>
+      {/* top bar */}
+      <div className="ob-fade flex items-center justify-between px-5 pt-12 pb-0 shrink-0" style={{ animationDelay:".05s" }}>
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-black flex items-center justify-center">
+            <svg width="15" height="15" viewBox="0 0 36 36" fill="none">
+              <path d="M7 6C7 6 7 8 8.5 9.5L11 12L11 24C11 26 9 27.5 7.5 29L7.5 30L13 30L13 18.5L23 18.5L23 30L28.5 30L28.5 29C27 27.5 25 26 25 24L25 12L27.5 9.5C29 8 29 6 29 6L23 6C23 6 23 8 21.5 9.5L19 12L17 12L14.5 9.5C13 8 13 6 13 6Z" fill="white"/>
+            </svg>
+          </div>
+          <span className="font-bold text-neutral-900 text-sm tracking-tight">HammaBop</span>
         </div>
-        <span className="font-bold text-neutral-800 text-base">HammaBop</span>
       </div>
 
-      {/* Main text */}
-      <div className="flex-1 flex flex-col justify-center">
-        <div className="ob-fade" style={{ animationDelay:".12s" }}>
-          <p className="text-neutral-400 text-sm mb-3">Xush kelibsiz 👋</p>
-          <h1 className="text-3xl font-bold text-neutral-900 leading-snug mb-8">
-            O'zingizga kerakli<br />mahsulotni toping<br />va buyurtma bering.
+      {/* hero */}
+      <div className="flex-1 flex flex-col justify-center px-5 overflow-hidden">
+        <div className="ob-fade" style={{ animationDelay:".1s" }}>
+          <p className="text-neutral-400 text-xs font-medium tracking-widest uppercase mb-4">Onlayn bozor</p>
+          <h1 className="text-[2.6rem] font-black text-neutral-900 leading-[1.08] tracking-tight mb-2">
+            Kerakli<br />narsani<br />toping.
           </h1>
+
+          {/* animated cycling text */}
+          <div className="ob-word-loader mt-4">
+            <span className="ob-word-static">Minglab</span>
+            <div className="ob-words-wrap">
+              <span className="ob-word-item">mahsulot</span>
+              <span className="ob-word-item">yetkazish</span>
+              <span className="ob-word-item">to'lov usuli</span>
+              <span className="ob-word-item">chegirma</span>
+              <span className="ob-word-item">mahsulot</span>
+            </div>
+          </div>
         </div>
 
-        <div className="ob-fade flex flex-col gap-4" style={{ animationDelay:".22s" }}>
+        {/* feature pills */}
+        <div className="ob-fade flex gap-2 mt-8 flex-wrap" style={{ animationDelay:".18s" }}>
           {[
-            { icon:"🚚", title:"Tez yetkazish", sub:"1–3 kun ichida" },
-            { icon:"💳", title:"Qulay to'lov", sub:"Click, Payme, naqd" },
-            { icon:"📦", title:"Keng tanlov", sub:"1000+ mahsulot" },
+            { label:"Tez yetkazish",  sub:"1–3 kun" },
+            { label:"Click / Payme",  sub:"To'lov" },
+            { label:"1000+ mahsulot", sub:"Tanlov" },
           ].map(f => (
-            <div key={f.title} className="flex items-center gap-4">
-              <span className="text-2xl w-8 text-center shrink-0">{f.icon}</span>
-              <div>
-                <p className="text-sm font-semibold text-neutral-800">{f.title}</p>
-                <p className="text-xs text-neutral-400">{f.sub}</p>
-              </div>
+            <div key={f.label}
+              className="flex flex-col rounded-2xl px-3.5 py-2.5 border border-neutral-200 bg-white shadow-sm">
+              <span className="text-neutral-900 text-xs font-semibold">{f.label}</span>
+              <span className="text-neutral-400 text-[10px]">{f.sub}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Referral code (optional) */}
-      <div className="ob-fade mt-6" style={{ animationDelay:".3s" }}>
-        {!refApplied ? (
-          <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-4 py-3">
-            <p className="text-xs font-semibold text-neutral-500 mb-2 flex items-center gap-1.5">
-              <Gift className="h-3.5 w-3.5 text-yellow-500" />
-              Referal kodingiz bormi? (ixtiyoriy)
-            </p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={refInput}
-                onChange={e => setRefInput(e.target.value.toUpperCase())}
-                placeholder="Masalan: AB12CD"
-                className="flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-mono tracking-widest outline-none focus:border-[#1d4f8a]"
-              />
-              <button
-                onClick={async () => {
-                  if (!refInput.trim()) return;
-                  setRefLoading(true);
-                  const result = await redeemReferralCode(refInput);
-                  setRefLoading(false);
-                  if (result.ok) {
-                    setRefApplied(true);
-                    haptic.success();
-                    toast.success(result.message);
-                  } else {
-                    haptic.error();
-                    toast.error(result.message);
-                  }
-                }}
-                disabled={refLoading || !refInput.trim()}
-                className="rounded-xl bg-[#1d4f8a] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50"
-              >
-                {refLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Qo'lla"}
-              </button>
+      {/* bottom panel */}
+      <div className="shrink-0 px-5 pb-10">
+        {/* referral */}
+        <div className="ob-fade mb-3" style={{ animationDelay:".24s" }}>
+          {!refApplied ? (
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+              <p className="text-[11px] font-medium text-neutral-400 mb-2 flex items-center gap-1.5">
+                <Gift className="h-3 w-3" />
+                Referal kod (ixtiyoriy)
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={refInput}
+                  onChange={e => setRefInput(e.target.value.toUpperCase())}
+                  placeholder="AB12CD"
+                  className="flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-mono tracking-widest text-neutral-900 placeholder:text-neutral-300 outline-none focus:border-neutral-400"
+                />
+                <button
+                  onClick={async () => {
+                    if (!refInput.trim()) return;
+                    setRefLoading(true);
+                    const result = await redeemReferralCode(refInput);
+                    setRefLoading(false);
+                    if (result.ok) {
+                      setRefApplied(true);
+                      setRefBonusAmount(result.bonusAmount ?? 5000);
+                      setShowBonusPopup(true);
+                      haptic.success();
+                    } else {
+                      haptic.error();
+                      toast.error(result.message);
+                    }
+                  }}
+                  disabled={refLoading || !refInput.trim()}
+                  className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-white disabled:opacity-30"
+                >
+                  {refLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Qo'lla"}
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 flex items-center gap-2">
-            <span className="text-emerald-600 text-lg">🎁</span>
-            <div>
-              <p className="text-sm font-semibold text-emerald-700">Referal kod qabul qilindi!</p>
-              <p className="text-xs text-emerald-600">+5 000 so'm bonus hisobingizga qo'shildi</p>
+          ) : (
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3 flex items-center gap-3">
+              <div className="h-8 w-8 rounded-xl bg-black flex items-center justify-center shrink-0">
+                <Gift className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-neutral-900">Kod qabul qilindi</p>
+                <p className="text-xs text-neutral-400">+{refBonusAmount.toLocaleString()} so'm bonus</p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* CTA */}
-      <div className="ob-fade mt-4" style={{ animationDelay:".35s" }}>
-        <button onClick={() => go(1)}
-          className="ob-btn w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-semibold text-white bg-[#1d4f8a]">
-          Boshlash
-          <ChevronRight className="h-4 w-4" />
-        </button>
-        <p className="text-neutral-400 text-xs text-center mt-3">3 ta savol • 1 daqiqa</p>
+        {/* CTA */}
+        <div className="ob-fade" style={{ animationDelay:".3s" }}>
+          <button onClick={() => go(1)}
+            className="ob-btn w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-bold text-white bg-black">
+            Boshlash
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <p className="text-neutral-400 text-xs text-center mt-3">3 ta savol · 1 daqiqa</p>
+        </div>
       </div>
     </div>
   );
 
   /* ══════ STEP 1 — ISM ══════ */
   if (step === 1) return (
-    <div className="fixed inset-0 bg-[#f8f9ff]">
+    <div className="fixed inset-0 bg-white">
       <style>{CSS}</style>
       <Shell>
-        <AvatarPreview name={name} />
-        <div className="mb-6 text-center">
-          <h2 className="text-2xl font-extrabold text-neutral-900">Ismingiz nima?</h2>
-          <p className="text-neutral-500 text-sm mt-1">Biz siz bilan to'g'ridan-to'g'ri muloqot qilamiz</p>
-        </div>
-        <div className="relative mb-4">
-          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-neutral-400 pointer-events-none" style={{width:18,height:18}} />
+        <h2 className="text-[2rem] font-black text-neutral-900 leading-tight mb-2">
+          Ismingizni<br />kiriting
+        </h2>
+        <p className="text-neutral-400 text-sm mb-8">Profil uchun to'liq ism kerak</p>
+
+        <div className="relative mb-3">
           <input ref={nameRef} value={name}
             onChange={e => setName(e.target.value)}
             onKeyDown={e => e.key==="Enter" && nextName()}
             placeholder="Ism Familiya"
-            className="ob-input w-full rounded-2xl border-2 border-neutral-200 bg-white pl-11 pr-4 py-3.5 text-[16px] font-semibold text-neutral-900 placeholder:font-normal placeholder:text-neutral-300"
+            className="ob-input w-full rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-[16px] font-medium text-neutral-900 placeholder:text-neutral-300 outline-none"
           />
         </div>
-        <button onClick={nextName} disabled={!name.trim()}
-          className="ob-btn w-full rounded-2xl py-4 text-sm font-bold text-white disabled:opacity-40"
-          style={{ background:"linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
-          Keyingi →
-        </button>
+
+        <div className="mt-auto pt-6">
+          <button onClick={nextName} disabled={!name.trim()}
+            className="ob-btn w-full rounded-2xl py-4 text-sm font-bold text-white bg-black disabled:opacity-30">
+            Keyingi →
+          </button>
+        </div>
       </Shell>
     </div>
   );
 
   /* ══════ STEP 2 — TELEFON ══════ */
   if (step === 2) return (
-    <div className="fixed inset-0 bg-[#f8f9ff]">
+    <div className="fixed inset-0 bg-white">
       <style>{CSS}</style>
       <Shell>
-        <div className="mb-6 text-center">
-          <h2 className="text-xl font-bold text-neutral-900 mb-1">Telefon raqamingiz</h2>
-          <p className="text-neutral-400 text-sm">Buyurtma holati xabarlari yuboriladi</p>
-        </div>
+        <h2 className="text-[2rem] font-black text-neutral-900 leading-tight mb-2">
+          Telefon<br />raqamingiz
+        </h2>
+        <p className="text-neutral-400 text-sm mb-8">Buyurtma holati xabarlari yuboriladi</p>
 
-        {/* bitta katta input — prefix ichida */}
-        <div className="ob-input rounded-2xl border-2 border-neutral-200 bg-white flex items-center px-4 gap-2 mb-4"
+        <div className="rounded-2xl border border-neutral-200 bg-neutral-50 flex items-center px-4 gap-3 mb-3 ob-input"
           onClick={() => phoneRef.current?.focus()}
           style={{ cursor:"text" }}>
-          <span className="text-lg shrink-0">🇺🇿</span>
+          <span className="text-xl shrink-0">🇺🇿</span>
           <span className="text-neutral-500 font-semibold text-base shrink-0">+998</span>
           <div className="w-px h-5 bg-neutral-200 shrink-0" />
           <input
@@ -518,26 +550,22 @@ export default function OnboardingPage() {
           />
           {phone.length > 0 && (
             <button onClick={() => setPhone("")}
-              className="shrink-0 h-5 w-5 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-500 text-xs font-bold">
+              className="shrink-0 h-6 w-6 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-500 text-xs font-bold">
               ✕
             </button>
           )}
         </div>
 
-        {/* progress dots */}
-        <div className="flex justify-center gap-1.5 mb-6">
+        {/* digit dots */}
+        <div className="flex gap-1.5 mb-8 px-1">
           {Array.from({length:9}).map((_,i) => (
-            <div key={i} className="h-1 rounded-full transition-all duration-150"
-              style={{
-                width: i < phone.length ? 20 : 12,
-                background: i < phone.length ? "#f97316" : "#e5e7eb",
-              }} />
+            <div key={i} className="h-[3px] rounded-full flex-1 transition-all duration-150"
+              style={{ background: i < phone.length ? "#000" : "#e5e7eb" }} />
           ))}
         </div>
 
         <button onClick={nextPhone} disabled={phone.length < 9}
-          className="ob-btn w-full rounded-2xl py-4 text-sm font-semibold text-white disabled:opacity-35"
-          style={{ background:"#f97316" }}>
+          className="ob-btn w-full rounded-2xl py-4 text-sm font-bold text-white bg-black disabled:opacity-30">
           Keyingi →
         </button>
       </Shell>
@@ -546,186 +574,109 @@ export default function OnboardingPage() {
 
   /* ══════ STEP 3 — VILOYAT ══════ */
   if (step === 3) return (
-    <div className="fixed inset-0 bg-[#f8f9ff]">
+    <div className="fixed inset-0 bg-white">
       <style>{CSS}{EARTH_CSS}</style>
       <Shell>
-        <div className="mb-3 text-center">
-          <h2 className="text-xl font-bold text-neutral-900 mb-1">Manzilingizni aniqlaymiz</h2>
-          <p className="text-neutral-400 text-sm">GPS orqali aniq joylashuvingiz topiladi</p>
-        </div>
+        <h2 className="text-[2rem] font-black text-neutral-900 leading-tight mb-2">
+          Viloyatingizni<br />tanlang
+        </h2>
+        <p className="text-neutral-400 text-sm mb-6">GPS orqali avtomatik aniqlanadi</p>
 
-        {/* ── Loading state ── */}
+        {/* Loading */}
         {geoLoad && (
-          <div className="ob-fade flex flex-col items-center py-4">
+          <div className="ob-fade flex flex-col items-center py-6">
             <EarthGlobe label={geoLabel} />
           </div>
         )}
 
-        {/* ── Result state ── */}
+        {/* GPS muvaffaqiyatli */}
         {!geoLoad && geoResult && (
-          <div className="ob-fade">
-            {/* Map pin visual */}
-            <div className="flex justify-center mb-4">
-              <div className="h-16 w-16 rounded-2xl flex items-center justify-center shadow-md"
-                style={{ background:"linear-gradient(135deg,#10b981,#06b6d4)" }}>
-                <MapPin className="h-8 w-8 text-white" />
+          <div className="ob-fade mb-4">
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 flex items-start gap-3">
+              <div className="h-9 w-9 rounded-xl bg-black flex items-center justify-center shrink-0">
+                <MapPin className="h-4 w-4 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-neutral-400 mb-0.5 uppercase tracking-wide">Manzil aniqlandi</p>
+                <p className="text-sm font-semibold text-neutral-900 truncate">{geoResult.state || geoResult.country}</p>
+                {geoResult.city && <p className="text-xs text-neutral-400 truncate">{geoResult.city}{geoResult.road ? `, ${geoResult.road}` : ""}</p>}
               </div>
             </div>
-
-            {/* Address card */}
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 mb-4">
-              <p className="text-xs font-semibold text-emerald-600 mb-2 uppercase tracking-wide">✅ Manzil aniqlandi</p>
-              <div className="space-y-1.5">
-                {geoResult.country && (
-                  <div className="flex items-start gap-2">
-                    <span className="text-sm">🌍</span>
-                    <span className="text-sm text-neutral-700 font-medium">{geoResult.country}</span>
-                  </div>
-                )}
-                {geoResult.state && (
-                  <div className="flex items-start gap-2">
-                    <span className="text-sm">📍</span>
-                    <span className="text-sm text-neutral-700 font-medium">{geoResult.state}</span>
-                  </div>
-                )}
-                {geoResult.city && (
-                  <div className="flex items-start gap-2">
-                    <span className="text-sm">🏙️</span>
-                    <span className="text-sm text-neutral-700">{geoResult.city}</span>
-                  </div>
-                )}
-                {geoResult.road && (
-                  <div className="flex items-start gap-2">
-                    <span className="text-sm">🛣️</span>
-                    <span className="text-sm text-neutral-600">{geoResult.road}</span>
-                  </div>
-                )}
-                <div className="flex items-start gap-2 pt-1 border-t border-emerald-100">
-                  <span className="text-xs">📡</span>
-                  <span className="text-xs text-neutral-400">{geoResult.lat.toFixed(5)}, {geoResult.lng.toFixed(5)}</span>
-                </div>
-              </div>
-            </div>
-
-            <button onClick={() => { if(!region){haptic.error();return;} finish(); }}
-              disabled={!region || saving}
-              className="ob-btn w-full rounded-2xl py-4 text-sm font-semibold text-white disabled:opacity-40"
-              style={{ background:"linear-gradient(135deg,#10b981,#06b6d4)" }}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Davom etish →"}
-            </button>
-
             <button onClick={() => setShowManual(v => !v)}
-              className="w-full text-center text-xs text-neutral-400 mt-3 py-1">
+              className="w-full text-center text-xs text-neutral-400 mt-2 py-1">
               {showManual ? "Yashirish ▲" : "Qo'lda o'zgartirish ▼"}
             </button>
           </div>
         )}
 
-        {/* ── Error / manual ── */}
+        {/* GPS xatolik */}
         {!geoLoad && geoError && (
-          <div className="ob-fade mb-3 rounded-2xl bg-amber-50 border border-amber-100 p-3">
-            <div className="flex items-start gap-2">
-              <span className="text-base shrink-0">⚠️</span>
-              <div>
-                <p className="text-sm text-amber-700 font-semibold">GPS ruxsat berilmadi</p>
-                <p className="text-xs text-amber-600 mt-0.5 leading-relaxed">
-                  {geoError.includes("Ruxsat")
-                    ? "Brauzer sozlamasida joylashuv ruxsatini yoqing yoki quyidan viloyatni tanlang."
-                    : geoError}
-                </p>
-                <button onClick={runDetectGeo}
-                  className="mt-2 text-xs text-emerald-600 font-semibold underline">
-                  Qayta urinish
-                </button>
-              </div>
+          <div className="ob-fade mb-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 flex items-start gap-3">
+            <div className="h-9 w-9 rounded-xl border border-neutral-200 bg-white flex items-center justify-center shrink-0 text-base">⚠️</div>
+            <div>
+              <p className="text-sm font-semibold text-neutral-800">GPS ruxsat berilmadi</p>
+              <p className="text-xs text-neutral-400 mt-0.5 leading-relaxed">
+                {geoError.includes("Ruxsat") ? "Quyidan viloyatni tanlang." : geoError}
+              </p>
+              <button onClick={runDetectGeo} className="mt-2 text-xs font-semibold text-black underline">
+                Qayta urinish
+              </button>
             </div>
           </div>
         )}
 
-        {/* ── Manual chips ── */}
+        {/* Viloyat chiplari */}
         {!geoLoad && (showManual || (!geoResult && !geoLoad)) && (
-          <div className="ob-fade">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex-1 h-px bg-neutral-200" />
-              <span className="text-xs text-neutral-400">yoki viloyat tanlang</span>
-              <div className="flex-1 h-px bg-neutral-200" />
-            </div>
-            <div className="flex flex-wrap gap-2 pb-2">
+          <div className="ob-fade mb-4">
+            <div className="flex flex-wrap gap-2">
               {regions.map(r => {
                 const sel = region === r;
                 return (
                   <button key={r} onClick={() => { haptic.select(); setRegion(r); }}
-                    className={`ob-chip rounded-xl px-3 py-2 text-xs font-semibold border-2 ${sel ? "sel" : ""}`}
+                    className={`ob-chip rounded-xl px-3 py-2 text-xs font-semibold border transition-all ${sel ? "sel" : ""}`}
                     style={sel
-                      ? { background:"#ecfdf5", borderColor:"#10b981", color:"#065f46" }
-                      : { background:"white", borderColor:"#e5e7eb", color:"#374151" }
+                      ? { background:"#000", borderColor:"#000", color:"#fff" }
+                      : { background:"#fff", borderColor:"#e5e7eb", color:"#374151" }
                     }>
-                    {sel && "✓ "}{r}
+                    {r}
                   </button>
                 );
               })}
             </div>
-            <button onClick={() => { if(!region){haptic.error();return;} finish(); }}
-              disabled={!region || saving}
-              className="ob-btn w-full rounded-2xl py-4 text-sm font-semibold text-white disabled:opacity-40 mt-3"
-              style={{ background:"linear-gradient(135deg,#10b981,#06b6d4)" }}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Tayyor! 🎉"}
-            </button>
           </div>
         )}
+
+        <button onClick={() => { if(!region){haptic.error();return;} finish(); }}
+          disabled={!region || saving}
+          className="ob-btn w-full rounded-2xl py-4 text-sm font-bold text-white bg-black disabled:opacity-30 mt-2">
+          {saving ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : "Tayyor →"}
+        </button>
       </Shell>
     </div>
   );
 
   /* ══════ STEP 4 — DONE ══════ */
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ background:"#0a0f1e" }}>
+    <div className="fixed inset-0 bg-black overflow-hidden">
       <style>{CSS}{DONE_CSS}</style>
       <Confetti />
 
-      {/* animated glow orbs */}
-      <div className="ob-orb ob-orb1" />
-      <div className="ob-orb ob-orb2" />
-      <div className="ob-orb ob-orb3" />
-
-      {/* stars */}
-      {STARS.map((s,i) => (
-        <div key={i} className="ob-star" style={{ left:`${s.x}%`, top:`${s.y}%`, width:s.r, height:s.r, animationDelay:`${s.d}s`, animationDuration:`${s.t}s` }} />
-      ))}
+      {/* subtle grid */}
+      <div className="ob-grid-bg" />
 
       {/* content */}
-      <div className="relative z-10 flex flex-col items-center justify-between h-full px-6 py-10">
-
-        {/* top badge */}
-        <div className="ob-fade" style={{ animationDelay:".05s" }}>
-          <div className="flex items-center gap-2 px-4 py-1.5 rounded-full"
-            style={{ background:"rgba(255,255,255,.08)", border:"1px solid rgba(255,255,255,.12)" }}>
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-white/60 text-xs font-medium">Profil tayyor</span>
-          </div>
-        </div>
+      <div className="relative z-10 flex flex-col h-full px-6 pt-16 pb-10">
 
         {/* center */}
-        <div className="flex flex-col items-center w-full max-w-sm">
+        <div className="flex-1 flex flex-col items-center justify-center w-full">
 
-          {/* big checkmark ring */}
-          <div className="ob-pop mb-6 relative" style={{ animationDelay:".1s" }}>
-            {/* outer glow ring */}
+          {/* checkmark */}
+          <div className="ob-pop mb-8 relative" style={{ animationDelay:".1s" }}>
             <div className="ob-ring1" />
             <div className="ob-ring2" />
-            {/* icon */}
-            <div className="relative h-28 w-28 rounded-[32px] flex items-center justify-center"
-              style={{
-                background:"linear-gradient(145deg,#10b981,#059669)",
-                boxShadow:"0 0 0 1px rgba(16,185,129,.3), 0 20px 60px rgba(16,185,129,.5)",
-              }}>
-              {/* shine */}
-              <div className="absolute inset-0 rounded-[32px] overflow-hidden">
-                <div className="absolute top-1 left-3 right-3 h-8 rounded-full opacity-20"
-                  style={{ background:"linear-gradient(180deg,white,transparent)" }} />
-              </div>
-              <svg width="52" height="52" viewBox="0 0 24 24" fill="none"
-                stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="h-24 w-24 rounded-[28px] bg-white flex items-center justify-center">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none"
+                stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 13l4 4L19 7"
                   strokeDasharray="60" strokeDashoffset="60"
                   style={{ animation:"ob-check .6s .4s cubic-bezier(.22,1,.36,1) forwards" }} />
@@ -733,53 +684,48 @@ export default function OnboardingPage() {
             </div>
           </div>
 
-          {/* name + subtitle */}
-          <div className="ob-fade text-center mb-7" style={{ animationDelay:".25s" }}>
-            <h1 className="font-black text-white mb-2 leading-tight"
-              style={{ fontSize:"clamp(1.6rem,7vw,2.2rem)" }}>
-              Barakalla,<br />{name.split(" ")[0]}! 🎉
+          {/* heading */}
+          <div className="ob-fade text-center mb-8" style={{ animationDelay:".25s" }}>
+            <h1 className="font-black text-white leading-tight mb-3"
+              style={{ fontSize:"clamp(2rem,8vw,2.6rem)" }}>
+              Barakalla,<br />{name.split(" ")[0]}!
             </h1>
-            <p className="text-white/50 text-sm leading-relaxed">
-              Profilingiz muvaffaqiyatli yaratildi.<br />
-              Minglab mahsulotlar sizni kutmoqda!
+            <p className="text-white/40 text-sm leading-relaxed">
+              Profil muvaffaqiyatli yaratildi.<br />
+              Minglab mahsulotlar sizni kutmoqda.
             </p>
           </div>
 
-          {/* stats row */}
-          <div className="ob-fade w-full grid grid-cols-3 gap-3 mb-7" style={{ animationDelay:".4s" }}>
+          {/* stats */}
+          <div className="ob-fade w-full grid grid-cols-3 gap-2 mb-6" style={{ animationDelay:".4s" }}>
             {[
-              { icon:"📦", val:"1 000+", lbl:"Mahsulot",     color:"#6366f1" },
-              { icon:"🚀", val:"1–3",    lbl:"Kun yetkazish", color:"#f97316" },
-              { icon:"⭐", val:"4.9",    lbl:"Reyting",       color:"#f59e0b" },
+              { val:"1 000+", lbl:"Mahsulot" },
+              { val:"1–3",    lbl:"Kun yetkazish" },
+              { val:"4.9",    lbl:"Reyting" },
             ].map(s => (
-              <div key={s.lbl} className="rounded-2xl p-3 text-center flex flex-col items-center gap-1"
-                style={{ background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.08)" }}>
-                <span className="text-xl">{s.icon}</span>
-                <span className="font-extrabold text-white text-base leading-none">{s.val}</span>
-                <span className="text-[10px] text-white/40 leading-tight">{s.lbl}</span>
+              <div key={s.lbl} className="rounded-2xl py-3 text-center border border-white/8"
+                style={{ background:"rgba(255,255,255,.05)" }}>
+                <p className="font-extrabold text-white text-base leading-none mb-1">{s.val}</p>
+                <p className="text-[10px] text-white/35 leading-tight">{s.lbl}</p>
               </div>
             ))}
           </div>
 
-          {/* location chip */}
-          <div className="ob-fade mb-7" style={{ animationDelay:".5s" }}>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full"
-              style={{ background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)" }}>
-              <span className="text-sm">📍</span>
-              <span className="text-white/60 text-xs">{region}</span>
+          {/* info chip */}
+          <div className="ob-fade" style={{ animationDelay:".5s" }}>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5">
+              <span className="text-xs text-white/50">📍 {region}</span>
               <span className="text-white/20 text-xs">·</span>
-              <span className="text-white/60 text-xs">+998{phone}</span>
+              <span className="text-xs text-white/50">+998{phone}</span>
             </div>
           </div>
         </div>
 
         {/* CTA */}
-        <div className="ob-fade w-full max-w-sm" style={{ animationDelay:".6s" }}>
+        <div className="ob-fade" style={{ animationDelay:".6s" }}>
           <button onClick={() => { haptic.success(); navigate("/", { replace:true }); }}
-            className="ob-btn w-full py-4 rounded-2xl text-white font-bold text-sm relative overflow-hidden"
-            style={{ background:"linear-gradient(135deg,#6366f1,#8b5cf6)", boxShadow:"0 12px 40px rgba(99,102,241,.45)" }}>
-            {/* shimmer */}
-            <span className="ob-shimmer" />
+            className="ob-btn w-full py-4 rounded-2xl bg-white text-black font-bold text-sm relative overflow-hidden">
+            <span className="ob-shimmer-dark" />
             <span className="relative z-10">Xarid qilishni boshlash →</span>
           </button>
         </div>
@@ -788,6 +734,78 @@ export default function OnboardingPage() {
   );
 }
 
+/* ── Welcome screen word animation ── */
+const WORD_CSS = `
+  .ob-word-loader {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    overflow: hidden;
+    position: relative;
+  }
+  .ob-word-static {
+    font-size: 15px;
+    font-weight: 600;
+    color: #a3a3a3;
+    flex-shrink: 0;
+    line-height: 26px;
+  }
+  .ob-words-wrap {
+    overflow: hidden;
+    position: relative;
+    height: 26px;
+  }
+  .ob-words-wrap::before,
+  .ob-words-wrap::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    height: 8px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .ob-words-wrap::before { top: 0; background: linear-gradient(white, transparent); }
+  .ob-words-wrap::after  { bottom: 0; background: linear-gradient(transparent, white); }
+  .ob-word-item {
+    display: block;
+    height: 26px;
+    line-height: 26px;
+    padding-left: 2px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #171717;
+    animation: ob-word-spin 4s infinite;
+    white-space: nowrap;
+  }
+  @keyframes ob-word-spin {
+    10%  { transform: translateY(-102%); }
+    25%  { transform: translateY(-100%); }
+    35%  { transform: translateY(-202%); }
+    50%  { transform: translateY(-200%); }
+    60%  { transform: translateY(-302%); }
+    75%  { transform: translateY(-300%); }
+    85%  { transform: translateY(-402%); }
+    100% { transform: translateY(-400%); }
+  }
+`;
+
+/* ── Welcome screen extras ── */
+const WELCOME_CSS = `
+  .ob-grid-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .ob-grid-bg::after {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,255,255,.06) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(255,255,255,.04) 0%, transparent 60%);
+  }
+`;
+
 /* ── Done screen extras ── */
 const STARS = Array.from({length:30}, (_,i) => ({
   x: Math.random()*100, y: Math.random()*100,
@@ -795,20 +813,11 @@ const STARS = Array.from({length:30}, (_,i) => ({
 }));
 
 const DONE_CSS = `
-  @keyframes ob-orb-float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-30px) scale(1.08)} }
-  @keyframes ob-star-twinkle { 0%,100%{opacity:.15} 50%{opacity:.8} }
-  @keyframes ob-ring-pulse { 0%{transform:scale(1);opacity:.5} 100%{transform:scale(1.8);opacity:0} }
+  @keyframes ob-ring-pulse { 0%{transform:scale(1);opacity:.4} 100%{transform:scale(2);opacity:0} }
   @keyframes ob-shimmer-slide { from{transform:translateX(-100%)} to{transform:translateX(200%)} }
 
-  .ob-orb { position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none; }
-  .ob-orb1 { width:340px;height:340px;top:-80px;left:-80px;background:rgba(99,102,241,.25);animation:ob-orb-float 7s ease-in-out infinite; }
-  .ob-orb2 { width:280px;height:280px;bottom:-60px;right:-60px;background:rgba(16,185,129,.2);animation:ob-orb-float 9s ease-in-out infinite 2s; }
-  .ob-orb3 { width:200px;height:200px;top:40%;left:50%;transform:translate(-50%,-50%);background:rgba(245,158,11,.12);animation:ob-orb-float 11s ease-in-out infinite 4s; }
+  .ob-ring1 { position:absolute;inset:-14px;border-radius:36px;border:1.5px solid rgba(255,255,255,.2);animation:ob-ring-pulse 2s .8s ease-out infinite; }
+  .ob-ring2 { position:absolute;inset:-28px;border-radius:44px;border:1px solid rgba(255,255,255,.1);animation:ob-ring-pulse 2s 1.3s ease-out infinite; }
 
-  .ob-star { position:absolute; border-radius:50%; background:white; animation:ob-star-twinkle var(--t,3s) var(--d,0s) ease-in-out infinite; }
-
-  .ob-ring1 { position:absolute;inset:-16px;border-radius:40px;border:2px solid rgba(16,185,129,.4);animation:ob-ring-pulse 2s .8s ease-out infinite; }
-  .ob-ring2 { position:absolute;inset:-32px;border-radius:48px;border:1.5px solid rgba(16,185,129,.2);animation:ob-ring-pulse 2s 1.2s ease-out infinite; }
-
-  .ob-shimmer { position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.2) 50%,transparent 60%);animation:ob-shimmer-slide 2.5s 1s ease-in-out infinite; }
+  .ob-shimmer-dark { position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(0,0,0,.06) 50%,transparent 60%);animation:ob-shimmer-slide 2.5s 1s ease-in-out infinite; }
 `;

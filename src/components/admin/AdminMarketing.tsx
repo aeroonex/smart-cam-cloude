@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from "react";
 import {
   CheckCircle2, Copy, ExternalLink, Gift, GripVertical, Loader2, Megaphone,
-  Plus, Send, Trash2, X, XCircle, ImageIcon, LayoutGrid, Tag,
+  Plus, Send, Trash2, X, XCircle, ImageIcon, LayoutGrid, Tag, Users,
 } from "lucide-react";
 import { useRef } from "react";
 import { BoxLoader } from "@/components/BoxLoader";
@@ -19,7 +19,7 @@ type PromoSection = Database["public"]["Tables"]["promo_sections"]["Row"];
 type Banner = Database["public"]["Tables"]["banners"]["Row"];
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
-type Tab = "promocodes" | "promos" | "banners" | "mailing";
+type Tab = "promocodes" | "promos" | "banners" | "mailing" | "referral";
 
 export function AdminMarketing() {
   const [tab, setTab] = useState<Tab>("promocodes");
@@ -39,6 +39,7 @@ export function AdminMarketing() {
           { id: "promos" as Tab, label: "Aksiya bo'limlari", icon: LayoutGrid },
           { id: "banners" as Tab, label: "Bannerlar", icon: ImageIcon },
           { id: "mailing" as Tab, label: "Xabar yuborish", icon: Megaphone },
+          { id: "referral" as Tab, label: "Referal tizimi", icon: Users },
         ] as const).map(t => (
           <button
             key={t.id}
@@ -59,6 +60,7 @@ export function AdminMarketing() {
       {tab === "promos" && <PromoSectionsPanel products={products} />}
       {tab === "banners" && <BannersPanel />}
       {tab === "mailing" && <MailingPanel />}
+      {tab === "referral" && <ReferralPanel />}
     </div>
   );
 }
@@ -726,6 +728,134 @@ function MailingPanel() {
         <h3 className="mb-1 font-bold text-neutral-900">UTM Link Generator</h3>
         <p className="mb-4 text-xs text-neutral-400">Target reklama uchun kuzatuv havolasi yaratish</p>
         <UTMGenerator />
+      </div>
+    </div>
+  );
+}
+
+/* ── REFERRAL PANEL ── */
+function ReferralPanel() {
+  const [bonusAmount, setBonusAmount] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [stats, setStats] = useState<{ total: number; this_month: number } | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("site_settings").select("value").eq("key", "referral_bonus_amount").single(),
+      supabase
+        .from("wallet_transactions" as never)
+        .select("id", { count: "exact", head: true })
+        .eq("type", "referral_bonus"),
+      supabase
+        .from("wallet_transactions" as never)
+        .select("id", { count: "exact", head: true })
+        .eq("type", "referral_bonus")
+        .gte("created_at", new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
+    ]).then(([settingRes, totalRes, monthRes]) => {
+      setBonusAmount(settingRes.data?.value ?? "5000");
+      setStats({
+        total: (totalRes as { count: number | null }).count ?? 0,
+        this_month: (monthRes as { count: number | null }).count ?? 0,
+      });
+      setLoading(false);
+    });
+  }, []);
+
+  async function save() {
+    const val = Number(bonusAmount);
+    if (!val || val < 0) { toast.error("To'g'ri miqdor kiriting"); return; }
+    setSaving(true);
+    const { error } = await supabase
+      .from("site_settings")
+      .upsert({ key: "referral_bonus_amount", value: String(val) }, { onConflict: "key" });
+    setSaving(false);
+    if (error) toast.error("Saqlashda xato: " + error.message);
+    else toast.success("Referal bonus miqdori saqlandi!");
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Stats */}
+      {stats && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm text-center">
+            <p className="text-2xl font-black text-[#1d4f8a]">{stats.total}</p>
+            <p className="text-xs text-neutral-500 mt-1">Jami referal bonuslar</p>
+          </div>
+          <div className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm text-center">
+            <p className="text-2xl font-black text-emerald-600">{stats.this_month}</p>
+            <p className="text-xs text-neutral-500 mt-1">Bu oy referal bonuslar</p>
+          </div>
+        </div>
+      )}
+
+      {/* Bonus amount config */}
+      <div className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
+        <h3 className="mb-1 flex items-center gap-2 font-bold text-neutral-900">
+          <Users className="h-5 w-5 text-[#1d4f8a]" />Referal bonus sozlamalari
+        </h3>
+        <p className="text-xs text-neutral-400 mb-4">
+          Referal kod kiritganda har ikki foydalanuvchiga beriladigan bonus miqdori
+        </p>
+
+        {loading ? (
+          <div className="flex items-center gap-2 text-neutral-400 py-4">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Yuklanmoqda...</span>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                Bonus miqdori (so'm)
+              </label>
+              <div className="flex gap-3">
+                <Input
+                  type="number"
+                  value={bonusAmount}
+                  onChange={e => setBonusAmount(e.target.value)}
+                  placeholder="5000"
+                  className="rounded-xl max-w-[200px]"
+                />
+                <Button
+                  onClick={() => void save()}
+                  disabled={saving}
+                  className="rounded-full bg-[#1d4f8a] text-white hover:bg-[#164078]"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Saqlash"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Preset buttons */}
+            <div className="flex flex-wrap gap-2">
+              {[1000, 2000, 5000, 10000, 20000].map(v => (
+                <button
+                  key={v}
+                  onClick={() => setBonusAmount(String(v))}
+                  className={`rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+                    bonusAmount === String(v)
+                      ? "border-[#1d4f8a] bg-blue-50 text-[#1d4f8a]"
+                      : "border-neutral-200 text-neutral-500 hover:bg-neutral-50"
+                  }`}
+                >
+                  {v.toLocaleString()} so'm
+                </button>
+              ))}
+            </div>
+
+            <div className="rounded-xl bg-blue-50 border border-blue-100 p-3">
+              <p className="text-xs text-blue-700 font-semibold mb-1">Qanday ishlaydi?</p>
+              <ul className="text-xs text-blue-600 space-y-1 list-disc list-inside">
+                <li>Har bir foydalanuvchiga unikal referal kod avtomatik beriladi</li>
+                <li>Yangi foydalanuvchi onboarding'da kodini kiritadi</li>
+                <li>Ikki tomon ham aynan shu miqdorda cashback bonus oladi</li>
+                <li>Bonus faqat bir marta beriladi</li>
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

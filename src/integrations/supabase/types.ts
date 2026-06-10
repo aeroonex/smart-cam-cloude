@@ -150,7 +150,11 @@ export interface Database {
           region: string | null;
           avatar_url: string | null;
           age: number | null;
-          role: "user" | "admin";
+          role: "user" | "admin" | "seller" | "courier";
+          login_code: string | null;
+          is_active: boolean;
+          created_by: string | null;
+          seller_note: string | null;
           wallet_balance: number;
           cashback_balance: number;
           referral_code: string | null;
@@ -167,7 +171,11 @@ export interface Database {
           region?: string | null;
           age?: number | null;
           avatar_url?: string | null;
-          role?: "user" | "admin";
+          role?: "user" | "admin" | "seller" | "courier";
+          login_code?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+          seller_note?: string | null;
           wallet_balance?: number;
           cashback_balance?: number;
           referral_code?: string | null;
@@ -270,6 +278,9 @@ export interface Database {
           customer_phone: string | null;
           customer_region: string | null;
           notes: string | null;
+          delivered_by: string | null;
+          delivered_at: string | null;
+          handover_code: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -277,6 +288,9 @@ export interface Database {
           id?: string;
           user_id: string;
           items?: Json;
+          delivered_by?: string | null;
+          delivered_at?: string | null;
+          handover_code?: string | null;
           total_amount?: number;
           status?:
             | "yangi"

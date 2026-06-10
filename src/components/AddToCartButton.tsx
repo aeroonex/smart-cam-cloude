@@ -1,5 +1,6 @@
 ﻿import { useCart } from "@/hooks/useCart";
 import { toast } from "sonner";
+import { track } from "@/utils/analytics";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -43,7 +44,7 @@ export function AddToCartButton({ product, onAddToCart, size = "md" }: Props) {
         onClick={(e) => {
           e.stopPropagation();
           onAddToCart(product);
-          toast.success("Savatga qo'shildi");
+          track("add_to_cart", { product_id: product.id, price: Number(product.price) });
         }}
         className={`${btnBase} bg-[#1d4f8a] text-white hover:bg-[#164078]`}
       >

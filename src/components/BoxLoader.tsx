@@ -1,9 +1,9 @@
-import { HeartLoader } from "@/components/HeartLoader";
+import { GridLoader } from "@/components/GridLoader";
 
 export function BoxLoader({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center justify-center ${className}`}>
-      <HeartLoader size="md" />
+      <GridLoader size="md" />
     </div>
   );
 }

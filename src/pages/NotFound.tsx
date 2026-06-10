@@ -10,7 +10,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-neutral-900">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
       <div className="nf_wrapper">
         <div className="nf_main">
           <div className="nf_antenna">
@@ -71,7 +71,7 @@ const NotFound = () => {
       </div>
 
       <div className="mt-4 text-center">
-        <p className="text-neutral-500 dark:text-neutral-400 text-sm mb-3">
+        <p className="text-neutral-500 text-sm mb-3">
           Bu sahifa mavjud emas
         </p>
         <button

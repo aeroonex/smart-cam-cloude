@@ -1,4 +1,5 @@
 export type AdminSection =
   | "dashboard" | "orders" | "products" | "marketing"
   | "partners" | "delivery" | "finance" | "reviews" | "system" | "users"
-  | "tax" | "audit" | "pickup_points" | "merchant" | "branding";
+  | "tax" | "audit" | "pickup_points" | "merchant" | "branding" | "deployment"
+  | "sellers" | "push";

@@ -3,11 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#FF6B35" />
+    <meta name="theme-color" content="#1d4f8a" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <title>HammaBop — Online Marketplace</title>
+    <meta name="application-name" content="HammaBop" />
+    <meta name="description" content="HammaBop — O'zbekistonning onlayn bozori. Elektronika, kiyim-kechak, uy jihozlari va boshqa minglab mahsulotlar. Tez yetkazib berish, cashback bonuslar va xavfsiz to'lov." />
+    <meta name="keywords" content="HammaBop, online dokon, uzbekistan marketplace, elektronika, kiyim, yetkazib berish" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="HammaBop" />
+    <meta property="og:title" content="HammaBop - Online marketplace | aigate.uz" />
+    <meta property="og:description" content="HammaBop — minglab mahsulotlar, tez yetkazib berish va cashback bonuslar bilan O'zbekistonning eng qulay onlayn do'koni." />
+    <meta property="og:image" content="/assets/smartcam-logo.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="HammaBop — O'zbekistonning Onlayn Bozori" />
+    <meta name="twitter:description" content="Minglab mahsulotlar, tez yetkazib berish va cashback bonuslar." />
+    <title>HammaBop - Online marketplace</title>
     <link rel="icon" type="image/png" href="/assets/smartcam-logo.png" />
     <link rel="apple-touch-icon" href="/assets/smartcam-logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,11 +26,97 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <style>
       *, *::before, *::after { font-family: 'Inter', system-ui, sans-serif; font-style: normal; }
-      body { background: #ffffff; }
+      body { background: #ffffff; margin: 0; }
+      #static-landing { font-family: 'Inter', system-ui, sans-serif; }
+      #static-landing h1 { font-size: 2rem; font-weight: 800; color: #0f172a; margin: 0 0 8px; }
+      #static-landing p { color: #475569; line-height: 1.6; margin: 0 0 12px; }
+      #static-landing .badge { display: inline-block; background: #dbeafe; color: #1d4f8a; font-size: 0.75rem; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; }
+      #static-landing .features { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+      #static-landing .feature { background: #f0f6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px 18px; flex: 1 1 200px; }
+      #static-landing .feature strong { display: block; color: #1d4f8a; font-size: 0.95rem; margin-bottom: 4px; }
+      #static-landing .feature span { font-size: 0.83rem; color: #64748b; }
+      #static-landing a.cta { display: inline-block; background: #1d4f8a; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 50px; font-weight: 700; font-size: 0.95rem; margin-top: 8px; }
+      #static-landing .nav { background: #1d4f8a; color: white; padding: 14px 24px; display: flex; align-items: center; gap: 10px; }
+      #static-landing .nav span { font-weight: 800; font-size: 1.1rem; }
+      #static-landing .nav em { font-style: normal; opacity: 0.7; font-size: 0.8rem; margin-left: auto; }
+      #static-landing .body { max-width: 860px; margin: 0 auto; padding: 40px 24px 60px; }
+      #static-landing footer { text-align: center; padding: 24px; font-size: 0.78rem; color: #94a3b8; border-top: 1px solid #e2e8f0; }
     </style>
   </head>
   <body>
+    <!-- Static content visible to search engines and OAuth verification bots without JavaScript -->
+    <div id="static-landing">
+      <nav class="nav">
+        <svg width="30" height="30" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="10" fill="rgba(255,255,255,0.2)"/><text x="20" y="27" text-anchor="middle" font-size="18" font-weight="bold" fill="white">H</text></svg>
+        <span>HammaBop - Online marketplace</span>
+        <em>aigate.uz</em>
+      </nav>
+      <div class="body">
+        <span class="badge">O'zbekiston Onlayn Bozori</span>
+        <h1>HammaBop - Online marketplace</h1>
+        <h2 style="font-size:1.1rem;font-weight:600;color:#475569;margin:4px 0 0;">O'zbekistonning onlayn bozori — mahsulot sotib olish va yetkazib berish platformasi</h2>
+        <p>
+          <strong>HammaBop</strong> — O'zbekistonda foydalanuvchilarga onlayn tarzda mahsulot sotib olish,
+          buyurtma berish va tez yetkazib olish imkoniyatini taqdim etuvchi marketplace ilovasi.
+          Elektronika, kiyim-kechak, uy jihozlari va boshqa minglab mahsulotlar bir joyda.
+        </p>
+        <p>
+          Ilova Google hisobi orqali kirish (OAuth) funksiyasini taqdim etadi — bu foydalanuvchilarga
+          tez va xavfsiz tarzda ro'yxatdan o'tish imkonini beradi.
+        </p>
+        <div class="features">
+          <div class="feature">
+            <strong>🛒 Onlayn Xarid</strong>
+            <span>Minglab mahsulotlar, qulay qidiruv va kategoriyalar</span>
+          </div>
+          <div class="feature">
+            <strong>🚚 Tez Yetkazib Berish</strong>
+            <span>Kuryer orqali yoki o'z-o'zidan olib ketish</span>
+          </div>
+          <div class="feature">
+            <strong>💰 Cashback Bonuslar</strong>
+            <span>Har xariddan 2% cashback — keyingi xaridda ishlating</span>
+          </div>
+          <div class="feature">
+            <strong>🔒 Xavfsiz To'lov</strong>
+            <span>Click, Payme va naqd pul orqali to'lov</span>
+          </div>
+          <div class="feature">
+            <strong>📱 Telegram Bildirishnomalar</strong>
+            <span>Buyurtma holati haqida real vaqtda xabar</span>
+          </div>
+          <div class="feature">
+            <strong>🎁 Referal Dastur</strong>
+            <span>Do'stingizni taklif qiling va bonus oling</span>
+          </div>
+        </div>
+        <a class="cta" href="https://aigate.uz">Xarid qilishni boshlash →</a>
+        <p style="margin-top:32px; font-size:0.82rem; color:#94a3b8;">
+          <a href="/privacy" style="color:#1d4f8a;">Maxfiylik Siyosati</a> &nbsp;|&nbsp;
+          <a href="/terms" style="color:#1d4f8a;">Foydalanish Shartlari</a> &nbsp;|&nbsp;
+          Bog'lanish: <a href="mailto:support@aigate.uz" style="color:#1d4f8a;">support@aigate.uz</a>
+        </p>
+      </div>
+      <footer>© 2026 HammaBop - Online marketplace (aigate.uz) — O'zbekistonning Onlayn Bozori. Barcha huquqlar himoyalangan.</footer>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Hide static landing once React app loads
+      document.addEventListener('DOMContentLoaded', function() {
+        var el = document.getElementById('static-landing');
+        if (el) {
+          var obs = new MutationObserver(function() {
+            var root = document.getElementById('root');
+            if (root && root.children.length > 0) {
+              el.style.display = 'none';
+              obs.disconnect();
+            }
+          });
+          obs.observe(document.getElementById('root'), { childList: true });
+        }
+      });
+    </script>
   </body>
 </html>

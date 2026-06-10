@@ -216,18 +216,26 @@ export function OrderSuccess({ orderId, onClose }: Props) {
             </div>
           </div>
 
-          {/* Hint */}
-          <p className="os-hint text-[12px] text-slate-400 mt-1">
-            Buyurtmangiz holati <strong className="text-slate-600">Buyurtmalarim</strong> bo'limida ko'rinadi
+          {/* Title + subtitle */}
+          <h2 className="os-title text-[22px] font-extrabold text-neutral-900 leading-tight mt-4">
+            Order Successful!
+          </h2>
+          <p className="os-sub mt-1.5 text-[14px] text-neutral-400">
+            You have successfully made order
           </p>
 
-          {/* CTA */}
+          {/* CTA buttons */}
           <button
             onClick={handleClose}
-            className="os-btn mt-5 w-full h-12 rounded-2xl text-white font-bold text-[14px] active:scale-[0.98] transition"
-            style={{ background: "linear-gradient(135deg,#1d4f8a,#2d6bb5)" }}
+            className="os-btn mt-5 w-full h-13 rounded-2xl bg-neutral-900 text-white font-bold text-[15px] active:scale-[0.98] transition py-3.5"
           >
-            Buyurtmalarimni ko'rish →
+            View Order
+          </button>
+          <button
+            onClick={handleClose}
+            className="os-btn mt-3 w-full h-13 rounded-2xl bg-[#F5F5F5] text-neutral-500 font-semibold text-[15px] active:scale-[0.98] transition py-3.5"
+          >
+            View E-Receipt
           </button>
         </div>
       </div>

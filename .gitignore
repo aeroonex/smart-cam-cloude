@@ -28,5 +28,10 @@ dist-ssr
 *.sw?
 .dyad/
 
+# Firebase / maxfiy kalitlar — HECH QACHON git'ga qo'shilmasin
+**/google-services.json
+*-firebase-adminsdk-*.json
+*service-account*.json
+
 # Media uploads (server localida saqlanadi, git'ga kirmasin)
 uploads/

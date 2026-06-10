@@ -9,11 +9,20 @@ import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { Component, lazy, Suspense, useEffect, useRef } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { useActivityTracker } from "@/hooks/useActivityTracker";
-import { BoxLoader } from "@/components/BoxLoader";
+import { useRole } from "@/hooks/useRole";
+import { useSystemTheme } from "@/hooks/useSystemTheme";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useWebPush } from "@/hooks/useWebPush";
+import { flushPending } from "@/utils/analytics";
+import { UpdateBanner } from "@/components/UpdateBanner";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { HeartLoader } from "@/components/HeartLoader";
 import { SiteSettingsProvider } from "@/hooks/useSiteSettings";
 import { useAndroidBackButton } from "@/hooks/useAndroid";
 import { SplashScreen } from "@capacitor/splash-screen";
+import { App as CapApp } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
+import { supabase } from "@/integrations/supabase/client";
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
@@ -53,7 +62,14 @@ const TrackPage = lazy(() => import("./pages/TrackPage"));
 const OrderPage = lazy(() => import("./pages/OrderPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
+const WalkthroughPage = lazy(() => import("./pages/WalkthroughPage"));
 const PickupPointsPage = lazy(() => import("./pages/PickupPointsPage"));
+const TelegramCallback = lazy(() => import("./pages/TelegramCallback"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const SellerDashboard = lazy(() => import("./pages/SellerDashboard"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,9 +107,10 @@ function SwipeBack() {
       startY.current = e.touches[0].clientY;
     };
     const onEnd = (e: TouchEvent) => {
-      const dx = startX.current - e.changedTouches[0].clientX;
-      const dy = Math.abs(startY.current - e.changedTouches[0].clientY);
-      if (dx > 80 && dy < dx * 0.6) navigate(-1);
+      const dx = e.changedTouches[0].clientX - startX.current; // right swipe = positive
+      const dy = Math.abs(e.changedTouches[0].clientY - startY.current);
+      // Only trigger from left edge (first 24px) to avoid conflicting with horizontal scrolls
+      if (dx > 60 && dy < 60 && startX.current < 24) navigate(-1);
     };
     window.addEventListener("touchstart", onStart, { passive: true });
     window.addEventListener("touchend", onEnd, { passive: true });
@@ -106,23 +123,76 @@ function SwipeBack() {
   return null;
 }
 
+/** Global OAuth deep-link handler — must live outside Login so it works even when app is cold-started */
+function useOAuthDeepLink() {
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const listener = CapApp.addListener("appUrlOpen", async ({ url }) => {
+      if (!url.startsWith("uz.hammabop.app://")) return;
+      const urlObj = new URL(url.replace("uz.hammabop.app://", "https://placeholder.com/"));
+      const code = urlObj.searchParams.get("code");
+      if (code) {
+        await supabase.auth.exchangeCodeForSession(code);
+      }
+    });
+    return () => { listener.then(l => l.remove()); };
+  }, []);
+}
+
 function AppRoutes() {
   const { loading, user } = useSessionContext();
   const navigate = useNavigate();
   useActivityTracker(user?.id);
   useAndroidBackButton();
+  useOAuthDeepLink();
+  useSystemTheme();
+  usePushNotifications(user?.id);
+  useWebPush(user?.id);
+
+  /* #8 — App Shortcuts deep-link → navigatsiya */
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const map: Record<string, string> = {
+      "shortcut/search": "/search",
+      "shortcut/cart": "/cart",
+      "shortcut/catalog": "/?section=catalog",
+    };
+    const listener = CapApp.addListener("appUrlOpen", ({ url }) => {
+      const m = Object.keys(map).find((k) => url.includes(k));
+      if (m) navigate(map[m]);
+    });
+    return () => { listener.then((l) => l.remove()); };
+  }, [navigate]);
+
+  /* Yagona kirish — rolga qarab sotuvchini o'z paneliga yo'naltirish */
+  const { role } = useRole();
+  useEffect(() => {
+    if (role !== "seller" && role !== "courier") return;
+    const path = window.location.pathname;
+    if (path === "/" || path === "/login") navigate("/seller", { replace: true });
+  }, [role, navigate]);
 
   useEffect(() => {
     SplashScreen.hide({ fadeOutDuration: 300 }).catch(() => {});
+    flushPending();
   }, []);
 
-  /* Check onboarding after auth loads */
+  /* Check walkthrough + onboarding after auth loads */
   useEffect(() => {
     if (loading || !user) return;
-    const key = `ob_done_${user.id}`;
-    if (localStorage.getItem(key)) return;
     const path = window.location.pathname;
-    if (path === "/onboarding" || path === "/login") return;
+    const skipPaths = ["/onboarding", "/login", "/walkthrough"];
+    if (skipPaths.includes(path)) return;
+
+    // 1. Walkthrough ko'rmaganlar uchun (faqat bir marta)
+    if (!localStorage.getItem("wt_done")) {
+      navigate("/walkthrough", { replace: true });
+      return;
+    }
+
+    // 2. Onboarding: profil to'ldirilmagan bo'lsa
+    const obKey = `ob_done_${user.id}`;
+    if (localStorage.getItem(obKey)) return;
 
     let mounted = true;
     import("@/integrations/supabase/client")
@@ -134,12 +204,10 @@ function AppRoutes() {
         if (!data?.phone || !data?.full_name) {
           navigate("/onboarding", { replace: true });
         } else {
-          localStorage.setItem(key, "1");
+          localStorage.setItem(obKey, "1");
         }
       })
-      .catch(() => {
-        // Tarmoq xatosi — redirect qilmaymiz, keyingi yuklashda qayta tekshiriladi
-      });
+      .catch(() => {});
 
     return () => { mounted = false; };
   }, [user, loading, navigate]);
@@ -160,8 +228,16 @@ function AppRoutes() {
         <Route path="/track" element={<TrackPage />} />
         <Route path="/order" element={<OrderPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/seller" element={<SellerDashboard />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/walkthrough" element={<WalkthroughPage />} />
         <Route path="/pickup-points" element={<PickupPointsPage />} />
+        <Route path="/telegram-callback" element={<TelegramCallback />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/privasy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
@@ -178,6 +254,8 @@ const App = () => (
           <CurrencyProvider>
           <Toaster />
           <Sonner />
+          <OfflineIndicator />
+          <UpdateBanner />
           <BrowserRouter>
             <SwipeBack />
             <AppRoutes />

@@ -4,4 +4,12 @@
     <string name="title_activity_main">HammaBop</string>
     <string name="package_name">uz.hammabop.app</string>
     <string name="custom_url_scheme">uz.hammabop.app</string>
+
+    <!-- #8 App Shortcuts -->
+    <string name="shortcut_search_short">Qidiruv</string>
+    <string name="shortcut_search_long">Mahsulot qidirish</string>
+    <string name="shortcut_cart_short">Savat</string>
+    <string name="shortcut_cart_long">Savatni ko\'rish</string>
+    <string name="shortcut_catalog_short">Video Katalog</string>
+    <string name="shortcut_catalog_long">Video katalogni ochish</string>
 </resources>
